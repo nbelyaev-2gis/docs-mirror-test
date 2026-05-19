@@ -1,0 +1,35 @@
+.wrapper {
+  flex-shrink: 0;
+
+  ul {
+    padding: var(--gap-1m) !important;
+
+    [data-theme='dark'] & {
+      background-color: var(--shape-level-1) !important;
+    }
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-1m);
+    height: var(--gap-10m);
+    padding: var(--gap-2m) var(--gap-3m);
+    margin-top: 0 !important;
+  }
+
+  a:after {
+    display: none !important;
+  }
+
+  > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--gap-2m) var(--gap-4m) var(--gap-2m) var(--gap-3m) !important;
+  }
+}
+
+.iconLanguage {
+  vertical-align: text-bottom;
+}

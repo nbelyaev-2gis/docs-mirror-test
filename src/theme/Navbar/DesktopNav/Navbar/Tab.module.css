@@ -1,0 +1,38 @@
+.productTab {
+  display: flex;
+  align-items: center;
+  padding: var(--gap-2m) var(--gap-2m) var(--gap-2m) var(--gap-3m);
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-m);
+  line-height: var(--lh-sm);
+  color: var(--text-main);
+  text-decoration: none;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover {
+    color: var(--text-main);
+    text-decoration: none;
+    background-color: var(--shape-level-1);
+  }
+}
+
+.productTabActive {
+  background-color: var(--shape-level-1) !important;
+
+  > .productTabIcon {
+    transform: rotate(180deg);
+  }
+}
+
+.productTabIcon {
+  margin-left: var(--gap-1m);
+  transition: transform 0.3s ease;
+}

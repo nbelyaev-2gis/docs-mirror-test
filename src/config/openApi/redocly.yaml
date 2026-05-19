@@ -1,0 +1,17 @@
+# NOTE: Only supports options marked as "Supported in Redoc CE"
+# See https://redocly.com/docs/cli/configuration/ for more information.
+
+extends:
+  - recommended
+
+theme:
+  hideSidebar: true
+  openapi:
+    hideDownloadButton: true
+    disableSearch: true
+    expandResponses: '200,201'
+    jsonSampleExpandLevel: 3
+    hideFab: true
+    theme:
+      sidebar:
+        width: '0px'

@@ -1,0 +1,177 @@
+---
+sidebar: mapgljsapi
+---
+# Viewport GeoJSON на примере WFS
+
+[GeoJsonViewportSource](/mapgl/reference/class#geo-json-viewport-source) позволяет отображать данные в формате [GeoJSON](/mapgl/geodata/formats#geojson), запрашивая их для текущего viewport (области видимости) карты.
+
+## Отображение данных на карте
+
+В качестве примера вы можете использовать [WFS](https://en.wikipedia.org/wiki/Web_Feature_Service)-данные из [GeoServer](https://geoserver.org/).
+
+Стандарт WFS используется не только для запроса данных, но и для их модификации. Объект `GeoJsonViewportSource` поддерживает только отображение данных.
+
+Для отображения данных на карте выполните следующие шаги:
+
+1. Получите WFS-данные с помощью GeoServer.
+2. Добавьте слои в стиль карты.
+3. Подключите источник WFS-данных в карту.
+
+### 1. Получите WFS-данные из GeoServer
+
+1. Установите и запустите GeoServer как Docker-контейнер:
+
+   ```bash
+   docker pull docker.osgeo.org/geoserver:2.26.x
+   docker run -it -p8080:8080 --env CORS_ENABLED=true docker.osgeo.org/geoserver:2.26.x
+   ```
+
+   Переменная `CORS_ENABLED=true` добавлена только для примера из этой инструкции.
+
+   См. [полную инструкцию по установке](https://docs.geoserver.org/main/en/user/installation/docker.html) для актуальной версии GeoServer.
+
+2. В веб-интерфейсе перейдите по адресу `http://localhost:8080/geoserver`.
+
+3. Перейдите в раздел **Layer Preview**. Для нужного слоя столбце **All Formats** выберите **WFS → GeoJSON**:
+
+    {/*  prettier-ignore  */}
+
+   ![Предустановленные данные GeoServer](/img/mapgl/geodata/geojson-viewport/geoserver-built-in-data.png)
+
+<br />
+
+В новой вкладке откроется URL запроса с типом `GetFeature` для получения данных:
+
+{/*  prettier-ignore  */}
+
+![Базовый URL запроса данных](/img/mapgl/geodata/geojson-viewport/geoserver-base-get-data-url.png)
+
+На основе этого базового URL при [подключении источников данных](#connect-data-sources) вы создадите bbox-функцию источника. Функция используется в опции [data](/mapgl/reference/interface#geo-json-viewport-source-options/data) `GeoJsonViewportSource` и методе [setData](/mapgl/reference/class#geo-json-viewport-source/set-data).
+
+### 2. Добавьте стилевые слои
+
+Добавьте с помощью [addLayer](/mapgl/reference/class#map/add-layer) три новых слоя для отображения на карте полигонов, линий и точек:
+
+```ts
+const layers = [
+    {
+        type: 'polygon',
+        id: 'geojson-polygon',
+        filter: ['match', ['sourceAttr', 'exampleCase'], ['polygon'], true, false],
+        style: {
+            strokeWidth: 2,
+            strokeColor: '#444444',
+            color: '#00ff00a0',
+        },
+    },
+    {
+        type: 'line',
+        id: 'geojson-line',
+        filter: ['match', ['sourceAttr', 'exampleCase'], ['line'], true, false],
+        style: {
+            color: '#9e02e0',
+            width: 5,
+        },
+    },
+    {
+        type: 'point',
+        id: 'geojson-point',
+        filter: ['match', ['sourceAttr', 'exampleCase'], ['point'], true, false],
+        style: {
+            iconWidth: 16,
+            textFont: ['Open_Sans', 'Open_Sans'],
+            textField: ['get', 'NAME'],
+            textFontSize: [16, 16],
+        },
+    },
+];
+
+map.on('styleload', () => {
+    layers.forEach((layer) => map.addLayer(layer));
+});
+```
+
+Слои содержат в поле `filter` атрибуты, которые вы можете указать на следующем шаге в опции `attributes` источников.
+
+### 3. Подключите источники данных {#connect-data-sources}
+
+В качестве опции [data](/mapgl/reference/interface#geo-json-viewport-source-options/data) `GeoJsonViewportSource` принимает bbox-функцию, которая возвращает URL для запроса данных.
+
+Подключите источники для каждого созданного слоя и установите навигацию в нужное место карты:
+
+```ts
+const WFS_POINTS_DATA_FN = (bbox: number[]) =>
+    `http://localhost:8080/geoserver/tiger/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=tiger%3Apoi&maxFeatures=200&outputFormat=application%2Fjson&bbox=${bbox}&srcName=EPSG:4326`;
+const WFS_LINES_DATA_FN = (bbox: number[]) =>
+    `http://localhost:8080/geoserver/tiger/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=tiger%3Atiger_roads&maxFeatures=200&outputFormat=application%2Fjson&bbox=${bbox}&srcName=EPSG:4326`;
+const WFS_POLYGONS_DATA_FN = (bbox: number[]) =>
+    `http://localhost:8080/geoserver/tiger/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=tiger%3Apoly_landmarks&maxFeatures=200&outputFormat=application%2Fjson&bbox=${bbox}&srcName=EPSG:4326`;
+
+const points = new mapgl.GeoJsonViewportSource(map, {
+    data: WFS_POINTS_DATA_FN,
+    attributes: { exampleCase: 'point' },
+});
+
+const lines = new mapgl.GeoJsonViewportSource(map, {
+    data: WFS_LINES_DATA_FN,
+    attributes: { exampleCase: 'line' },
+});
+
+const polygons = new mapgl.GeoJsonViewportSource(map, {
+    data: WFS_POLYGONS_DATA_FN,
+    attributes: { exampleCase: 'polygon' },
+});
+
+map.setCenter([-74.0104611, 40.70758763]);
+map.setStyleZoom(12);
+```
+
+Укажите следующие параметры:
+
+* Для URL запроса данных:
+
+  * `request=GetFeature`: источник отображает данные с помощью bbox-функции, поэтому в качестве типа запроса используется `GetFeature`.
+  * `maxFeatures`: ограничение, которое действует при каждом запросе. Если вы удалите этот параметр, GeoServer вернёт все данные по bbox.
+  * `srcName=EPSG:4326`: обязательный параметр. По умолчанию источник отправляет запрос с bbox в этих координатах.
+  * `outputFormat=application%2Fjson`: обязательный параметр. По умолчанию источник работает только с GeoJSON.
+
+* `data`: имя bbox-функции.
+
+* `exampleCase`: атрибуты для связи данных источников и соответствующих им слоёв, которые вы добавили в поле `filter` на предыдущем шаге.
+
+В результате вы увидите добавленные данные на карте:
+
+![Результат](/img/mapgl/geodata/geojson-viewport/geoserver-data-result.png)
+
+## Установка новой функции data
+
+Вы можете изменить bbox-функцию у созданного источника, которую вы указали в опции `data`, с помощью метода [setData](/mapgl/reference/class#geo-json-viewport-source/set-data).
+
+В случае изменения запрашиваемых данных может потребоваться актуализировать атрибут источника. Например, чтобы установить bbox-функцию для запроса линий на источник с точечными данными:
+
+```ts
+points.setData(WFS_LINES_DATA_FN);
+points.setAttributes({ exampleCase: 'line' });
+```
+
+Теперь данные этого источника вы можете использовать в стилевом слое для отображения линий.
+
+## Изменение запрашиваемой области данных
+
+Настройка [viewportPadding](/mapgl/reference/interface#geo-json-viewport-source-options/viewport-padding) в опциях GeoJsonViewportSource позволяет расширить запрашиваемую область данных на указанное значение в пикселях. По умолчанию запрашиваемая область равна viewport (области видимости) экрана. Например:
+
+```ts
+const lines = new mapgl.GeoJsonViewportSource(map, {
+    data: WFS_LINES_DATA_FN,
+    attributes: { exampleCase: 'line' },
+    viewportPadding: 500,
+});
+```
+
+Чтобы расширить запрашиваемую область данных у созданного источника, используйте метод [setViewportPadding](/mapgl/reference/class#geo-json-viewport-source/set-viewport-padding):
+
+```ts
+lines.setViewportPadding(1000);
+```
+
+

@@ -1,0 +1,174 @@
+---
+sidebar: iossdk
+---
+# Общие принципы
+
+## Отложенные результаты {#deferred-results}
+
+Некоторые методы SDK (например те, которые обращаются к удаленному серверу) возвращают отложенные результаты (объект [Future](/ios/sdk/reference/stable/class#future)). Для работы с ними нужно создать обработчик получения данных и обработчик ошибок. Обработать результат в главной очереди можно с помощью [DispatchQueue](https://developer.apple.com/documentation/dispatch/dispatchqueue).
+
+Пример получения объекта из справочника:
+
+```swift
+// Создание объекта для поиска по справочнику.
+let searchManager = SearchManager.createOnlineManager(context: sdk.context)
+
+// Получение объекта из справочника по идентификатору.
+let future = searchManager.searchByDirectoryObjectId(objectId: object.id)
+
+// Обработка результата поиска в главной очереди.
+// Сохраняем результат вызова, так как его удаление отменяет обработку.
+self.searchDirectoryObjectCancellable = future.sink(
+	receiveValue: {
+		[weak self] directoryObject in
+		guard let directoryObject = directoryObject else { return }
+		DispatchQueue.main.async {
+			self.handle(directoryObject)
+		}
+	},
+	failure: { error in
+		DispatchQueue.main.async {
+			self.handle(error)
+		}
+	}
+)
+```
+
+Для упрощения работы можно создать расширение:
+
+```swift
+extension DGis.Future {
+	func sinkOnMainThread(
+		receiveValue: @escaping (Value) -> Void,
+		failure: @escaping (Error) -> Void
+	) -> DGis.Cancellable {
+		self.sink(on: .main, receiveValue: receiveValue, failure: failure)
+	}
+
+	func sink(
+		on queue: DispatchQueue,
+		receiveValue: @escaping (Value) -> Void,
+		failure: @escaping (Error) -> Void
+	) -> DGis.Cancellable {
+		self.sink { value in
+			queue.async {
+				receiveValue(value)
+			}
+		} failure: { error in
+			queue.async {
+				failure(error)
+			}
+		}
+	}
+}
+
+self.searchDirectoryObjectCancellable = future.sinkOnMainThread(
+	receiveValue: {
+		[weak self] directoryObject in
+		guard let directoryObject = directoryObject else { return }
+		self.handle(directoryObject)
+	},
+	failure: { error in
+		self.handle(error)
+	}
+)
+```
+
+:::note[Обновление в версии 13.x]
+
+В версии SDK 13.0.0 и выше в рамках перехода на Swift 6 обычный `Future.sink` был удалён. Теперь для получения отложенных результатов можно использовать `Future.sink(on queue: DispatchQueue, ...)` и `Future.sinkOnMainThread`.
+
+:::
+
+Можно также использовать [Combine](https://developer.apple.com/documentation/combine):
+
+```swift
+// Создание Combine.Future из DGis.Future.
+extension DGis.Future {
+	func asCombineFuture() -> Combine.Future<Value, Error> {
+		Combine.Future { [self] promise in
+			// Удерживаем ссылку на Cancellable, пока не будет вызван обработчик
+			// Combine.Future не позволяет конфигурировать отмену напрямую
+			var cancellable: DGis.Cancellable?
+			cancellable = self.sink {
+				promise(.success($0))
+				_ = cancellable
+			} failure: {
+				promise(.failure($0))
+				_ = cancellable
+			}
+		}
+	}
+}
+
+// Создание Combine.Future.
+let combineFuture = future.asCombineFuture()
+
+// Обработка результата поиска в главной очереди.
+combineFuture.receive(on: DispatchQueue.main).sink {
+	[weak self] completion in
+	switch completion {
+		case .failure(let error):
+			self?.handle(error)
+		case .finished:
+			break
+	}
+} receiveValue: {
+	[weak self] directoryObject in
+	self?.handle(directoryObject)
+}.store(in: &self.subscriptions)
+```
+
+## Потоки значений {#data-channels}
+
+Некоторые объекты SDK предоставляют потоки значений, которые можно обработать, используя механизм каналов: на поток можно подписаться, указав функцию-обработчик данных, и отписаться, когда обработка данных больше не требуется. Для работы с потоками значений используется класс [Channel](/ios/sdk/reference/stable/class#channel).
+
+Пример подписки на изменение видимой области карты (поток новых прямоугольных областей):
+
+```swift
+// Выбираем канал (прямоугольники видимой области карты).
+let visibleRectChannel = map.camera.visibleRectChannel
+
+// Подписываемся и обрабатываем результаты в главной очереди.
+// Значения будут присылаться при любом изменении видимой области до момента отписки.
+// Важно сохранить Cancellable, иначе подписка будет уничтожена.
+self.cancellable = visibleRectChannel.sink { [weak self] visibleRect in
+	DispatchQueue.main.async {
+		self?.handle(visibleRect)
+	}
+}
+```
+
+Чтобы отменить подписку, нужно вызвать метод `cancel()`:
+
+```swift
+self.cancellable.cancel()
+```
+
+Для упрощения работы можно создать расширение:
+
+```swift
+extension Channel {
+	func sinkOnMainThread(receiveValue: @escaping (Value) -> Void) -> DGis.Cancellable {
+		self.sink(on: .main, receiveValue: receiveValue)
+	}
+
+	func sink(on queue: DispatchQueue, receiveValue: @escaping (Value) -> Void) -> DGis.Cancellable {
+		self.sink { value in
+			queue.async {
+				receiveValue(value)
+			}
+		}
+	}
+}
+
+self.cancellable = visibleRectChannel.sinkOnMainThread { [weak self] visibleRect in
+	self?.handle(visibleRect)
+}
+```
+
+:::note[Обновление в версии 13.x]
+
+В версии SDK 13.0.0 и выше в рамках перехода на Swift 6 обычный `Channel.sink` был удалён. Теперь для получения отложенных результатов можно использовать `Channel.sink(on queue: DispatchQueue, ...)` и `Channel.sinkOnMainThread`.
+
+:::

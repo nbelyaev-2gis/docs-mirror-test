@@ -1,0 +1,1111 @@
+В этом разделе представлен пример интеграции поиска на карте в ваше веб-приложение. Интерактивный пример демонстрирует использование основных API поиска <Brand />:
+
+- Geocoder API для [определения адреса по координатам клика по карте](#reverse-geocoding);
+- Markers API для [поиска мест в заданном радиусе и отображения их на карте](#markers);
+- Places API для [получения дополнительной информации о месте на карте](#place-details); 
+- Suggest API для [отображения подсказок при вводе категории](#suggestions).
+
+Для [отображения интерактивной карты](#map-init) используется MapGL JS API.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '632px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Интеграция API поиска в веб-приложение с векторной картой</title>
+        <meta name="description" content="Интеграция API поиска в веб-приложение с векторной картой" />
+        <style>
+            * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            }
+
+            body {
+            font-family: system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+            }
+
+            #map {
+            width: 100%;
+            height: 100vh;
+            cursor: crosshair;
+            }
+
+            /* Control panel */
+            .control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            padding: 16px;
+            width: 320px;
+            z-index: 1000;
+            }
+
+            .control-panel__address {
+            font-size: 14px;
+            color: #0066cc;
+            font-weight: 500;
+            margin-bottom: 12px;
+            min-height: 20px;
+            }
+
+            #search-input {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s;
+            }
+
+            #search-input:focus {
+            border-color: #0066cc;
+            }
+
+            .radius-control {
+            margin-bottom: 12px;
+            }
+
+            .radius-control label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+            }
+
+            #radius-slider {
+            width: 100%;
+            cursor: pointer;
+            }
+
+            .suggestions {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            margin-top: 4px;
+            max-height: 280px;
+            overflow-y: auto;
+            }
+
+            .suggestions.active {
+            display: block;
+            }
+
+            .suggestion-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s;
+            }
+
+            .suggestion-item:last-child {
+            border-bottom: none;
+            }
+
+            .suggestion-item:hover {
+            background: #f5f5f5;
+            }
+
+            .suggestion-item__name {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+            }
+
+            .suggestion-item__address {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+            }
+
+            /* Stats panel */
+            .stats-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #666;
+            z-index: 1000;
+            display: none;
+            }
+
+            .stats-panel.active {
+            display: block;
+            }
+
+            /* Place popup */
+            .popup {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            padding: 16px 18px;
+            max-width: 300px;
+            min-width: 200px;
+            }
+
+            .popup__title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 8px;
+            }
+
+            .popup__address {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+            }
+
+            .popup__category {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+            }
+
+            .popup__loading {
+            font-size: 13px;
+            color: #999;
+            font-style: italic;
+            }
+
+            /* Error toast */
+            .error-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #f44336;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 10000;
+            max-width: 360px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            }
+
+            .error-toast.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .control-panel {
+                    left: 10px;
+                    right: 10px;
+                    width: auto;
+                }
+
+                .stats-panel {
+                    left: 10px;
+                    right: 10px;
+                    bottom: 10px;
+                }
+
+                .error-toast {
+                    left: 10px;
+                    right: 10px;
+                    bottom: 10px;
+                }
+            }
+
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <!-- Панель управления -->
+        <div class="control-panel">
+        <div id="current-address" class="control-panel__address">Нажмите на карту</div>
+        <div class="radius-control">
+            <label for="radius-slider">Радиус: <span id="radius-value">500</span>м</label>
+            <input type="range" id="radius-slider" min="100" max="3500" step="50" value="500">
+        </div>
+        <input
+            type="text"
+            id="search-input"
+            placeholder="Поиск по категории (кафе, аптека, банк, ...)"
+            autocomplete="off"
+        >
+        <div id="suggestions" class="suggestions"></div>
+        </div>
+
+        <!-- Статистика -->
+        <div id="stats-panel" class="stats-panel"></div>
+
+        <!-- Ошибка -->
+        <div id="error-toast" class="error-toast"></div>
+
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            // Ключи доступа к API
+            const API_KEY = 'Your API access key';
+            const MAPGL_KEY = 'Your API access key';
+
+            const DEFAULT_CENTER = [37.6173, 55.7558]; // Москва
+            const DEFAULT_ZOOM = 12;
+            const DEFAULT_RADIUS = 500; // Радиус поиска по умолчанию в метрах
+
+            // Глобальное состояние
+            let map;
+            let markers = [];
+            let searchCircle = null;
+            let searchRadius = DEFAULT_RADIUS;
+            let currentPopup = null;
+            let currentLocation = null;
+            let selectedCategory = null;
+            let debounceTimer = null;
+            let errorTimeout = null;
+
+            // DOM-элементы
+            const searchInput = document.getElementById('search-input');
+            const suggestionsContainer = document.getElementById('suggestions');
+            const addressDisplay = document.getElementById('current-address');
+            const statsPanel = document.getElementById('stats-panel');
+            const radiusSlider = document.getElementById('radius-slider');
+            const radiusValue = document.getElementById('radius-value');
+
+            // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+
+            // Провалидировать ответ API через meta.code
+            function checkApiResponse(data, apiName = 'API') {
+            if (!data.meta) {
+                throw new Error(\`\${apiName}: Отсутствует поле meta в ответе\`);
+            }
+
+            const { code, error } = data.meta;
+
+            if (code !== 200) {
+                const message = error?.message || 'Unknown error';
+                const type = error?.type || 'unknown';
+                throw new Error(\`\${apiName} (\${code}): \${message} [\${type}]\`);
+            }
+
+            return data.result;
+            }
+
+            // Отобразить ошибку
+            function showError(message) {
+            const errorEl = document.getElementById('error-toast');
+            errorEl.textContent = message;
+            errorEl.classList.add('active');
+
+            clearTimeout(errorTimeout);
+            errorTimeout = setTimeout(() => {
+                errorEl.classList.remove('active');
+            }, 5000);
+            }
+
+            // Экранировать HTML-сущности
+            function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+            }
+
+            // Настройка задержки
+            function debounce(func, delay) {
+            return (...args) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func(...args), delay);
+            };
+            }
+
+            // ==================== КАРТА ====================
+
+            // Инициализация карты
+            function initMap() {
+            map = new mapgl.Map('map', {
+                center: DEFAULT_CENTER,
+                zoom: DEFAULT_ZOOM,
+                key: MAPGL_KEY,
+                enableTrackResize: true,
+                zoomControl: 'centerRight',
+            });
+
+            // Клик по карте для исследования области
+            map.on('click', handleMapClick);
+            }
+
+            // Обработка клика по карте
+            async function handleMapClick(e) {
+            const { lngLat } = e;
+            currentLocation = lngLat;
+
+            // Очистить предыдущие маркеры
+            clearMarkers();
+
+            // Нарисовать круг радиуса поиска
+            drawSearchRadius(lngLat);
+
+            // 1. Geocoder API - получить адрес по координатам
+            await reverseGeocode(lngLat);
+
+            // 2. Markers API - загрузить ближайшие места, если выбрана категория
+            if (selectedCategory) {
+                await loadNearbyMarkers(lngLat, selectedCategory);
+            }
+            }
+
+            // Нарисовать круг радиуса поиска на карте
+            function drawSearchRadius(lngLat) {
+            // Удалить ранее созданный круг, если он есть
+            if (searchCircle) {
+                searchCircle.destroy();
+            }
+
+            searchCircle = new mapgl.Circle(map, {
+                coordinates: lngLat,
+                radius: searchRadius,
+                color: '#0066cc22',
+                strokeColor: '#0066cc',
+                strokeWidth: 2,
+                interactive: false,
+            });
+            }
+
+            // ==================== GEOCODER API ====================
+
+            // Обратное геокодирование - получить адрес по координатам
+            async function reverseGeocode(lngLat) {
+            const [lon, lat] = lngLat;
+
+            const url = new URL('https://catalog.api.2gis.com/3.0/items/geocode');
+            url.searchParams.set('lat', lat);
+            url.searchParams.set('lon', lon);
+            url.searchParams.set('key', API_KEY);
+            url.searchParams.set('fields', 'items.point,items.address');
+            url.searchParams.set('locale', 'ru_RU');
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const result = checkApiResponse(data, 'Geocoder API');
+
+                if (result?.items?.length) {
+                const item = result.items[0];
+                const address =
+                    item.full_name || item.address_name || item.name || 'Адрес не найден';
+
+                addressDisplay.textContent = address;
+                } else {
+                addressDisplay.textContent = 'Адрес не найден';
+                }
+            } catch (error) {
+                console.error('Geocoder API error:', error);
+                showError(\`Ошибка геокодирования: \${error.message}\`);
+                addressDisplay.textContent = 'Не удалось получить адрес';
+            }
+            }
+
+            // ==================== MARKERS API ====================
+
+            // Load nearby place markers
+            async function loadNearbyMarkers(lngLat, query) {
+            if (!query || !query.trim()) {
+                showError('Категория не выбрана');
+                return;
+            }
+
+            const [lon, lat] = lngLat;
+
+            const url = new URL('https://catalog.api.2gis.com/3.0/markers');
+            url.searchParams.set('q', query);
+            url.searchParams.set('point', \`\${lon},\${lat}\`); // Центр радиуса для поиска
+            url.searchParams.set('radius', searchRadius); // Радиус в метрах
+            url.searchParams.set('sort', 'distance'); // Сортировка по расстоянию от точки
+            url.searchParams.set('key', API_KEY);
+            url.searchParams.set('locale', 'ru_RU');
+            url.searchParams.set('limit', 10); // До 10 результатов в ответе
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const result = checkApiResponse(data, 'Markers API');
+
+                if (result?.items?.length) {
+                renderMarkers(result.items);
+                updateStats(result.items.length, result.total);
+                } else {
+                updateStats(0, 0);
+                showError(\`Ничего не найдено в радиусе \${searchRadius}м\`);
+                }
+            } catch (error) {
+                console.error('Markers API error:', error);
+                showError(\`Не удалось загрузить маркеры: \${error.message}\`);
+                updateStats(0, 0);
+            }
+            }
+
+            // Отобразить маркеры на карте
+            function renderMarkers(items) {
+            clearMarkers();
+
+            items.forEach((item) => {
+                if (item.lat && item.lon) {
+                const marker = new mapgl.Marker(map, {
+                    coordinates: [item.lon, item.lat],
+                });
+
+                // Клик по маркеру для загрузки деталей через Places API
+                marker.on('click', () => {
+                    fetchPlaceDetails(item.id, [item.lon, item.lat]);
+                });
+
+                markers.push(marker);
+                }
+            });
+            }
+
+            // Обновить панель статистики
+            function updateStats(shown, total) {
+            if (shown > 0) {
+                statsPanel.textContent = \`Показано \${shown} из \${total} мест в радиусе \${searchRadius}м\`;
+                statsPanel.classList.add('active');
+            } else {
+                statsPanel.classList.remove('active');
+            }
+            }
+
+            // ==================== PLACES API ====================
+
+            // Получить подробную информацию о месте
+            async function fetchPlaceDetails(placeId, coordinates) {
+            // Показать состояние загрузки
+            showLoadingPopup(coordinates);
+
+            const url = new URL('https://catalog.api.2gis.com/3.0/items/byid');
+            url.searchParams.set('id', placeId);
+            url.searchParams.set('key', API_KEY);
+            url.searchParams.set(
+                'fields',
+                'items.point,items.address,items.rubrics,items.schedule',
+            );
+            url.searchParams.set('locale', 'ru_RU');
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const result = checkApiResponse(data, 'Places API');
+
+                if (result?.items?.length) {
+                const item = result.items[0];
+                showPlacePopup(item, coordinates);
+                } else {
+                showError('Информация о месте не найдена');
+                closePopup();
+                }
+            } catch (error) {
+                console.error('Places API error:', error);
+                showError(\`Не удалось загрузить детали: \${error.message}\`);
+                closePopup();
+            }
+            }
+
+            // Показать всплывающую подсказку с деталями места
+            function formatTodayWorkingHours(schedule) {
+            if (!schedule) return '';
+
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const todayKey = days[new Date().getDay()];
+            const today = schedule[todayKey];
+
+            if (!today) return '';
+
+            const ranges = (today.working_hours || [])
+                .map((h) => {
+                if (!h) return '';
+                const from = h.from || '';
+                const to = h.to || '';
+                if (from && to) return from + '–' + to;
+                return from || to || '';
+                })
+                .filter(Boolean);
+
+            if (ranges.length) {
+                return 'Время работы сегодня: ' + ranges.join(', ');
+            }
+
+            if (today.day_off || today.is_day_off) {
+                return 'Время работы сегодня: выходной';
+            }
+
+            return '';
+            }
+
+            function showPlacePopup(item, coordinates) {
+            closePopup();
+
+            const name = item.name || 'Без названия';
+            const address = item.address_name || item.address?.name || item.full_address_name || '';
+            const category = item.rubrics?.[0]?.name || '';
+            const workingHoursToday = formatTodayWorkingHours(item.schedule);
+
+            const content = \`
+                <div class="popup">
+                <div class="popup__title">\${escapeHtml(name)}</div>
+                \${address ? \`<div class="popup__address">\${escapeHtml(address)}</div>\` : ''}
+                \${workingHoursToday ? \`<div class="popup__address">\${escapeHtml(workingHoursToday)}</div>\` : ''}
+                \${category ? \`<div class="popup__category">\${escapeHtml(category)}</div>\` : ''}
+                </div>
+            \`;
+
+            currentPopup = new mapgl.HtmlMarker(map, {
+                coordinates,
+                html: content,
+                anchor: [0.5, 1],
+            });
+            }
+
+            // Показать всплывающую подсказку с состоянием загрузки
+            function showLoadingPopup(coordinates) {
+            closePopup();
+
+            const content = \`
+                <div class="popup">
+                <div class="popup__loading">Загрузка...</div>
+                </div>
+            \`;
+
+            currentPopup = new mapgl.HtmlMarker(map, {
+                coordinates,
+                html: content,
+                anchor: [0.5, 1],
+            });
+            }
+            // ==================== SUGGEST API ====================
+
+            // Получить подсказки по категориям
+            async function fetchSuggestions(query) {
+            if (!query.trim()) {
+                hideSuggestions();
+                return;
+            }
+
+            // Использовать текущее местоположение или центр карты
+            const [lon, lat] = currentLocation || map.getCenter();
+
+            const url = new URL('https://catalog.api.2gis.com/3.0/suggests');
+            url.searchParams.set('q', query);
+            url.searchParams.set('key', API_KEY);
+            url.searchParams.set('location', \`\${lon},\${lat}\`);
+            url.searchParams.set('locale', 'ru_RU');
+            url.searchParams.set('type', 'rubric'); // Только категории
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const result = checkApiResponse(data, 'Suggest API');
+
+                if (result?.items?.length) {
+                renderSuggestions(result.items);
+                } else {
+                hideSuggestions();
+                }
+            } catch (error) {
+                console.error('Ошибка Suggest API:', error);
+                showError(\`Ошибка подсказок: \${error.message}\`);
+                hideSuggestions();
+            }
+            }
+
+            // Отобразить выпадающий список подсказок
+            function renderSuggestions(items) {
+            suggestionsContainer.innerHTML = items
+                .map((item) => {
+                const name = item.name || item.full_name || 'Без названия';
+                const address = item.address?.name || item.full_address_name || '';
+                return \`
+                    <div class="suggestion-item" data-name="\${escapeHtml(name)}">
+                    <div class="suggestion-item__name">\${escapeHtml(name)}</div>
+                    \${address ? \`<div class="suggestion-item__address">\${escapeHtml(address)}</div>\` : ''}
+                    </div>
+                \`;
+                })
+                .join('');
+
+            suggestionsContainer.classList.add('active');
+
+            // Обработчики клика по подсказкам
+            suggestionsContainer.querySelectorAll('.suggestion-item').forEach((el) => {
+                el.addEventListener('click', () => {
+                const name = el.dataset.name;
+                searchInput.value = name;
+                hideSuggestions();
+                applyFilter(name);
+                });
+            });
+            }
+
+            function hideSuggestions() {
+            suggestionsContainer.classList.remove('active');
+            suggestionsContainer.innerHTML = '';
+            }
+
+            // Применить выбранную категорию для поиска
+            function applyFilter(category) {
+            // Сохранить выбранную категорию
+            selectedCategory = category;
+
+            // Если местоположение уже выбрано, загрузить маркеры
+            if (currentLocation) {
+                loadNearbyMarkers(currentLocation, category);
+            } else {
+                // В противном случае предложить кликнуть на карту
+                showError('Теперь кликните на карту для поиска');
+                addressDisplay.textContent = \`Категория: \${category}\`;
+            }
+            }
+
+            // ==================== УПРАВЛЕНИЕ МАРКЕРАМИ ====================
+
+            // Очистить все маркеры
+            function clearMarkers() {
+            for (const marker of markers) {
+                marker.destroy();
+            }
+            markers = [];
+            closePopup();
+            }
+
+            // Закрыть всплывающую подсказку
+            function closePopup() {
+            if (currentPopup) {
+                currentPopup.destroy();
+                currentPopup = null;
+            }
+            }
+
+            // ==================== ОБРАБОТЧИКИ СОБЫТИЙ ====================
+
+            // Обработчик ввода с задержкой
+            const handleInput = debounce((e) => {
+            fetchSuggestions(e.target.value);
+            }, 300);
+
+            searchInput.addEventListener('input', handleInput);
+
+            // Нажатие клавиши Enter для применения фильтра
+            searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                hideSuggestions();
+                applyFilter(searchInput.value);
+            }
+            });
+
+            // Скрыть подсказки при клике вне панели управления
+            document.addEventListener('click', (e) => {
+            if (!e.target.closest('.control-panel')) {
+                hideSuggestions();
+            }
+            });
+
+            // Обработчик ползунка радиуса
+            radiusSlider.addEventListener('input', (e) => {
+            searchRadius = Number(e.target.value);
+            radiusValue.textContent = searchRadius;
+
+            // Обновить круг и перезагрузить маркеры, если местоположение выбрано
+            if (currentLocation) {
+                drawSearchRadius(currentLocation);
+                if (selectedCategory) {
+                loadNearbyMarkers(currentLocation, selectedCategory);
+                }
+            }
+            });
+
+            // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+
+            initMap();
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+:::note[Ключи доступа]
+
+В примере используются две переменные для API-ключей: `API_KEY` для доступа к API поиска и `MAPGL_KEY` для API карт. Если вы используете другую конфигурацию ключей (один ключ для всех сервисов или отдельные ключи для каждого API), отредактируйте использование переменных соответственно.
+
+:::
+
+## Основные блоки сценария {#blocks}
+
+### Инициализация карты {#map-init}
+
+С помощью [MapGL JS API](/mapgl/overview/features) создаётся экземпляр карты с основными параметрами её отображения и ключом доступа к [Map Tiles API](/maps/others/maptiles/overview). Также задаётся обработчик кликов по карте, который запускает основной сценарий поиска.
+
+```js
+function initMap() {
+    map = new mapgl.Map('map', {
+        center: DEFAULT_CENTER, // Координаты центра карты (Москва)
+        zoom: DEFAULT_ZOOM, // Начальный масштаб
+        key: MAPGL_KEY, // Ключ доступа к Map Tiles API
+        enableTrackResize: true,
+        zoomControl: 'centerRight',
+    });
+
+    // Клик по карте для исследования области
+    map.on('click', handleMapClick);
+}
+```
+
+Когда пользователь кликает по карте, вокруг места клика рисуется круг (радиус поиска).
+
+```js
+function drawSearchRadius(lngLat) {
+    // Удалить ранее созданный круг
+    if (searchCircle) {
+        searchCircle.destroy();
+    }
+
+    searchCircle = new mapgl.Circle(map, {
+        coordinates: lngLat, // Центр круга — координаты клика
+        radius: searchRadius, // Радиус круга — радиус поиска
+        color: '#0066cc22',
+        strokeColor: '#0066cc',
+        strokeWidth: 2,
+        interactive: false,
+    });
+}
+```
+
+### Обратное геокодирование {#reverse-geocoding}
+
+Формируется запрос к [Geocoder API](/api/search/geocoder/overview) с указанием необходимых параметров поиска и ключа доступа.
+
+```js
+async function reverseGeocode(lngLat) {
+    const [lon, lat] = lngLat;
+
+    const url = new URL('https://catalog.api.2gis.com/3.0/items/geocode');
+    url.searchParams.set('lat', lat);
+    url.searchParams.set('lon', lon);
+    url.searchParams.set('key', API_KEY); // Ключ доступа к Geocoder API
+    url.searchParams.set('fields', 'items.point,items.address'); // Получить в ответе координаты и адрес
+    url.searchParams.set('locale', 'ru_RU');
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const result = checkApiResponse(data, 'Geocoder API');
+
+        if (result?.items?.length) {
+        const item = result.items[0];
+        const address =
+            item.full_name || item.address_name || item.name || 'Address not found';
+
+        addressDisplay.textContent = address;
+        } else {
+        addressDisplay.textContent = 'Address not found';
+        }
+    } catch (error) {
+        console.error('Geocoder API error:', error);
+        showError(`Geocoding error: ${error.message}`);
+        addressDisplay.textContent = 'Failed to get address';
+    }
+}
+```
+
+Запрос к Geocoder API выполняется при каждом клике по карте, внутри обработчика `handleMapClick()`.
+
+```js
+async function handleMapClick(e) {
+    const { lngLat } = e; // Координаты клика по карте
+    currentLocation = lngLat;
+
+    clearMarkers();
+    drawSearchRadius(lngLat);
+
+    // 1. Geocoder API - получить адрес для выбранной точки
+    await reverseGeocode(lngLat);
+
+    if (selectedCategory) {
+        await loadNearbyMarkers(lngLat, selectedCategory);
+    }
+}
+```
+
+Полученный в ответе адрес отображается в виджете на карте.
+
+### Поиск и отображение мест на карте {#markers}
+
+Формируется запрос к [Markers API](/api/search/markers/overview) с указанием параметров поиска и ключа доступа. Также задаётся ограничение на количество результатов в ответе (до 10).
+
+```js
+async function loadNearbyMarkers(lngLat, query) {
+    if (!query || !query.trim()) {
+        showError('No category selected');
+        return;
+    }
+
+    const [lon, lat] = lngLat;
+
+    const url = new URL('https://catalog.api.2gis.com/3.0/markers');
+    url.searchParams.set('q', query); // Строка запроса (категория мест)
+    url.searchParams.set('point', `${lon},${lat}`); // Центр поиска (координаты клика по карте)
+    url.searchParams.set('radius', searchRadius); // Радиус поиска в метрах
+    url.searchParams.set('sort', 'distance'); // Отсортировать результаты по расстоянию от центра поиска
+    url.searchParams.set('key', API_KEY); // Ключ доступа к Markers API
+    url.searchParams.set('locale', 'ru_RU');
+    url.searchParams.set('limit', 10);  // До 10 результатов в ответе
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const result = checkApiResponse(data, 'Markers API');
+
+        if (result?.items?.length) {
+        renderMarkers(result.items);
+        updateStats(result.items.length, result.total);
+        } else {
+        updateStats(0, 0);
+        showError(`Nothing found within ${searchRadius}m`);
+        }
+    } catch (error) {
+        console.error('Markers API error:', error);
+        showError(`Failed to load markers: ${error.message}`);
+        updateStats(0, 0);
+    }
+}
+```
+
+Запрос к Markers API выполняется в следующих случаях:
+
+- Внутри вызова функции `handleMapClick()` — после клика по карте, если категория уже выбрана:
+
+    ```js
+    // 2. Markers API - загрузить ближайшие места, если категория выбрана
+    if (selectedCategory) {
+        await loadNearbyMarkers(lngLat, selectedCategory);
+    }
+    ```
+
+- Внутри функции `applyFilter()` — когда пользователь подтвердил категорию (выбрал из списка подсказок или нажал _Enter_), и точка на карте уже выбрана:
+
+    ```js
+    function applyFilter(category) {
+        selectedCategory = category;
+
+        if (currentLocation) {
+            loadNearbyMarkers(currentLocation, category);
+        }
+    }
+    ```
+
+- Внутри обработчика слайдера радиуса `radiusSlider.addEventListener()` — когда радиус поиска изменился, а точка и категория уже заданы:
+
+    ```js
+    if (currentLocation) {
+        drawSearchRadius(currentLocation);
+        if (selectedCategory) {
+            loadNearbyMarkers(currentLocation, selectedCategory);
+        }
+    }
+    ```
+
+Полученные элементы отрисовываются на карте с помощью объекта `mapgl.Marker`. На каждый маркер добавляется обработчик клика, который запускает запрос к Places API для [получения подробной информации о месте](#place-details).
+
+```js
+const marker = new mapgl.Marker(map, {
+    coordinates: [item.lon, item.lat],
+});
+
+marker.on('click', () => {
+    fetchPlaceDetails(item.id, [item.lon, item.lat]);
+});
+```
+
+### Получение данных о месте {#place-details}
+
+Формируется запрос к [Places API](/api/search/places/overview) с указанием идентификатора места, необходимых полей для получения в ответе и ключа доступа.
+
+```js
+async function fetchPlaceDetails(placeId, coordinates) {
+    // Показать состояние загрузки
+    showLoadingPopup(coordinates);
+
+    const url = new URL('https://catalog.api.2gis.com/3.0/items/byid');
+    url.searchParams.set('id', placeId); // Идентификатор места из Markers API
+    url.searchParams.set('key', API_KEY); // Ключ доступа к Places API
+    url.searchParams.set(
+        'fields',
+        'items.point,items.address,items.rubrics,items.schedule',
+    ); // Какие данные о месте получить в ответе
+    url.searchParams.set('locale', 'ru_RU');
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const result = checkApiResponse(data, 'Places API');
+
+        if (result?.items?.length) {
+        const item = result.items[0];
+        showPlacePopup(item, coordinates);
+        } else {
+        showError('Place information not found');
+        closePopup();
+        }
+    } catch (error) {
+        console.error('Places API error:', error);
+        showError(`Failed to load details: ${error.message}`);
+        closePopup();
+    }
+}
+```
+
+Запрос отправляется при клике по одному из маркеров, который был отрисован на карте после [получения данных из Markers API](#markers).
+
+```js
+marker.on('click', () => {
+    fetchPlaceDetails(item.id, [item.lon, item.lat]);
+});
+```
+
+Полученные данные используются в функции `showPlacePopup()` для отображения информации о месте в всплывающей подсказке на карте с помощью `mapgl.HtmlMarker`.
+
+```js
+function formatTodayWorkingHours(schedule) {
+    if (!schedule) return '';
+
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const todayKey = days[new Date().getDay()];
+    const today = schedule[todayKey];
+
+    if (!today) return '';
+
+    const ranges = (today.working_hours || [])
+        .map((h) => {
+        if (!h) return '';
+        const from = h.from || '';
+        const to = h.to || '';
+        if (from && to) return `${from}–${to}`;
+        return from || to || '';
+        })
+        .filter(Boolean);
+
+    if (ranges.length) {
+        return `Время работы сегодня: ${ranges.join(', ')}`;
+    }
+
+    if (today.day_off || today.is_day_off) {
+        return 'Время работы сегодня: выходной';
+    }
+
+    return '';
+}
+
+function showPlacePopup(item, coordinates) {
+    closePopup();
+
+    const name = item.name || 'Unnamed';
+    const address = item.address_name || item.address?.name || item.full_address_name || '';
+    const category = item.rubrics?.[0]?.name || '';
+
+    const workingHoursToday = formatTodayWorkingHours(item.schedule);
+
+    const content = `
+        <div class="popup">
+        <div class="popup__title">${escapeHtml(name)}</div>
+        ${address ? `<div class="popup__address">${escapeHtml(address)}</div>` : ''}
+        ${workingHoursToday ? `<div class="popup__address">${escapeHtml(workingHoursToday)}</div>` : ''}
+        ${category ? `<div class="popup__category">${escapeHtml(category)}</div>` : ''}
+        </div>
+    `;
+
+    currentPopup = new mapgl.HtmlMarker(map, {
+        coordinates,
+        html: content,
+        anchor: [0.5, 1],
+    });
+    }
+```
+
+### Отображение подсказок при вводе категории {#suggestions}
+
+Формируется запрос к [Suggest API](/api/search/suggest/overview) с указанием текста запроса, локации, типа подсказок и ключа доступа.
+
+```js
+async function fetchSuggestions(query) {
+    if (!query.trim()) {
+        hideSuggestions();
+        return;
+    }
+
+    // Использовать текущую локацию или центр карты
+    const [lon, lat] = currentLocation || map.getCenter();
+
+    const url = new URL('https://catalog.api.2gis.com/3.0/suggests');
+    url.searchParams.set('q', query); // Текст, который вводит пользователь
+    url.searchParams.set('key', API_KEY); // Ключ доступа к Suggest API
+    url.searchParams.set('location', `${lon},${lat}`); // Текущая локация или центр карты
+    url.searchParams.set('locale', 'ru_RU');
+    url.searchParams.set('type', 'rubric'); // Предлагать подсказки только по категориям
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const result = checkApiResponse(data, 'Suggest API');
+
+        if (result?.items?.length) {
+        renderSuggestions(result.items);
+        } else {
+        hideSuggestions();
+        }
+    } catch (error) {
+        console.error('Suggest API error:', error);
+        showError(`Suggestions error: ${error.message}`);
+        hideSuggestions();
+    }
+}
+```
+
+Запрос отправляется, когда пользователь начинает вводить текст в поле поиска категории. Запрос отправляется с задержкой 300 мс, чтобы не перегружать API при быстром вводе.
+
+```js
+const handleInput = debounce((e) => {
+    fetchSuggestions(e.target.value);
+}, 300);
+
+searchInput.addEventListener('input', handleInput);
+```
+
+Полученные подсказки отображаются в виде выпадающего списка. При клике по подсказке её название устанавливается в поле ввода, список скрывается, и запускается поиск маркеров по выбранной категории.
+
+```js
+suggestionsContainer.querySelectorAll('.suggestion-item').forEach((el) => {
+    el.addEventListener('click', () => {
+        const name = el.dataset.name;
+        searchInput.value = name;
+        hideSuggestions();
+        applyFilter(name);
+    });
+});
+```

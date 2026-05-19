@@ -1,0 +1,48 @@
+# Золотые образы nodejs от команды devops.
+# Отсюда берём актуальную версию образа, в которой уже настроены прокси, сертификаты и т.д.
+# Подробнее: https://confluence.2gis.ru/display/DEVOPS/Node
+include:
+  - project: devops/versions
+    file:
+      - golden_images.yml
+    ref: master
+
+.echo global envs:
+  script:
+    - >
+      echo -e "
+      🌳 COMMON ENV VARIABLES:\n
+      - DOCKER_REGISTRY=${DOCKER_REGISTRY}\n
+      - DOCKER_NAMESPACE=${DOCKER_NAMESPACE}\n
+      - IMAGE_TAG=${IMAGE_TAG}\n
+      - DEPS_IMAGE=${DEPS_IMAGE}\n
+      - APP_IMAGE_NAME_2GIS=${APP_IMAGE_NAME_2GIS}\n
+      - APP_IMAGE_NAME_2GIS_PRIVATE=${APP_IMAGE_NAME_2GIS_PRIVATE}\n
+      - APP_IMAGE_NAME_URBI=${APP_IMAGE_NAME_URBI}\n
+      - NODE_IMAGE=${NODE_IMAGE}\n
+      - PYTHON_IMAGE=${PYTHON_IMAGE}"
+
+variables:
+  DOCKER_REGISTRY: docker-hub.2gis.ru
+  DOCKER_NAMESPACE: service-kit-docs
+  APP_IMAGE_NAME_COMMON: ui
+  APP_IMAGE_NAME_2GIS: ${APP_IMAGE_NAME_COMMON}_2gis
+  APP_IMAGE_NAME_2GIS_STAGING: ${APP_IMAGE_NAME_COMMON}_2gis_staging
+  APP_IMAGE_NAME_2GIS_PRIVATE: ${APP_IMAGE_NAME_COMMON}_2gis_private
+  APP_IMAGE_NAME_URBI: ${APP_IMAGE_NAME_COMMON}_urbi
+  APP_IMAGE_NAME_URBI_STAGING: ${APP_IMAGE_NAME_COMMON}_urbi_staging
+  DEPS_IMAGE_NAME: ui_deps
+  DEPS_IMAGE_MASTER: ${DOCKER_REGISTRY}/${DOCKER_NAMESPACE}/${DEPS_IMAGE_NAME}:${CI_DEFAULT_BRANCH}
+  NODE_IMAGE: docker-hub.2gis.ru/${NODE_REPOSITORY}-20:${NODE_TAG}
+  PYTHON_IMAGE: docker-hub.2gis.ru/${PYTHON_REPOSITORY}-3.13:${PYTHON_TAG}
+  UX_FEEDBACK_ID_2GIS: 8vcis6tk73dv73lvtowh8ral
+
+# Хак для того, чтобы Gitlab не создавал pipeline при пуше в ветку. Например, при пуше ветки в МР, создавалось 2 pipeline: на ветку и на МР.
+# Происходила ошибка: `jobs config should contain at least one visible job`.
+# Почему это возникает? `.gitlab-ci.yml` включает файлы-конфиги по условию и без. В файлах, которые включаются без условия, нет видимых задач.
+# Gitlab по умолчанию генерирует pipeline на ветку.
+hidden job:
+  script:
+    - echo "This job is hidden and should not be executed"
+  rules:
+    - when: never

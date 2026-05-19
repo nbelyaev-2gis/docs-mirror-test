@@ -1,0 +1,858 @@
+---
+sidebar: mapgljsapi
+---
+# Геометрические фигуры
+
+Вы можете добавлять на карту различные геометрические фигуры: круги, многоугольники и линии.
+
+Дополнительно вы можете использовать инструмент для рисования фигур на карте: см. инструкцию [Рисование геометрических фигур](/mapgl/map/tools/drawing).
+
+## Круг
+
+Чтобы нарисовать на карте круг, нужно создать объект [Circle](/mapgl/reference/class#circle) и указать координаты центра и радиус в метрах. Дополнительно можно указать параметры обводки и используемые цвета (см. [CircleOptions](/mapgl/reference/interface#circle-options)).
+
+```js
+const circle = new mapgl.Circle(map, {
+    coordinates: map.getCenter(),
+    radius: 1500,
+    color: '#ff000055',
+    strokeWidth: 2,
+    strokeColor: '#ffffff',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Круг" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const circle = new mapgl.Circle(map, {
+                coordinates: map.getCenter(),
+                radius: 1500,
+                color: '#ff000055',
+                strokeWidth: 2,
+                strokeColor: '#ffffff',
+            });
+
+            circle.on('click', () => {
+                alert('Вы нажали на круг');
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Радиус круга можно также указать в пикселях. Для этого вместо объекта [Circle](/mapgl/reference/class#circle) нужно создать объект [CircleMarker](/mapgl/reference/class#circle-marker). В таком случае размер круга будет одинаковым при любом масштабе карты.
+
+```js
+const circleMarker = new mapgl.CircleMarker(map, {
+    coordinates: map.getCenter(),
+    radius: 80,
+    color: '#ff0000',
+    strokeWidth: 2,
+    strokeColor: '#ffffff',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Круг с маркером" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const circleMarker = new mapgl.CircleMarker(map, {
+                coordinates: map.getCenter(),
+                radius: 80,
+                color: '#ff0000',
+                strokeWidth: 2,
+                strokeColor: '#ffffff',
+            });
+
+            circleMarker.on('click', () => {
+                alert('Вы нажали на круг');
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Многоугольник
+
+Чтобы нарисовать на карте многоугольник, нужно создать объект [Polygon](/mapgl/reference/class#polygon).
+
+Координаты для многоугольника указываются в виде двумерного массива. Первый вложенный массив должен содержать координаты основных вершин многоугольника. Остальные вложенные массивы не обязательны и могут быть заданы для того, чтобы создать вырез внутри многоугольника (один дополнительный массив - один вырез в виде многоугольника).
+
+Важно указать координаты таким образом, чтобы первое и последнее значение в каждом массиве совпадало. Иными словами, ломаная должна быть замкнутой.
+
+Дополнительно можно указать цвет полигона и параметры обводки (см. [PolygonOptions](/mapgl/reference/interface#polygon-options)).
+
+```js
+const polygon = new mapgl.Polygon(map, {
+coordinates: [
+      // Вершины многоугольника
+      [
+         [37.59371929, 55.75099944],
+         [37.59576922, 55.78686786],
+         [37.63902789, 55.78717836],
+         [37.63696795, 55.75037825],
+         [37.59371929, 55.75099944],
+      ],
+      // Координаты для выреза внутри многоугольника
+      [
+         [37.60100489, 55.77009952],
+         [37.61885768, 55.78205496],
+         [37.63276225, 55.76947843],
+         [37.61662608, 55.75829820],
+         [37.60100489, 55.77009952],
+      ],
+   ],
+   color: '#990000',
+   strokeWidth: 3,
+   strokeColor: '#bb0000',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Полигон" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const polygon = new mapgl.Polygon(map, {
+               coordinates: [
+                  [
+                     [37.59371929, 55.75099944],
+                     [37.59576922, 55.78686786],
+                     [37.63902789, 55.78717836],
+                     [37.63696795, 55.75037825],
+                     [37.59371929, 55.75099944],
+                  ],
+                  [
+                     [37.60100489, 55.77009952],
+                     [37.61885768, 55.78205496],
+                     [37.63276225, 55.76947843],
+                     [37.61662608, 55.75829820],
+                     [37.60100489, 55.77009952],
+                  ],
+               ],
+               color: '#99000055',
+               strokeWidth: 3,
+               strokeColor: '#bb0000',
+            });
+
+            polygon.on('click', () => {
+                alert('Вы нажали на полигон');
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Линия {#polyline}
+
+Чтобы нарисовать на карте линию, нужно создать объект [Polyline](/mapgl/reference/class#polyline) и указать координаты точек линии, цвет линии и толщину.
+
+```js
+const polyline = new mapgl.Polyline(map, {
+    coordinates: [
+        [37.59371929, 55.75099944],
+        [37.59576922, 55.78686786],
+        [37.63696795, 55.75037825],
+        [37.63902789, 55.78717836],
+    ],
+    width: 10,
+    color: '#00b7ff',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Линия" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const polyline = new mapgl.Polyline(map, {
+                coordinates: [
+                  [37.59371929, 55.75099944],
+                  [37.59576922, 55.78686786],
+                  [37.63696795, 55.75037825],
+                  [37.63902789, 55.78717836],
+                ],
+                width: 10,
+                color: '#00b7ff',
+            });
+
+            polyline.on('click', () => {
+                alert('Вы нажали на линию');
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+У линии нет параметров обводки. Вместо этого, чтобы создать эффект обводки, можно нарисовать несколько линий друг под другом.
+
+Укажите параметр `zIndex` для линий, чтобы они корректно наложились друг на друга.
+
+```js
+const polyline = new mapgl.Polyline(map, {
+    coordinates: [
+        [37.59371929, 55.75099944],
+        [37.59576922, 55.78686786],
+        [37.63696795, 55.75037825],
+        [37.63902789, 55.78717836],
+    ],
+    width: 10,
+    color: '#00b7ff',
+    zIndex: 2,
+});
+
+const polylineStroke = new mapgl.Polyline(map, {
+    coordinates: [
+        [37.59371929, 55.75099944],
+        [37.59576922, 55.78686786],
+        [37.63696795, 55.75037825],
+        [37.63902789, 55.78717836],
+    ],
+    width: 14,
+    color: '#ffffff',
+    zIndex: 1,
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Линия с обводкой" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [37.615655, 55.768005],
+            zoom: 13,
+            key: 'Your API access key',
+        });
+
+        const polyline = new mapgl.Polyline(map, {
+            coordinates: [
+               [37.59371929, 55.75099944],
+               [37.59576922, 55.78686786],
+               [37.63696795, 55.75037825],
+               [37.63902789, 55.78717836],
+            ],
+            width: 10,
+            color: '#00b7ff',
+            zIndex: 2
+        });
+        const polylineStroke = new mapgl.Polyline(map, {
+            coordinates: [
+               [37.59371929, 55.75099944],
+               [37.59576922, 55.78686786],
+               [37.63696795, 55.75037825],
+               [37.63902789, 55.78717836],
+            ],
+            width: 14,
+            color: '#ffffff',
+            zIndex: 1
+        });
+
+        polyline.on('click', () => {
+            alert('Вы нажали на линию');
+        });
+        polylineStroke.on('click', () => {
+            alert('Вы нажали на обводку линии');
+        });
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+По умолчанию [Polyline](/mapgl/reference/class#polyline) создаёт сплошную линию.
+
+Чтобы создать штриховую линию, нужно указать следующие параметры:
+
+* `dashLength` — длина штрихов (в пикселях).
+* `gapLength` — длина пробелов (в пикселях). Если параметр не указан, длина пробелов будет равна длине штрихов.
+* `gapColor` — цвет пробелов. Если параметр не указан, пробелы будут полностью прозрачными.
+
+```js
+const polyline = new mapgl.Polyline(map, {
+    coordinates: [
+      [37.59371929, 55.75099944],
+      [37.59576922, 55.78686786],
+      [37.63696795, 55.75037825],
+      [37.63902789, 55.78717836],
+    ],
+    width: 10,
+    color: '#00b7ff',
+    dashLength: 10,
+    gapLength: 30,
+    gapColor: '#ffffff39',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Штриховая линия" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const polyline = new mapgl.Polyline(map, {
+                coordinates: [
+                    [37.59371929, 55.75099944],
+                    [37.59576922, 55.78686786],
+                    [37.63696795, 55.75037825],
+                    [37.63902789, 55.78717836],
+                ],
+                width: 10,
+                color: '#00b7ff',
+                dashLength: 10,
+                gapLength: 30,
+                gapColor: '#ffffff39',
+            });
+
+            polyline.on('click', () => {
+                alert('Вы нажали на штриховую линию');
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+### 3D/2D-режим отрисовки
+
+Опция [renderingMode](/mapgl/reference/interface#polyline-options/rendering-mode) указывает на то, будет ли линия участвовать в буфере глубины.
+
+Сравните поведение полилинии при переключении значения `renderingMode` на карте ниже. В режиме `3d` вы увидите линию, которая будет скрываться за зданиями и другими объектами.
+
+```js
+const polyline3dOptions = {
+    coordinates: [map.getBounds().southWest, map.getBounds().northEast],
+    width: 5,
+    renderingMode: '3d',
+    dashLength: 5,
+    gapColor: '#ff0000',
+    color: '#00ff00',
+};
+```
+
+В режиме `2d` вы увидите линию поверх всех объектов.
+
+```js
+const polyline2dOptions = {
+    coordinates: [map.getBounds().southWest, map.getBounds().northEast],
+    width: 5,
+    renderingMode: '2d',
+    dashLength: 5,
+    gapColor: '#ff0000',
+    color: '#00ff00',
+};
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Режимы отрисовки" />
+        <link rel="stylesheet" type="text/css" href="/css/switch.css" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            #buttons {
+                position: absolute;
+                z-index: 2;
+
+                top: 0;
+                left: 0;
+                margin: 8px;
+                padding: 2px 4px;
+
+                display: flex;
+                align-items: center;
+                background-color: white;
+                border-radius: 8px;
+                font: 13px sans-serif;
+            }
+
+            #buttons label {
+                padding: 0 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div id="buttons">
+            <label>Режим отрисовки</label>
+            <input type="checkbox" role="switch" onclick="toggleRenderingMode(event)" checked="true"/>
+            <label id="stateCaption">3D</label>
+        </div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 18,
+                key: 'Your API access key',
+            });
+
+            const polyline3dOptions = {
+                coordinates: [map.getBounds().southWest, map.getBounds().northEast],
+                width: 5,
+                renderingMode: '3d',
+                dashLength: 5,
+                gapColor: '#ff0000',
+                color: '#00ff00',
+            };
+
+            const polyline2dOptions = {
+                coordinates: [map.getBounds().southWest, map.getBounds().northEast],
+                width: 5,
+                renderingMode: '2d',
+                dashLength: 5,
+                gapColor: '#ff0000',
+                color: '#00ff00',
+            };
+
+            window.polyline = new mapgl.Polyline(map, polyline3dOptions);
+
+            const stateCaption = document.getElementById('stateCaption');
+
+            function toggleRenderingMode(ev) {
+                const is3d = ev.target.checked;
+
+                window.polyline.destroy();
+
+                if (is3d) {
+                    window.polyline = new mapgl.Polyline(map, polyline3dOptions);
+                } else {
+                    window.polyline = new mapgl.Polyline(map, polyline2dOptions);
+                }
+
+                stateCaption.innerText = is3d ? '3D' : '2D';
+            }
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+С помощью опций [hiddenPartColor](/mapgl/reference/interface#polyline-options/hidden-part-color) и [hiddenPartGapColor](/mapgl/reference/interface#polyline-options/hidden-part-gap-color) можно стилизовать те части линии, которые скрыты за зданиями и другими объектами.
+
+```js
+const polyline = new mapgl.Polyline(map, {
+    coordinates: [map.getBounds().southWest, map.getBounds().northEast],
+    width: 5,
+    renderingMode: '3d',
+    dashLength: 5,
+    gapColor: '#ff0000',
+    color: '#00ff00',
+    hiddenPartColor: '#0000ff',
+    hiddenPartGapColor: '#ffff00',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Стилизация частей линии" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 18,
+                key: 'Your API access key',
+            });
+
+            const polyline = new mapgl.Polyline(map, {
+                coordinates: [map.getBounds().southWest, map.getBounds().northEast],
+                width: 5,
+                renderingMode: '3d',
+                dashLength: 5,
+                gapColor: '#ff0000',
+                color: '#00ff00',
+                hiddenPartColor: '#0000ff',
+                hiddenPartGapColor: '#ffff00',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## События
+
+Чтобы подписаться на события, нужно использовать метод `on()` (см. [DynamicObjectEventTable](/mapgl/reference/interface#dynamic-object-event-table) для полного списка событий).
+
+Например, чтобы добавить обработчик для нажатия на круг, можно использовать следующий код:
+
+```js
+circle.on('click', () => {
+    alert('Вы нажали на круг');
+});
+```
+
+## Удаление
+
+Чтобы удалить фигуру, нужно использовать метод `destroy()`. См. [Circle reference](/mapgl/reference/class#circle/destroy).
+
+Например, чтобы удалить круг, можно использовать следующий код:
+
+```js
+circle.destroy();
+```
+
+Если вы хотите удалить все добавленные фигуры, вам нужно удалять каждую фигуру индивидуально:
+
+```js
+[circle, polygon].forEach((shape) => {
+    shape.destroy();
+});
+```
+
+## Автомобильный маршрут
+
+С помощью геометрических фигур можно нарисовать на карте автомобильный маршрут. Для этого нужно соединить несколько линий так, чтобы они образовали путь.
+
+Сначала нужно создать массив, содержащий координаты и другую информацию о сегментах маршрута:
+
+```js
+const segments = [
+   {
+      color: '#e84646',
+      label: 'A',
+      coords: [
+            [37.596614, 55.769439],
+            [37.601140, 55.767001],
+            [37.605355, 55.764842],
+      ],
+   },
+   {
+      color: '#e3e340',
+      coords: [
+            [37.605355, 55.764842],
+            [37.609743, 55.766358],
+            [37.613751, 55.767990],
+            [37.618293, 55.767436],
+      ],
+   },
+   {
+      color: '#43e843',
+      label: 'B',
+      coords: [
+            [37.618293, 55.767436],
+            [37.623773, 55.766565],
+            [37.631265, 55.766380],
+      ],
+   },
+];
+```
+
+Затем нужно создать цикл, который создаст объект [Polyline](/mapgl/reference/class#polyline) для каждого сегмента маршрута. При создании [Polyline](/mapgl/reference/class#polyline) важно указать параметр `zIndex`, чтобы созданные линии корректно наложились друг на друга.
+
+Дополнительно можно отметить начальную и конечную точки маршрута кругом ([CircleMarker](/mapgl/reference/class#circle-marker)) и текстовой меткой ([Label](/mapgl/reference/class#label)).
+
+```js
+segments.forEach((segment, i) => {
+    const zIndex = segments.length - 1 - i;
+    new mapgl.Polyline(map, {
+        coordinates: segment.coords,
+        width: 10,
+        color: segment.color,
+        width2: 14,
+        color2: '#ffffff',
+        zIndex,
+    });
+
+    if (segment.label) {
+        const isFirstPoint = i === 0;
+        const lastPointIndex = segment.coords.length - 1;
+        const coords = isFirstPoint ? segment.coords[0] : segment.coords[lastPointIndex];
+
+        new mapgl.CircleMarker(map, {
+            coordinates: coords,
+            radius: 16,
+            color: '#0088ff',
+            strokeWidth: 2,
+            strokeColor: '#ffffff',
+            zIndex: isFirstPoint ? 5 : 3,
+        });
+
+        new mapgl.Label(map, {
+            coordinates: coords,
+            text: segment.label,
+            fontSize: 14,
+            color: '#ffffff',
+            zIndex: isFirstPoint ? 6 : 4,
+        });
+    }
+});
+```
+
+Полный пример можно найти ниже.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Геометрия автомобильного маршрута" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const segments = [
+               {
+                  color: '#e84646',
+                  label: 'A',
+                  coords: [
+                        [37.596614, 55.769439],
+                        [37.601140, 55.767001],
+                        [37.605355, 55.764842],
+                  ],
+               },
+               {
+                  color: '#e3e340',
+                  coords: [
+                        [37.605355, 55.764842],
+                        [37.609743, 55.766358],
+                        [37.613751, 55.767990],
+                        [37.618293, 55.767436],
+                  ],
+               },
+               {
+                  color: '#43e843',
+                  label: 'B',
+                  coords: [
+                        [37.618293, 55.767436],
+                        [37.623773, 55.766565],
+                        [37.631265, 55.766380],
+                  ],
+               },
+            ];
+
+            segments.forEach((segment, i) => {
+                const zIndex = segments.length - 1 - i;
+                new mapgl.Polyline(map, {
+                    coordinates: segment.coords,
+                    width: 10,
+                    color: segment.color,
+                    width2: 14,
+                    color2: '#ffffff',
+                    zIndex,
+                });
+
+                if (segment.label) {
+                    const isFirstPoint = i === 0;
+                    const lastPointIndex = segment.coords.length - 1;
+                    const coords = isFirstPoint
+                        ? segment.coords[0]
+                        : segment.coords[lastPointIndex];
+
+                    new mapgl.CircleMarker(map, {
+                        coordinates: coords,
+                        radius: 16,
+                        color: '#0088ff',
+                        strokeWidth: 2,
+                        strokeColor: '#ffffff',
+                        zIndex: isFirstPoint ? 5 : 3,
+                    });
+
+                    new mapgl.Label(map, {
+                        coordinates: coords,
+                        text: segment.label,
+                        fontSize: 14,
+                        color: '#ffffff',
+                        zIndex: isFirstPoint ? 6 : 4,
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

@@ -1,0 +1,296 @@
+variables:
+  HELM_RELEASE_NAME_BASE: kit-docs
+  ENVIRONMENT_NAME: ${CI_COMMIT_REF_NAME}/kit-docs
+  IMAGE_TAG: ${CI_DEFAULT_BRANCH}-${CI_COMMIT_SHORT_SHA}
+  DEPS_IMAGE: ${DOCKER_REGISTRY}/${DOCKER_NAMESPACE}/${DEPS_IMAGE_NAME}:${IMAGE_TAG}
+
+.master rules:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: on_success
+    - when: never
+
+deps build:
+  extends: [.build deps, .master rules]
+
+.app build:
+  needs: [deps build]
+  extends: [.build app, .master rules]
+  interruptible: true
+  variables:
+    SEARCH_API_URL: http://docs-search-api.doka.svc.cluster.local
+    CHAT_BOT_API_URL: http://twogis-api-docs-search.ai.svc.cluster.local
+    S3_BUCKET_NAME: ${S3_BUCKET_PROD}
+
+.app staging build:
+  extends: [.app build]
+  variables:
+    APP_URL: https://${HELM_RELEASE_NAME}.web-staging.2gis.ru
+    APIKEY_DOCS_SEARCH: ${APIKEY_DOCS_SEARCH_STAGING}
+
+staging 2gis build:
+  extends: [.app staging build, .master rules]
+  variables:
+    BRAND: 2gis
+    DISTRIBUTION_MODE: public
+    HELM_RELEASE_NAME: kit-docs
+    APP_IMAGE: ${DOCKER_REGISTRY}/${DOCKER_NAMESPACE}/${APP_IMAGE_NAME_2GIS_STAGING}:${IMAGE_TAG}
+    APIKEY_MAPGL: ${APIKEY_MAPGL_2GIS_PROD}
+    APIKEY_MAPGL_JSFIDDLE: ${APIKEY_MAPGL_JSFIDDLE_PROD}
+    APIKEY_NAVIGATION: ${APIKEY_NAVIGATION_PROD}
+    APIKEY_PLACES: ${APIKEY_PLACES_PROD}
+    SEARCH_API_COLLECTION: 2gis-kit-docs
+    UX_FEEDBACK_ID: ${UX_FEEDBACK_ID_2GIS}
+
+private 2gis build:
+  extends: [.app staging build, .master rules]
+  variables:
+    BRAND: 2gis
+    DISTRIBUTION_MODE: private
+    HELM_RELEASE_NAME: kit-docs-private
+    APP_IMAGE: ${DOCKER_REGISTRY}/${DOCKER_NAMESPACE}/${APP_IMAGE_NAME_2GIS_PRIVATE}:${IMAGE_TAG}
+    APIKEY_MAPGL: ${APIKEY_MAPGL_DEMO}
+    APIKEY_MAPGL_JSFIDDLE: ${APIKEY_MAPGL_JSFIDDLE_DEMO}
+    APIKEY_NAVIGATION: ${APIKEY_NAVIGATION_DEMO}
+    APIKEY_PLACES: ${APIKEY_PLACES_DEMO}
+    SEARCH_API_COLLECTION: 2gis-kit-docs
+
+staging urbi build:
+  extends: [.app staging build, .master rules]
+  variables:
+    BRAND: urbi
+    DISTRIBUTION_MODE: public
+    HELM_RELEASE_NAME: kit-docs-urbi
+    APP_IMAGE: ${DOCKER_REGISTRY}/${DOCKER_NAMESPACE}/${APP_IMAGE_NAME_URBI_STAGING}:${IMAGE_TAG}
+    APIKEY_MAPGL: ${APIKEY_MAPGL_URBI_PROD}
+    APIKEY_MAPGL_JSFIDDLE: ${APIKEY_MAPGL_JSFIDDLE_PROD}
+    APIKEY_NAVIGATION: ${APIKEY_NAVIGATION_PROD}
+    APIKEY_PLACES: ${APIKEY_PLACES_PROD}
+    SEARCH_API_COLLECTION: urbi-kit-docs
+
+prod 2gis build:
+  extends: [.app build]
+  variables:
+    APP_URL: https://docs.2gis.com
+    BRAND: 2gis
+    DISTRIBUTION_MODE: public
+    HELM_RELEASE_NAME: kit-docs
+    APP_IMAGE: ${DOCKER_REGISTRY}/${DOCKER_NAMESPACE}/${APP_IMAGE_NAME_2GIS}:${IMAGE_TAG}
+    APIKEY_MAPGL: ${APIKEY_MAPGL_2GIS_PROD}
+    APIKEY_MAPGL_JSFIDDLE: ${APIKEY_MAPGL_JSFIDDLE_PROD}
+    APIKEY_NAVIGATION: ${APIKEY_NAVIGATION_PROD}
+    APIKEY_PLACES: ${APIKEY_PLACES_PROD}
+    SEARCH_API_COLLECTION: 2gis-kit-docs
+    APIKEY_DOCS_SEARCH: ${APIKEY_DOCS_SEARCH_PROD}
+    GA_TRACKING_ID: 'G-6P1GT73D9T'
+    UX_FEEDBACK_ID: ${UX_FEEDBACK_ID_2GIS}
+
+prod urbi build:
+  extends: [.app build]
+  variables:
+    APP_URL: https://docs.urbi.ae
+    BRAND: urbi
+    DISTRIBUTION_MODE: public
+    HELM_RELEASE_NAME: kit-docs-urbi
+    APP_IMAGE: ${DOCKER_REGISTRY}/${DOCKER_NAMESPACE}/${APP_IMAGE_NAME_URBI}:${IMAGE_TAG}
+    APIKEY_MAPGL: ${APIKEY_MAPGL_URBI_PROD}
+    APIKEY_MAPGL_JSFIDDLE: ${APIKEY_MAPGL_JSFIDDLE_PROD}
+    APIKEY_NAVIGATION: ${APIKEY_NAVIGATION_PROD}
+    APIKEY_PLACES: ${APIKEY_PLACES_PROD}
+    SEARCH_API_COLLECTION: urbi-kit-docs
+    APIKEY_DOCS_SEARCH: ${APIKEY_DOCS_SEARCH_PROD}
+    GA_TRACKING_ID: 'G-EE6R7KKHSL'
+
+helm lint:
+  extends: [.helm lint, .master rules]
+
+test dev:
+  extends: [.tests_dev, .master rules]
+  needs: [deps build]
+  script:
+    - !reference [.tests_dev, script]
+    - npm run test:env:ci-dev
+
+.deploy staging:
+  extends: [.deploy app, .master rules]
+  stage: deploy-staging
+  variables:
+    DOMAINS: ${HELM_RELEASE_NAME}
+    HELM_VALUES_EXTRA: ./deploy/kit-docs/values.staging.yaml
+  environment:
+    name: ${CLUSTER}/${BRAND}/${DISTRIBUTION_MODE}
+    url: https://${HELM_RELEASE_NAME}.web-staging.2gis.ru
+
+2gis staging deploy:
+  extends: [.deploy staging]
+  needs: [staging 2gis build, helm lint]
+  variables:
+    HELM_RELEASE_NAME: kit-docs
+    BRAND: 2gis
+    DISTRIBUTION_MODE: public
+    DC: n3
+    CLUSTER: staging
+    APP_IMAGE_NAME: ${APP_IMAGE_NAME_2GIS_STAGING}
+
+2gis private deploy:
+  extends: [.deploy staging]
+  needs: [private 2gis build, helm lint]
+  variables:
+    HELM_RELEASE_NAME: kit-docs-private
+    BRAND: 2gis
+    DISTRIBUTION_MODE: private
+    DC: n3
+    CLUSTER: staging
+    APP_IMAGE_NAME: ${APP_IMAGE_NAME_2GIS_PRIVATE}
+
+urbi staging deploy:
+  extends: [.deploy staging]
+  needs: [staging urbi build, helm lint]
+  variables:
+    HELM_RELEASE_NAME: kit-docs-urbi
+    BRAND: urbi
+    DISTRIBUTION_MODE: public
+    DC: n3
+    CLUSTER: staging
+    APP_IMAGE_NAME: ${APP_IMAGE_NAME_URBI_STAGING}
+
+.deploy prod:
+  extends: [.deploy app, .master rules]
+  stage: deploy-prod
+  environment:
+    name: ${CLUSTER}/${BRAND}/${DISTRIBUTION_MODE}
+  variables:
+    CLUSTER: production
+    DISTRIBUTION_MODE: public
+
+.2gis deploy:
+  extends: [.deploy prod]
+  needs: [prod 2gis build, 2gis staging deploy, helm lint, s3 sync]
+  variables:
+    HELM_RELEASE_NAME: kit-docs
+    DOMAINS: docs.2gis.com
+    BRAND: 2gis
+    APP_IMAGE_NAME: ${APP_IMAGE_NAME_2GIS}
+
+2gis n3 deploy:
+  extends: [.2gis deploy]
+  variables:
+    DC: n3
+
+2gis n2 deploy:
+  extends: [.2gis deploy]
+  variables:
+    DC: n2
+
+2gis m1 deploy:
+  extends: [.2gis deploy]
+  variables:
+    DC: m1
+
+2gis m9 deploy:
+  extends: [.2gis deploy]
+  variables:
+    DC: m9
+
+.urbi deploy:
+  extends: [.deploy prod]
+  needs: [prod urbi build, urbi staging deploy, helm lint, s3 sync]
+  variables:
+    HELM_RELEASE_NAME: kit-docs-urbi
+    DOMAINS: docs.urbi.ae
+    BRAND: urbi
+    APP_IMAGE_NAME: ${APP_IMAGE_NAME_URBI}
+
+urbi m1 deploy:
+  extends: [.urbi deploy]
+  variables:
+    DC: m1
+
+urbi m9 deploy:
+  extends: [.urbi deploy]
+  variables:
+    DC: m9
+
+test screen:
+  extends: [.tests_screen, .master rules]
+  needs: [2gis staging deploy]
+  variables:
+    HELM_RELEASE_NAME: ${HELM_RELEASE_NAME_BASE}
+    APP_URL: https://${HELM_RELEASE_NAME}.web-staging.2gis.ru
+
+update snapshots:
+  extends: [.update_snapshots]
+  needs: [2gis staging deploy]
+  variables:
+    HELM_RELEASE_NAME: ${HELM_RELEASE_NAME_BASE}
+    APP_URL: https://${HELM_RELEASE_NAME}.web-staging.2gis.ru
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+
+.rag index base:
+  needs: [deps build, 2gis n3 deploy, 2gis n2 deploy, 2gis m1 deploy, 2gis m9 deploy]
+
+rag index ru:
+  extends: [.rag index, .rag index base, .master rules]
+  variables:
+    RAG_COLLECTION_NAME: 2gis-api-docs-ru
+    RAG_INDEXER_EXTRA_ARGS: >-
+      --patterns *.mdx
+      --include-pattern "docs/**"
+      --exclude-pattern "docs/id/**"
+      --exclude-pattern "docs/test/**"
+      --exclude-pattern "docs/api/ugc/**"
+      --exclude-pattern "docs/api/search/twins/**"
+      --exclude-pattern "docs/api/search/catalog/**"
+      --exclude-pattern "i18n/**"
+
+rag index en:
+  extends: [.rag index, .rag index base, .master rules]
+  variables:
+    RAG_COLLECTION_NAME: 2gis-api-docs-en
+    RAG_INDEXER_EXTRA_ARGS: >-
+      --patterns *.mdx
+      --include-pattern "i18n/en/docusaurus-plugin-content-docs/current/**"
+      --exclude-pattern "i18n/en/docusaurus-plugin-content-docs/current/tutorial-basics/**"
+      --exclude-pattern "i18n/en/docusaurus-plugin-content-docs/current/tutorial-extras/**"
+      --exclude-pattern "i18n/en/docusaurus-plugin-content-docs/current/api/search/twins/**"
+      --exclude-pattern "i18n/en/docusaurus-plugin-content-docs/current/api/search/catalog/**"
+      --exclude-pattern "docs/**"
+
+rag index ru [FULL REINDEX]:
+  extends: [rag index ru]
+  variables:
+    FULL_REINDEX: 'true'
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: never
+
+rag index en [FULL REINDEX]:
+  extends: [rag index en]
+  variables:
+    FULL_REINDEX: 'true'
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: never
+
+rag index docs refs ru:
+  extends: [.rag index docs refs, .rag index base, .master rules]
+  variables:
+    RAG_COLLECTION_NAME: 2gis-api-docs-ru
+    LOCALE: ru
+
+rag index docs refs en:
+  extends: [.rag index docs refs, .rag index base, .master rules]
+  variables:
+    RAG_COLLECTION_NAME: 2gis-api-docs-en
+    LOCALE: en
+
+s3 sync:
+  extends: [.s3 sync, .master rules]
+  variables:
+    S3_BUCKET_NAME: ${S3_BUCKET_PROD}
+    S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID_PROD}
+    S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY_PROD}

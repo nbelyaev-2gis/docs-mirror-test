@@ -1,0 +1,71 @@
+---
+sidebar: mapgljsapi
+---
+# Растровый объект
+
+Чтобы добавить [растр](/mapgl/reference/class#raster) на карту, нужно указать географические границы, в пределах которых он будет отображен.
+
+```js
+const raster = new mapgl.Raster(map, {
+    bounds: {
+        southWest: [37.594255, 55.752130],
+        northEast: [37.649709, 55.787238],
+    },
+    image: {
+        url: 'https://docs.2gis.com/img/mapgl/cloud.png',
+    },
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Растровый объект" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [37.615655, 55.772005],
+            zoom: 14,
+            key: 'Your API access key',
+        });
+        const raster = new mapgl.Raster(map, {
+            bounds: {
+                "southWest": [
+                    37.594255,
+                    55.752130
+                ],
+                "northEast": [
+                    37.649709,
+                    55.787238
+                ]
+            },
+            image: {
+                url: 'https://docs.2gis.com/img/mapgl/cloud.png',
+            },
+            opacity: ['interpolate', ['linear'], ['zoom'], 10, 0.1, 14.5, 0.8, 16, 0.1]
+        });
+
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>

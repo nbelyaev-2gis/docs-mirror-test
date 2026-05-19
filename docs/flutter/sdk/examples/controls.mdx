@@ -1,0 +1,119 @@
+---
+sidebar: fluttersdk
+---
+# UI–элементы
+
+## Карта
+
+Все варианты поставки SDK содержат стандартный набор UI-элементов для управления картой, которые вы можете добавить в макет и использовать для управления параметрами карты.
+
+{/*  Все перечисленные ниже UI-элементы должны добавляться как дочерние View по отношению к `MapView`. Процесс создания и добавления `MapView` подробно описан в разделе [Создание карты](/ru/android/sdk/examples/map#создание-карты).  */}
+
+Стандартный набор включает в себя:
+
+1. [IndoorWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/IndoorWidget-class.html) для переключения этажей.
+2. [TrafficWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/TrafficWidget-class.html) для показа текущего уровня пробок и для управления видимостью пробок на карте.
+3. [ZoomWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/ZoomWidget-class.html) для масштабирования (приближения и удаления) карты.
+4. [CompassWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/CompassWidget-class.html) для отображения текущего угла поворота карты относительно севера.
+5. [MyLocationWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/MyLocationWidget-class.html) для перелёта к текущему местоположению пользователя.
+6. В разработке.
+7. В разработке.
+8. В разработке.
+
+<img src="/img/mobile-sdk/android_map_controls_1.jpg" width="200" /> <img src="/img/mobile-sdk/android_map_controls_3.jpg" width="200" /> <img src="/img/mobile-sdk/android_map_controls_2.jpg" width="200" />
+
+## Навигатор
+
+Полный вариант поставки SDK содержит набор UI-элементов для отображения и управления навигацией. Все элементы могут быть использованы как наследники [MapWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/MapWidget-class.html) на любом уровне вложенности.
+
+Набор UI-элементов навигации состоит из:
+
+1. [TrafficLineWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/TrafficLineWidget-class.html) для отображения уровня пробок на маршруте.
+2. [ManeuverWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/ManeuverWidget-class.html) для отображения информации о следующем манёвре.
+3. [SpeedLimitWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/SpeedLimitWidget-class.html) для отображения текущей скорости и скоростного ограничения.
+4. [NavigationTrafficWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationTrafficWidget-class.html) и [NavigationParkingWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationParkingWidget-class.html) для управления видимостью пробок и парковок на карте соответственно.
+5. [NavigationZoomWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationZoomWidget-class.html) для масштабирования (приближения и удаления) карты.
+6. [NavigationCompassWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationCompassWidget-class.html) для отображения текущего угла поворота карты относительно севера.
+7. [NavigationMyLocationWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationMyLocationWidget-class.html) для управления слежением за маркером местоположения.
+8. [DashboardWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/DashboardWidget-class.html) для отображения информации в режиме [ведения по маршруту](/flutter/sdk/examples/navigation#turn-by-turn-mode).
+
+<img src="/img/mobile-sdk/android_navi_controls_4.jpg" width="200" /> <img src="/img/mobile-sdk/android_navi_controls_1.jpg" width="200" />
+
+9. [DashboardWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/DashboardWidget-class.html) для отображения информации в режиме [свободной навигации](/flutter/sdk/examples/navigation#free-drive-mode).
+10. [DashboardWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/DashboardWidget-class.html) для отображения информации в режиме [навигации внутри зданий](/flutter/sdk/examples/navigation#indoor-navigation).
+
+<img src="/img/mobile-sdk/android_navi_controls_2.jpg" width="200" /> <img src="/img/mobile-sdk/android_navi_controls_3.jpg" width="200" /> <img src="/img/mobile-sdk/android_navi_controls_5.jpg" width="200" />
+
+## Справочник
+
+[DgisSearchWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/DgisSearchWidget-class.html) — компонент, предоставляющий интерактивную строку поиска и список результатов. Является частью поставки как Full, так и Map-версии SDK.
+
+<img src="/img/mobile-sdk/search_control_overview_android.gif" height="600" />
+
+Чтобы добавить компонент `DgisSearchWidget` в ваш макет, выполните шаги ниже:
+
+Вы можете дополнительно настроить отображение результатов поиска (параметр `resultBuilder`) и изменить цветовую схему (параметр `colorScheme`):
+
+```dart
+DgisSearchWidget(
+  colorScheme: const sdk.SearchWidgetColorScheme(
+    searchBarBackgroundColor: Colors.transparent,
+    searchBarTextFieldColor: Colors.white,
+    objectCardTileColor: Colors.white,
+    objectCardHighlightedTextStyle: TextStyle(),
+    objectCardNormalTextStyle: TextStyle(),
+    objectListSeparatorColor: Colors.lightBlue,
+    objectListBackgroundColor: Colors.white,
+  ),
+  searchManager: searchManager,
+  resultBuilder: (context, objects) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final item = objects[index];
+
+          return item.fold(
+            // Обработка результатов поиска (DirectoryObject)
+            (directoryObject) {
+              return ListTile(
+                title: Text(directoryObject.title),
+                subtitle: Text(directoryObject.subtitle),
+                onTap: () {
+                  // Обработка выбора объекта справочника
+                  print('Selected: ${directoryObject.title}');
+                },
+              );
+            },
+            // Обработка поисковых подсказок
+            (suggest) {
+              return ListTile(
+                title: Text(suggest.title.text),
+                subtitle: Text(suggest.subtitle.text),
+                onTap: () {
+                  if (suggest.handler.isObjectHandler) {
+                    final item =
+                        suggest.handler.asObjectHandler!.item;
+                    print('Selected object: ${item.title}');
+                  } else if (suggest
+                      .handler.isIncompleteTextHandler) {
+                    final queryText = suggest
+                        .handler.asIncompleteTextHandler!.queryText;
+                    print('Complete search with: $queryText');
+                  } else if (suggest.handler.isPerformSearchHandler) {
+                    final searchQuery = suggest
+                        .handler.asPerformSearchHandler!.searchQuery;
+                    print('Perform search query');
+                  }
+                },
+              );
+            },
+          );
+        },
+        childCount: objects.length,
+      ),
+    );
+  },
+)
+```
+
+

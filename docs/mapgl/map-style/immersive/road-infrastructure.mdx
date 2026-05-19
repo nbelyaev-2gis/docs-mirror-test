@@ -1,0 +1,327 @@
+---
+sidebar: mapgljsapi
+---
+
+# Иммерсивные дороги
+
+Иммерсивная дорожная инфраструктура отображает дороги как реалистичные трёхмерные объекты, а не как схематичные линии. Это повышает детализацию карты и создаёт эффект присутствия, особенно при использовании совместно с другими иммерсивными возможностями: [3D-рельефом](/mapgl/map-style/immersive/terrain), [освещением](/mapgl/map-style/immersive/lighting) и [3D-моделями](/mapgl/map-style/immersive/models).
+
+## Компоненты инфраструктуры {#components}
+
+К объектам иммерсивной дорожной инфраструктуры относятся:
+
+* [Модели опор](#pillars):
+
+  <img src="/img/mapgl/road-infrastructure/bridge_pillar.png" alt="Модели опор мостов" width="600" />
+
+  Пример [фильтра данных](/mapgl/styles-specification#filter) для слоя [3D-модель](/maps/styles/layers/types/mapgl#3d-model):
+
+  ```json
+  [
+      "match",
+      ["get", "db_sublayer"],
+      ["Road_support_column"],
+      true,
+      false
+  ]
+  ```
+
+* [Дорожные полотна](#polygon-marking):
+
+  <img src="/img/mapgl/road-infrastructure/road_surface.png" alt="Дорожные полотна" width="600" />
+
+  Пример [фильтра данных](/mapgl/styles-specification#filter) для слоя [Полигон](/maps/styles/layers/types/mapgl#polygon):
+
+  ```json
+  [
+      "match",
+      ["get", "db_sublayer"],
+      ["Transport_Roadbed"],
+      true,
+      false
+  ]
+  ```
+
+* [Площадная разметка](#polygon-marking):
+
+  <img src="/img/mapgl/road-infrastructure/polygon_marking.png" alt="Площадная разметка" width="600" />
+
+  Пример [фильтра данных](/mapgl/styles-specification#filter) для слоя [Полигон](/maps/styles/layers/types/mapgl#polygon):
+
+  ```json
+  [
+      "==",
+      ["get", "sublayer"],
+      "PolygonMarkings_waffle"
+  ]
+  ```
+
+* [Точечная разметка](#point-marking):
+
+  <img src="/img/mapgl/road-infrastructure/point_marking.png" alt="Точечная разметка" width="600" />
+
+  Пример [фильтра данных](/mapgl/styles-specification#filter) для слоя [Плоское изображение](/maps/styles/layers/types/mapgl#metric-point):
+
+  ```json
+  [
+      "==",
+      ["get", "sublayer"],
+      "PointMarkings_lane_directions"
+  ]
+  ```
+
+* [Линейная разметка](#linear-marking):
+
+  <img src="/img/mapgl/road-infrastructure/linear_marking.png" alt="Линейная разметка" width="600" />
+
+  Пример [фильтра данных](/mapgl/styles-specification#filter) для слоя [Линия](/maps/styles/layers/types/mapgl#line):
+
+  ```json
+  [
+      "==",
+      ["get", "sublayer"],
+      "LinearMarking_ParkingPlaces"
+  ]
+  ```
+
+* [Развязки и туннели](#tunnels):
+
+  <img src="/img/mapgl/road-infrastructure/overpass_obj.png" alt="Развязки" width="600" />
+
+  Пример [фильтра данных](/mapgl/styles-specification#filter) для слоя **Транспортная развязка**:
+
+  ```json
+  [
+      "match",
+      ["get", "sublayer"],
+      [
+          "Roadbed",
+          "Main_Roadbed",
+          "Gas_station_Roadbed",
+          "Parking_Roadbed",
+          "Constructed_Roadbed",
+          "Intraquarter_Roadbed",
+          "WithMarking_Roadbed",
+          "Pocket_Roadbed",
+          "PhysicalBarrier_Roadbed",
+          "Road_bed_outline",
+          "Roadbed_outline"
+      ],
+      true,
+      false
+  ]
+  ```
+
+Начиная с определённого уровня масштабирования (в базовых стилях Редактора стилей — с уровня 16) эти объекты отображаются вместо схематичных линейных дорог.
+
+## Включение иммерсивных дорог {#enable-immersive-roads}
+
+:::note[Требования к устройствам]
+
+Иммерсивные данные требуют больше ресурсов устройств (памяти, CPU и трафика) и могут снижать их производительность.
+
+:::
+
+Чтобы отобразить на карте реалистичную дорожную инфраструктуру, используйте подготовленный стиль и включите иммерсивный режим через API.
+
+Чтобы включить режим, установите для глобальной переменной `immersiveRoadsOn` значение `true` с помощью метода [patchStyleState()](/mapgl/reference/class#map/patch-style-state). После этого карта начнёт запрашивать тайлы с иммерсивными данными. Подробнее о глобальных переменных см. в разделе [Глобальные переменные стиля карты](/mapgl/map-style/global-style-variables).
+
+```javascript
+map.patchStyleState({ immersiveRoadsOn: true });
+```
+
+Чтобы отключить режим, установите для глобальной переменной `immersiveRoadsOn` значение `false`. После этого тайлы с иммерсивными данными не будут запрашиваться.
+
+```javascript
+map.patchStyleState({ immersiveRoadsOn: false });
+```
+
+<HtmlExampleWithSrcCode>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Иммерсивные дороги" />
+        <link rel="stylesheet" type="text/css" href="/css/switch.css" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            #buttons {
+                position: absolute;
+                z-index: 2;
+
+                top: 0;
+                left: 0;
+                margin: 8px;
+                padding: 2px 4px;
+
+                display: flex;
+                align-items: center;
+                background-color: white;
+                border-radius: 8px;
+                font: 13px sans-serif;
+            }
+
+            #buttons label {
+                padding: 0 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div id="buttons">
+            <label>Иммерсивные дороги</label>
+            <input type="checkbox" role="switch" onclick="toggleImmersiveRoads(event)" checked="true"/>
+            <label id="stateCaption">Включены</label>
+        </div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.6120219382734, 55.747898343134935],
+                zoom: 18,
+                rotation: 14.24,
+                pitch: 50,
+                key: 'Your API access key',
+                style: 'eb10e2c3-3c28-4b81-b74b-859c9c4cf47e'
+            });
+
+            const stateCaption = document.getElementById('stateCaption');
+
+            function toggleImmersiveRoads(ev) {
+                const enabled = ev.target.checked;
+                map.patchStyleState({ immersiveRoadsOn: enabled });
+                stateCaption.innerText = enabled ? 'Включены' : 'Выключены';
+            }
+
+            map.once('styleload', () => {
+                toggleImmersiveRoads({ target: { checked: true } });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Настройка стилевых слоёв {#configuring-layers}
+
+Отображаемые объекты дорожной инфраструктуры можно настраивать в [Редакторе стилей](https://styles.2gis.com/). Чтобы включить режим иммерсивности в Редакторе стилей, в разделе **Настройки** включите **Иммерсивные дороги**:
+
+<img src="/img/mapgl/road-infrastructure/immersive-roads.png" alt="Включение режима в Редакторе стилей" width="650" />
+
+Подробнее о слоях для MapGL JS API см. в [спецификации стиля](/mapgl/styles-specification) и в [документации Редактора стилей](/maps/styles/layers/configured/mapgl). О создании стиля на основе базового см. в разделе [Создание стилей и настройка стилевых слоёв](/maps/styles/create).
+
+Среди общих настроек важен режим отображения неиммерсивных слоёв в зависимости от наличия у объекта атрибута `db_has_immersive_counterpart`. Этот атрибут указывает на наличие иммерсивного двойника — альтернативного иммерсивного представления того же объекта дорожной инфраструктуры вместо обычного объекта плоского слоя.
+
+Например, слой **Bike road** в базовом стиле использует следующее значение параметра **Настройки отображения слоя** на вкладке **Отображение**:
+
+```json
+[
+    "match",
+    ["get", "db_has_immersive_counterpart"],
+    [1],
+    false,
+    true
+]
+```
+
+Это означает:
+
+* если у объекта есть иммерсивный двойник, неиммерсивный слой не отрисовывается;
+* если иммерсивного двойника нет, объект отрисовывается плоско, с игнорированием уровней.
+
+### Модели опор {#pillars}
+
+В иммерсивном режиме опоры мостов и дорожных полотен представлены трёхмерными моделями в формате [glTF/GLB](https://www.khronos.org/gltf/).
+
+<img src="/img/mapgl/road-infrastructure/bridge_pillar_layer.png" alt="Слой модели опоры" width="800" />
+
+Параметр **Размер** (Scale) опор не является константой и задаётся выражением:
+
+```json
+[
+    "literal",
+    [
+        1,
+        1,
+        ["+",
+            ["*",
+                ["get", "db_nominal_height"],
+                ["*", ["get", "db_level"], 5]
+            ],
+            -0.3
+        ]
+    ]
+]
+```
+
+Такое выражение согласует модель опоры с геометрией развязки: по вертикальной оси используется номинальная высота, умножается на 5 (высота пролёта для России) и на текущий уровень, затем вычитается 0.3, чтобы опора визуально не пересекалась с развязкой.
+
+Более подробную информацию об использовании 3D-моделей на карте см. в разделе [3D-модели](/mapgl/map-style/immersive/models).
+
+### Дорожные полотна и площадная разметка {#polygon-marking}
+
+Дорожное полотно и площадная разметка (например, «вафельная» разметка 1.26) отрисовываются слоем [Полигон](/mapgl/styles-specification#style-for-polygon). Для него можно настроить:
+
+* текстуру:
+
+  <img src="/img/mapgl/road-infrastructure/waffle_example.png" alt="Текстура Полигона" width="800" />
+
+  Подробнее см. в разделе [Заливка полигона текстурой](/mapgl/map-style/examples/texturedpolygon).
+
+* цвет и обводку:
+
+  <img src="/img/mapgl/road-infrastructure/polygon_color_and_stroke.png" alt="Цвет и обводка Полигона" width="200" />
+
+### Точечная разметка {#point-marking}
+
+Точечная разметка отображается с помощью слоя [Плоское изображение](/mapgl/styles-specification#style-for-metricpoint). Этот тип слоя подходит для стрелок направления, пешеходных переходов и других точечных элементов дорожной разметки.
+
+Для настройки точечной разметки в Редакторе стилей можно задать:
+
+* иконку,
+* цвет иконки и её прозрачность,
+* угол поворота иконки,
+* размер иконки.
+
+<img src="/img/mapgl/road-infrastructure/metricpoint_example.png" alt="Точечная разметка" width="800" />
+
+Угол поворота задаётся `get`-выражением, поэтому для каждого объекта он может быть своим.
+
+### Линейная разметка {#linear-marking}
+
+Линейная разметка отрисовывается слоем [Линия](/mapgl/styles-specification#style-for-line). Этот тип слоя используется для разделительных полос, краевых линий и других линейных элементов дорожной разметки.
+
+Для настройки линейной разметки в Редакторе стилей можно задать:
+
+* цвет линии и прозрачность,
+* ширину линии,
+* тип паттерна.
+
+<img src="/img/mapgl/road-infrastructure/line_example.png" alt="Линейная разметка" width="800" />
+
+### Развязки и туннели {#tunnels}
+
+Развязки и туннели отрисовываются на карте с помощью слоя **Транспортная развязка**. Этот слой можно редактировать при работе с готовым шаблоном в Редакторе стилей.
+
+У развязок и туннелей общие параметры, кроме параметров:
+
+* **Толщина** — используется только для развязки;
+* **Высота туннеля** — используется только для туннеля.
+
+Схема параметров развязки:
+
+![Схема развязки](/img/mapgl/road-infrastructure/overpass_scheme_ru.png)
+
+Схема параметров туннеля:
+
+![Схема туннеля](/img/mapgl/road-infrastructure/tunnel_scheme_ru.png)
+

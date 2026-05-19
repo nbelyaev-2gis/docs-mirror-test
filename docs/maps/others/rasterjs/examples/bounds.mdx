@@ -1,0 +1,43 @@
+---
+sidebar: rasterjsapi
+---
+# Границы карты
+
+## Описание
+
+Ниже приведены примеры ограничения границ карты и уровней масштабирования. Для получения подробной информации о работе
+с картой см. раздел [Карта](/maps/others/rasterjs/reference/map).
+
+## Ограничение границ и масштаба
+
+Пример ограничения просматриваемой области границами города Новосибирск, а также уровней масштабирования диапазоном от 10 до 15:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+    <head>
+        <title>RasterJS API</title>
+        <meta name="description" content="Ограничение границ и масштаба" />
+        <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+    </head>
+    <body>
+        <div id="map" style="width: 100%; height: 400px"></div>
+        <script>
+            DG.then(function () {
+                DG.map('map', {
+                    center: [54.98, 82.89],
+                    zoom: 10,
+                    maxBounds: [
+                        [54.822, 82.4304],
+                        [55.1372, 83.3505],
+                    ],
+                    minZoom: 10,
+                    maxZoom: 15,
+                    key: 'Your API access key',
+                });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

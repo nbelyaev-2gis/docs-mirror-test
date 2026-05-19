@@ -1,0 +1,1234 @@
+---
+sidebar: mapgljsapi
+---
+# Рисование геометрических фигур
+
+Для рисования геометрических фигур на карте MapGL вы можете использовать плагин [MapGL Terra Draw](https://github.com/2gis/mapgl-terra-draw). Плагин является адаптером JavaScript-библиотеки [Terra Draw](https://terradraw.io/).
+
+Библиотека позволяет:
+
+* Рисовать на карте базовые геометрические фигуры: точки, линии, полигоны, окружности, прямоугольники и другие.
+* Настраивать ширину линий, а также цвет вершин, сторон и заливки геометрических фигур.
+* Скачивать файл с созданными геометриями в формате GeoJSON.
+
+## Начало работы
+
+Чтобы начать работу с плагином, выполните следующие шаги:
+
+1. [Подключите плагин](#install-plugin).
+2. [Инициализируйте плагин](#initialize-plugin).
+
+### 1. Подключите плагин {#install-plugin}
+
+#### При помощи тега script
+
+Чтобы подключить плагин, добавьте следующие строки в код HTML-страницы (после подключения MapGL):
+
+```html
+<script src="https://unpkg.com/terra-draw@1.0.0/dist/terra-draw.umd.js"></script>
+<script src="https://unpkg.com/@2gis/mapgl-terra-draw/dist/mapgl-terra-draw.umd.cjs"></script>
+```
+
+#### При помощи npm
+
+Если вы используете npm, подключите плагин с помощью пакета [@2gis/mapgl-terra-draw](https://www.npmjs.com/package/@2gis/mapgl-terra-draw):
+
+```bash
+npm install @2gis/mapgl-terra-draw
+```
+
+### 2. Инициализируйте плагин {#initialize-plugin}
+
+Чтобы инициализировать плагин, используйте метод `createTerraDrawWithUI()`.
+
+#### При помощи тега script
+
+```html
+<html>
+    <head>
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+        />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://unpkg.com/@2gis/mapgl-terra-draw@0.2.0/dist/mapgl-terra-draw.css"
+        />
+        <script src="https://mapgl.2gis.com/api/js/v1"></script>
+        <script src="https://unpkg.com/terra-draw@1.0.0/dist/terra-draw.umd.js"></script>
+        <script src="https://unpkg.com/@2gis/mapgl-terra-draw/dist/mapgl-terra-draw.umd.cjs"></script>
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+                enableTrackResize: true,
+            });
+
+            map.on('styleload', () => {
+                mapglTerraDraw.createTerraDrawWithUI({
+                    map,
+                    mapgl: mapgl,
+                    controls: [
+                        'color',
+                        'select',
+                        'point',
+                        'polygon',
+                        'circle',
+                        'download',
+                        'clear',
+                    ],
+                });
+            });
+        </script>
+    </body>
+</html>
+```
+
+#### При помощи npm
+
+```js
+import { load } from '@2gis/mapgl';
+import { createTerraDrawWithUI } from '@2gis/mapgl-terra-draw';
+import '@2gis/mapgl-terra-draw/dist/mapgl-terra-draw.css';
+
+load().then((mapgl) => {
+    const map = new mapgl.Map('map', {
+        center: [37.615655, 55.768005],
+        zoom: 13,
+        key: 'Your API access key',
+        enableTrackResize: true,
+    });
+
+    map.on('styleload', () => {
+        createTerraDrawWithUI({
+            map,
+            mapgl: mapgl as any,
+            controls: ['color', 'select', 'point', 'polygon', 'circle', 'download', 'clear'],
+        });
+    });
+});
+```
+
+## Пример использования
+
+Выберите тип геометрии и нажимайте на карту, чтобы строить геометрические фигуры.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Рисование геометрических фигур с помощью плагина Terra Draw" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+        <link rel="stylesheet" type="text/css"
+            href="https://unpkg.com/@2gis/mapgl-terra-draw@0.2.0/dist/mapgl-terra-draw.css" />
+        <script src="https://mapgl.2gis.com/api/js/v1"></script>
+        <script src="https://unpkg.com/terra-draw@1.0.0/dist/terra-draw.umd.js"></script>
+        <script src="https://unpkg.com/@2gis/mapgl-terra-draw/dist/mapgl-terra-draw.umd.cjs"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            map.on('styleload', () => {
+                mapglTerraDraw.createTerraDrawWithUI({
+                    map,
+                    mapgl: mapgl,
+                    controls: ['color', 'select', 'point', 'polygon', 'circle', 'download', 'clear'],
+                });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Использование TerraDrawMapGlAdapter
+
+Вы можете использовать класс `TerraDrawMapGlAdapter` напрямую для работы с продвинутыми функциями Terra Draw. Например, чтобы добавить режим выбора объектов на карте или создать собственный пользовательский интерфейс, если встроенный не подходит по каким-либо причинам.
+
+Пример создания карты с тремя режимами рисования (выбор объектов, рисование точек и рисование полигонов) и UI-элементами для переключения режимов и удаления нарисованных объектов:
+
+```js
+import { load } from '@2gis/mapgl';
+import {
+    TerraDraw,
+    TerraDrawPointMode,
+    TerraDrawPolygonMode,
+    TerraDrawSelectMode,
+} from 'terra-draw';
+import { TerraDrawMapGlAdapter } from '@2gis/mapgl-terra-draw';
+
+load().then((mapgl) => {
+    const map = new mapgl.Map('map', {
+        center: [37.615655, 55.768005],
+        zoom: 13,
+        key: 'Your API access key',
+        enableTrackResize: true,
+    });
+
+    map.on('styleload', () => {
+        const draw = new TerraDraw({
+            adapter: new TerraDrawMapGlAdapter({
+                map,
+                mapgl,
+                coordinatePrecision: 9,
+            }),
+            modes: [
+                new TerraDrawSelectMode(),
+                new TerraDrawPointMode(),
+                new TerraDrawPolygonMode(),
+            ],
+        });
+
+        const buttons = document.createElement('div');
+        buttons.style.display = 'flex';
+        buttons.style.flexDirection = 'column';
+        buttons.style.gap = '8px';
+        new mapgl.Control(map, buttons, { position: 'centerLeft' });
+
+        const selectButton = document.createElement('button');
+        selectButton.innerText = 'select';
+        selectButton.addEventListener('click', () => {
+            draw.setMode('select');
+        });
+        buttons.appendChild(selectButton);
+
+        const pointButton = document.createElement('button');
+        pointButton.innerText = 'point';
+        pointButton.addEventListener('click', () => {
+            draw.setMode('point');
+        });
+        buttons.appendChild(pointButton);
+
+        const polygonButton = document.createElement('button');
+        polygonButton.innerText = 'polygon';
+        polygonButton.addEventListener('click', () => {
+            draw.setMode('polygon');
+        });
+        buttons.appendChild(polygonButton);
+
+        const clearButton = document.createElement('button');
+        clearButton.innerText = 'clear';
+        clearButton.addEventListener('click', () => {
+            draw.clear();
+        });
+        buttons.appendChild(clearButton);
+
+        draw.start();
+    });
+});
+```
+
+## Получение данных об объектах
+
+Чтобы извлечь данные об объектах со стилями, получите нарисованные фигуры с помощью метода `getSnapshot()`, создайте объект `FeatureCollection` и добавьте свойства `icons` и `layers` в его корень:
+
+```js
+const adapter = new TerraDrawMapGlAdapter({
+    ...
+});
+const { draw } = createTerraDrawWithUI({
+    adapter,
+    ...
+});
+
+const features = draw.getSnapshot();
+const { icons, layers } = adapter.addStyling(features);
+const featureCollection = {
+    type: 'FeatureCollection',
+    icons,
+    layers,
+    features,
+};
+```
+
+Чтобы отобразить полученные данные на карте, добавьте к карте `icons` и `layers` из созданного выше FeatureCollection через методы `addIcon()` и `addLayer()` и подключите GeoJSON в качестве источника карты через [GeoJsonSource](/mapgl/reference/class#geo-json-source):
+
+```js
+for (const icon in featureCollection.icons) {
+    map.addIcon(icon, { url: featureCollection.icons[icon] });
+}
+for (const layer of featureCollection.layers) {
+    map.addLayer(layer);
+}
+const source = new mapgl.GeoJsonSource(map, {
+    data: featureCollection,
+    attributes: {
+        name: 'terra-draw-output',
+    },
+});
+```
+
+Пример использования:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Получение данных об объектах с помощью плагина Terra Draw" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            map.on('styleload', () => {
+                for (const icon in featureCollection.icons) {
+                    map.addIcon(icon, { url: featureCollection.icons[icon] });
+                }
+                for (const layer of featureCollection.layers) {
+                    map.addLayer(layer);
+                }
+                const source = new mapgl.GeoJsonSource(map, {
+                    data: featureCollection,
+                    attributes: {
+                        name: 'terra-draw-output',
+                    },
+                });
+            });
+
+            // Данные из адаптера MapGL TerraDraw
+            var featureCollection = {
+                "type": "FeatureCollection",
+                "icons": {
+                    "terra-draw-icon-0": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNyIgaGVpZ2h0PSI3IiB2aWV3Qm94PSIwIDAgNyA3IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8Y2lyY2xlIGN4PSIzLjUiIGN5PSIzLjUiIHI9IjIuNSIgZmlsbD0iIzc0MzNmZjMzIiBzdHJva2U9IiM3NDMzZmYiIHN0cm9rZS13aWR0aD0iMS4yIi8+Cjwvc3ZnPg=="
+                },
+                "layers": [
+                    {
+                        "type": "polygon",
+                        "style": {
+                            "color": "#3388ff33",
+                            "strokeColor": "#3388ff",
+                            "strokeWidth": 3
+                        },
+                        "id": "terra-draw-0",
+                        "filter": [
+                            "==",
+                            [
+                                "get",
+                                "styleLayer"
+                            ],
+                            "terra-draw-0"
+                        ]
+                    },
+                    {
+                        "type": "polygon",
+                        "style": {
+                            "color": "#3388ff33",
+                            "strokeColor": "#3388ff",
+                            "strokeWidth": 2
+                        },
+                        "id": "terra-draw-1",
+                        "filter": [
+                            "==",
+                            [
+                                "get",
+                                "styleLayer"
+                            ],
+                            "terra-draw-1"
+                        ]
+                    },
+                    {
+                        "type": "polygon",
+                        "style": {
+                            "color": "#2aab5d33",
+                            "strokeColor": "#2aab5d",
+                            "strokeWidth": 5
+                        },
+                        "id": "terra-draw-2",
+                        "filter": [
+                            "==",
+                            [
+                                "get",
+                                "styleLayer"
+                            ],
+                            "terra-draw-2"
+                        ]
+                    },
+                    {
+                        "type": "point",
+                        "style": {
+                            "iconImage": "terra-draw-icon-0",
+                            "iconWidth": 16,
+                            "iconLabelingGroup": "__overlapped"
+                        },
+                        "id": "terra-draw-3",
+                        "filter": [
+                            "==",
+                            [
+                                "get",
+                                "styleLayer"
+                            ],
+                            "terra-draw-3"
+                        ]
+                    },
+                    {
+                        "type": "line",
+                        "style": {
+                            "color": "#7433ff",
+                            "width": 5
+                        },
+                        "id": "terra-draw-4",
+                        "filter": [
+                            "==",
+                            [
+                                "get",
+                                "styleLayer"
+                            ],
+                            "terra-draw-4"
+                        ]
+                    },
+                    {
+                        "type": "line",
+                        "style": {
+                            "color": "#7433ff",
+                            "width": 7
+                        },
+                        "id": "terra-draw-5",
+                        "filter": [
+                            "==",
+                            [
+                                "get",
+                                "styleLayer"
+                            ],
+                            "terra-draw-5"
+                        ]
+                    },
+                    {
+                        "type": "polygon",
+                        "style": {
+                            "color": "#fffd3333",
+                            "strokeColor": "#fffd33",
+                            "strokeWidth": 7
+                        },
+                        "id": "terra-draw-6",
+                        "filter": [
+                            "==",
+                            [
+                                "get",
+                                "styleLayer"
+                            ],
+                            "terra-draw-6"
+                        ]
+                    }
+                ],
+                "features": [
+                    {
+                        "id": "9c589021-e3b9-49e5-9abc-f2a6f65ec572",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [
+                                    [
+                                        37.608065573,
+                                        55.754553751
+                                    ],
+                                    [
+                                        37.607992716,
+                                        55.755388306
+                                    ],
+                                    [
+                                        37.607774847,
+                                        55.756214806
+                                    ],
+                                    [
+                                        37.607414063,
+                                        55.757025293
+                                    ],
+                                    [
+                                        37.60691384,
+                                        55.757811961
+                                    ],
+                                    [
+                                        37.606278995,
+                                        55.758567238
+                                    ],
+                                    [
+                                        37.605515641,
+                                        55.75928385
+                                    ],
+                                    [
+                                        37.60463113,
+                                        55.759954899
+                                    ],
+                                    [
+                                        37.603633982,
+                                        55.760573926
+                                    ],
+                                    [
+                                        37.602533797,
+                                        55.76113497
+                                    ],
+                                    [
+                                        37.601341173,
+                                        55.761632631
+                                    ],
+                                    [
+                                        37.600067594,
+                                        55.76206212
+                                    ],
+                                    [
+                                        37.598725326,
+                                        55.762419302
+                                    ],
+                                    [
+                                        37.597327296,
+                                        55.76270074
+                                    ],
+                                    [
+                                        37.595886968,
+                                        55.762903724
+                                    ],
+                                    [
+                                        37.594418212,
+                                        55.763026301
+                                    ],
+                                    [
+                                        37.592935173,
+                                        55.763067291
+                                    ],
+                                    [
+                                        37.591452134,
+                                        55.763026301
+                                    ],
+                                    [
+                                        37.589983378,
+                                        55.762903724
+                                    ],
+                                    [
+                                        37.58854305,
+                                        55.76270074
+                                    ],
+                                    [
+                                        37.58714502,
+                                        55.762419302
+                                    ],
+                                    [
+                                        37.585802752,
+                                        55.76206212
+                                    ],
+                                    [
+                                        37.584529173,
+                                        55.761632631
+                                    ],
+                                    [
+                                        37.583336549,
+                                        55.76113497
+                                    ],
+                                    [
+                                        37.582236364,
+                                        55.760573926
+                                    ],
+                                    [
+                                        37.581239216,
+                                        55.759954899
+                                    ],
+                                    [
+                                        37.580354705,
+                                        55.75928385
+                                    ],
+                                    [
+                                        37.579591351,
+                                        55.758567238
+                                    ],
+                                    [
+                                        37.578956506,
+                                        55.757811961
+                                    ],
+                                    [
+                                        37.578456283,
+                                        55.757025293
+                                    ],
+                                    [
+                                        37.578095499,
+                                        55.756214806
+                                    ],
+                                    [
+                                        37.57787763,
+                                        55.755388306
+                                    ],
+                                    [
+                                        37.577804773,
+                                        55.754553751
+                                    ],
+                                    [
+                                        37.57787763,
+                                        55.753719178
+                                    ],
+                                    [
+                                        37.578095499,
+                                        55.752892625
+                                    ],
+                                    [
+                                        37.578456283,
+                                        55.752082053
+                                    ],
+                                    [
+                                        37.578956506,
+                                        55.751295268
+                                    ],
+                                    [
+                                        37.579591351,
+                                        55.750539851
+                                    ],
+                                    [
+                                        37.580354705,
+                                        55.749823078
+                                    ],
+                                    [
+                                        37.581239216,
+                                        55.749151855
+                                    ],
+                                    [
+                                        37.582236364,
+                                        55.748532647
+                                    ],
+                                    [
+                                        37.583336549,
+                                        55.747971422
+                                    ],
+                                    [
+                                        37.584529173,
+                                        55.747473586
+                                    ],
+                                    [
+                                        37.585802752,
+                                        55.747043936
+                                    ],
+                                    [
+                                        37.58714502,
+                                        55.746686613
+                                    ],
+                                    [
+                                        37.58854305,
+                                        55.74640506
+                                    ],
+                                    [
+                                        37.589983378,
+                                        55.74620199
+                                    ],
+                                    [
+                                        37.591452134,
+                                        55.74607936
+                                    ],
+                                    [
+                                        37.592935173,
+                                        55.746038352
+                                    ],
+                                    [
+                                        37.594418212,
+                                        55.74607936
+                                    ],
+                                    [
+                                        37.595886968,
+                                        55.74620199
+                                    ],
+                                    [
+                                        37.597327296,
+                                        55.74640506
+                                    ],
+                                    [
+                                        37.598725326,
+                                        55.746686613
+                                    ],
+                                    [
+                                        37.600067594,
+                                        55.747043936
+                                    ],
+                                    [
+                                        37.601341173,
+                                        55.747473586
+                                    ],
+                                    [
+                                        37.602533797,
+                                        55.747971422
+                                    ],
+                                    [
+                                        37.603633982,
+                                        55.748532647
+                                    ],
+                                    [
+                                        37.60463113,
+                                        55.749151855
+                                    ],
+                                    [
+                                        37.605515641,
+                                        55.749823078
+                                    ],
+                                    [
+                                        37.606278995,
+                                        55.750539851
+                                    ],
+                                    [
+                                        37.60691384,
+                                        55.751295268
+                                    ],
+                                    [
+                                        37.607414063,
+                                        55.752082053
+                                    ],
+                                    [
+                                        37.607774847,
+                                        55.752892625
+                                    ],
+                                    [
+                                        37.607992716,
+                                        55.753719178
+                                    ],
+                                    [
+                                        37.608065573,
+                                        55.754553751
+                                    ]
+                                ]
+                            ]
+                        },
+                        "properties": {
+                            "mode": "circle",
+                            "radiusKilometers": 0.946732736687087,
+                            "styleLayer": "terra-draw-0"
+                        }
+                    },
+                    {
+                        "id": "7404def6-8417-45cf-a606-042211dcd8f7",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [
+                                    [
+                                        37.61477484,
+                                        55.775147575
+                                    ],
+                                    [
+                                        37.641220921,
+                                        55.764753708
+                                    ],
+                                    [
+                                        37.649753151,
+                                        55.762054169
+                                    ],
+                                    [
+                                        37.648607593,
+                                        55.765721068
+                                    ],
+                                    [
+                                        37.656288527,
+                                        55.774228569
+                                    ],
+                                    [
+                                        37.641257758,
+                                        55.779540986
+                                    ],
+                                    [
+                                        37.627765779,
+                                        55.779589315
+                                    ],
+                                    [
+                                        37.61477484,
+                                        55.775147575
+                                    ]
+                                ]
+                            ]
+                        },
+                        "properties": {
+                            "mode": "polygon",
+                            "styleLayer": "terra-draw-1"
+                        }
+                    },
+                    {
+                        "id": "2d815cd5-4a12-4e2a-8793-98618d0cc269",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [
+                                    [
+                                        37.637618506,
+                                        55.758914725
+                                    ],
+                                    [
+                                        37.636588037,
+                                        55.750388557
+                                    ],
+                                    [
+                                        37.66153734359206,
+                                        55.74943355450331
+                                    ],
+                                    [
+                                        37.66256781259206,
+                                        55.757959931237544
+                                    ],
+                                    [
+                                        37.637618506,
+                                        55.758914725
+                                    ]
+                                ]
+                            ]
+                        },
+                        "properties": {
+                            "mode": "angled-rectangle",
+                            "styleLayer": "terra-draw-2"
+                        }
+                    },
+                    {
+                        "id": "908832b4-6812-48d3-8421-3bb26dff4c9f",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                                37.56462765,
+                                55.76453334
+                            ]
+                        },
+                        "properties": {
+                            "mode": "point",
+                            "styleLayer": "terra-draw-3"
+                        }
+                    },
+                    {
+                        "id": "f944e10f-29c3-4f42-b7df-90c29cd99cae",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                                37.56750267,
+                                55.76783916
+                            ]
+                        },
+                        "properties": {
+                            "mode": "point",
+                            "styleLayer": "terra-draw-3"
+                        }
+                    },
+                    {
+                        "id": "8446cff4-2d9d-4a7d-9848-65a5f4acca5f",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                                37.5717473,
+                                55.770160427
+                            ]
+                        },
+                        "properties": {
+                            "mode": "point",
+                            "styleLayer": "terra-draw-3"
+                        }
+                    },
+                    {
+                        "id": "76b55011-05f9-40b1-83b4-6ebcf4eca3b9",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                                37.577898256,
+                                55.771278064
+                            ]
+                        },
+                        "properties": {
+                            "mode": "point",
+                            "styleLayer": "terra-draw-3"
+                        }
+                    },
+                    {
+                        "id": "b6dc2750-4c50-4404-adf2-bea926414b9e",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                                37.582325503,
+                                55.770222147
+                            ]
+                        },
+                        "properties": {
+                            "mode": "point",
+                            "styleLayer": "terra-draw-3"
+                        }
+                    },
+                    {
+                        "id": "720f4118-9d6a-4e68-9c17-feb8a850908e",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                                37.570918252,
+                                55.764251457
+                            ]
+                        },
+                        "properties": {
+                            "mode": "point",
+                            "styleLayer": "terra-draw-3"
+                        }
+                    },
+                    {
+                        "id": "1c7f3462-8b4e-4797-950c-4dad0f92c6bd",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                                37.572860636,
+                                55.767771393
+                            ]
+                        },
+                        "properties": {
+                            "mode": "point",
+                            "styleLayer": "terra-draw-3"
+                        }
+                    },
+                    {
+                        "id": "16398e5a-ede4-43c0-aad9-a7df60a4637a",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [
+                                    37.584242565,
+                                    55.77696222
+                                ],
+                                [
+                                    37.595548161,
+                                    55.770319475
+                                ],
+                                [
+                                    37.604840774,
+                                    55.772883574
+                                ]
+                            ]
+                        },
+                        "properties": {
+                            "mode": "linestring",
+                            "styleLayer": "terra-draw-4"
+                        }
+                    },
+                    {
+                        "id": "78704451-0c5b-422a-afb2-65c667f2c024",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [
+                                    37.604840774,
+                                    55.772883574
+                                ],
+                                [
+                                    37.602606432,
+                                    55.777359878
+                                ],
+                                [
+                                    37.600304954,
+                                    55.779802909
+                                ],
+                                [
+                                    37.597648988,
+                                    55.782482452
+                                ]
+                            ]
+                        },
+                        "properties": {
+                            "mode": "linestring",
+                            "styleLayer": "terra-draw-5"
+                        }
+                    },
+                    {
+                        "id": "f1069f73-0aba-4089-802f-e6d61c4b3324",
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                                [
+                                    [
+                                        37.616795875,
+                                        55.761718306
+                                    ],
+                                    [
+                                        37.615552486,
+                                        55.767876065
+                                    ],
+                                    [
+                                        37.614725351,
+                                        55.768182525
+                                    ],
+                                    [
+                                        37.613190776,
+                                        55.768504952
+                                    ],
+                                    [
+                                        37.611895979,
+                                        55.768715802
+                                    ],
+                                    [
+                                        37.610749269,
+                                        55.768757238
+                                    ],
+                                    [
+                                        37.609697318,
+                                        55.768750116
+                                    ],
+                                    [
+                                        37.609011748,
+                                        55.76821576
+                                    ],
+                                    [
+                                        37.608286661,
+                                        55.767807435
+                                    ],
+                                    [
+                                        37.607500576,
+                                        55.767460182
+                                    ],
+                                    [
+                                        37.606842627,
+                                        55.767040842
+                                    ],
+                                    [
+                                        37.607008745,
+                                        55.766485744
+                                    ],
+                                    [
+                                        37.607226271,
+                                        55.765722147
+                                    ],
+                                    [
+                                        37.607329471,
+                                        55.765166814
+                                    ],
+                                    [
+                                        37.607720021,
+                                        55.764528592
+                                    ],
+                                    [
+                                        37.608313517,
+                                        55.763807477
+                                    ],
+                                    [
+                                        37.609146407,
+                                        55.763290968
+                                    ],
+                                    [
+                                        37.610026102,
+                                        55.762771215
+                                    ],
+                                    [
+                                        37.610778427,
+                                        55.761854508
+                                    ],
+                                    [
+                                        37.610995953,
+                                        55.761207813
+                                    ],
+                                    [
+                                        37.611258365,
+                                        55.759805598
+                                    ],
+                                    [
+                                        37.611328572,
+                                        55.758171488
+                                    ],
+                                    [
+                                        37.612342158,
+                                        55.757579349
+                                    ],
+                                    [
+                                        37.615925772,
+                                        55.756505143
+                                    ],
+                                    [
+                                        37.620614662,
+                                        55.755785607
+                                    ],
+                                    [
+                                        37.623549534,
+                                        55.755785607
+                                    ],
+                                    [
+                                        37.626896439,
+                                        55.756046826
+                                    ],
+                                    [
+                                        37.627655286,
+                                        55.75641512
+                                    ],
+                                    [
+                                        37.628067319,
+                                        55.756921574
+                                    ],
+                                    [
+                                        37.628183947,
+                                        55.757899921
+                                    ],
+                                    [
+                                        37.62842756,
+                                        55.758721092
+                                    ],
+                                    [
+                                        37.628626671,
+                                        55.759450503
+                                    ],
+                                    [
+                                        37.628752123,
+                                        55.760437637
+                                    ],
+                                    [
+                                        37.628540736,
+                                        55.761573253
+                                    ],
+                                    [
+                                        37.62802205,
+                                        55.762293762
+                                    ],
+                                    [
+                                        37.627385969,
+                                        55.762891873
+                                    ],
+                                    [
+                                        37.626314837,
+                                        55.76360804
+                                    ],
+                                    [
+                                        37.625360715,
+                                        55.764144833
+                                    ],
+                                    [
+                                        37.624286897,
+                                        55.765143504
+                                    ],
+                                    [
+                                        37.623650433,
+                                        55.766029918
+                                    ],
+                                    [
+                                        37.622896574,
+                                        55.7666038
+                                    ],
+                                    [
+                                        37.620919275,
+                                        55.767324863
+                                    ],
+                                    [
+                                        37.61869913,
+                                        55.768045481
+                                    ],
+                                    [
+                                        37.616665052,
+                                        55.768362515
+                                    ],
+                                    [
+                                        37.614454882,
+                                        55.768182741
+                                    ],
+                                    [
+                                        37.614553862,
+                                        55.767615357
+                                    ],
+                                    [
+                                        37.615602743,
+                                        55.766371356
+                                    ],
+                                    [
+                                        37.616375401,
+                                        55.76431405
+                                    ],
+                                    [
+                                        37.616500853,
+                                        55.763326798
+                                    ],
+                                    [
+                                        37.616795875,
+                                        55.762273688
+                                    ],
+                                    [
+                                        37.616795875,
+                                        55.761718306
+                                    ],
+                                    [
+                                        37.616795875,
+                                        55.761718306
+                                    ],
+                                    [
+                                        37.616795875,
+                                        55.761718306
+                                    ]
+                                ]
+                            ]
+                        },
+                        "properties": {
+                            "mode": "freehand",
+                            "styleLayer": "terra-draw-6"
+                        }
+                    }
+                ]
+            }
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+### Сырые данные
+
+Если необходимо получить только геометрические фигуры в формате GeoJSON, используйте метод [getSnapshot()](https://jameslmilner.github.io/terra-draw/classes/terra_draw.TerraDraw.html#getSnapshot) библиотеки Terra Draw:
+
+```js
+const { draw } = createTerraDrawWithUI({
+    ...
+});
+
+...
+
+draw.getSnapshot();
+```
+
+Подробнее о добавлении GeoJSON-данных на карту см. в инструкции [GeoJSON](/mapgl/geodata/geojson).

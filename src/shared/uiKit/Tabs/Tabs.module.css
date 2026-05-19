@@ -1,0 +1,4 @@
+.tabsContainer {
+  display: flex;
+  gap: 24px;
+}

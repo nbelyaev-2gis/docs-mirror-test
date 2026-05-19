@@ -1,0 +1,35 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+}
+
+.button {
+  border: none;
+  padding: var(--gap-3m) var(--gap-4m);
+  font-weight: var(--fw-m);
+
+  div {
+    width: 100%;
+  }
+
+  color: var(--text-main) !important;
+  text-decoration: none !important;
+
+  &:hover {
+    background-color: var(--shape-level-1);
+  }
+}
+
+.chevron {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-left: auto;
+  transform: rotate(270deg);
+}

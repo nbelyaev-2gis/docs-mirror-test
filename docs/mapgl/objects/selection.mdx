@@ -1,0 +1,82 @@
+---
+sidebar: mapgljsapi
+---
+# Выделение объектов
+
+На карте можно выделить различные объекты: здания, дороги и так далее. Чтобы это сделать, нужно вызвать метод карты [setSelectedObjects()](/mapgl/reference/class#map/set-selected-objects), передав массив идентификаторов объектов, которые требуется подсветить.
+
+```js
+map.setSelectedObjects([id1, id2]);
+```
+
+Идентификатор объекта можно получить, добавив обработчик события `click` для карты (см. [MapPointerEvent](/mapgl/reference/interface#map-pointer-event)):
+
+```js
+map.on('click', (e) => {
+    if (!e.target) {
+        return;
+    }
+    const { id } = e.target;
+    alert('Идентификатор объекта: ' + id);
+});
+```
+
+Чтобы убрать выделение, нужно вызвать `setSelectedObjects()` без параметров:
+
+```js
+map.setSelectedObjects();
+```
+
+Ниже приведён демонстрационный пример. Нажмите на объект на карте, чтобы его выделить. Нажмите еще раз, чтобы убрать выделение.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Выделение объектов на карте" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 18,
+                key: 'Your API access key',
+            });
+
+            let selectedIds = [];
+
+            map.on('click', (e) => {
+                if (!e.target) {
+                    return;
+                }
+
+                const { id } = e.target;
+
+                if (selectedIds.includes(id)) {
+                    selectedIds = selectedIds.filter((i) => i !== id);
+                } else {
+                    selectedIds.push(id);
+                }
+
+                map.setSelectedObjects(selectedIds);
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

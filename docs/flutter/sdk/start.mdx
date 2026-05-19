@@ -1,0 +1,272 @@
+---
+sidebar: fluttersdk
+---
+
+# Начало работы
+
+## 1. Получение ключа доступа {#get-api-key}
+
+Чтобы подключиться к серверам <Brand />, получать геоданные и включить возможности SDK, получите файл ключа доступа `dgissdk.key`:
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=sdk_flutter).
+2. Купите [подписку](/platform-manager/subscription/purchase) для доступа к необходимым API. Набор API зависит от необходимых функциональностей и [версии SDK](/flutter/sdk/overview#versions). См. подробнее в разделе [API для работы SDK](/flutter/sdk/overview#api-list).
+3. Создайте [ключ доступа](/platform-manager/subscription/keys#production) или [настройте существующий ключ для использования с мобильным SDK](/platform-manager/subscription/managing-keys#sdk-key-configuration).
+4. Скачайте файл ключа `dgissdk.key`.
+
+Работать с ключами можно в Менеджере Платформы: подробнее см. в документации [личного кабинета](/platform-manager/overview).
+
+### Требования к работе с ключами {#key-requirements}
+
+#### Общие требования {#common-requirements}
+
+* При работе с SDK версии 13.3.0 и выше указание App ID при создании ключа необязательно. Укажите App ID, только если вы используете SDK более низких версий или планируете работать с [офлайн-данными](#offline-mode).
+* Если в ключе указан App ID, вы можете использовать этот ключ только для одного приложения. Отдельные ключи требуются в следующих случаях:
+  * Если приложение доступно для разных операционных систем.
+  * Если у приложения есть несколько вариантов для одной ОС (например, приложение для водителя и приложение для пассажира).
+  * Если используются разные версии SDK (**Full** и **Map**).
+* Изменение файла ключа во время работы приложения не поддерживается.
+
+#### Ключи для ОС Аврора {#aurora-requirements}
+
+Для SDK ключ выписывается для определённого идентификатора приложения. Для ОС Аврора идентификатор приложения формируется по принципу `"{QCoreApplication::organizationDomain()}.{QCoreApplication::applicationName()}"`.
+
+Значение `organizationDomain` указывается в файле приложения `aurora/main.cpp`. Например:
+
+```cpp
+int main(int argc, char * argv[])
+{
+	aurora::Initialize(argc, argv);
+	aurora::EnableQtCompatibility();
+	// Необходимо указать для успешной проверки ключа
+	QCoreApplication::setOrganizationDomain("ru.mobile.sdk.app");
+	aurora::RegisterPlugins();
+	aurora::Launch();
+	return 0;
+}
+```
+
+Значение `applicationName` указывается в конфигурационных файлах приложения. Например:
+
+```yaml
+ApplicationName=flutter_app
+```
+
+и:
+
+```yaml
+Name: ru.dgis.flutter_app
+```
+
+Полные примеры файлов см. в GitHub-репозитории: [ru.dgis.flutter\_app.desktop](https://github.com/2gis/dgis_mobile_sdk_full/blob/aurora-release/example/aurora/desktop/ru.dgis.flutter_app.desktop#L12) и [ru.dgis.flutter\_app.spec](https://github.com/2gis/dgis_mobile_sdk_full/blob/aurora-release/example/aurora/rpm/ru.dgis.flutter_app.spec#L4).
+
+## 2. Установка SDK {#install}
+
+### Для всех платформ {#all-platforms}
+
+Чтобы установить Flutter SDK на iOS, Android и Аврора, добавьте в файл `pubspec.yaml` одну из следующих зависимостей:
+
+<Tabs>
+<TabItem value="sdk-full" label="Для версии Full" default>
+
+```yaml
+dependencies:
+    flutter:
+        sdk: flutter
+    flutter_localizations:
+        sdk: flutter
+
+    dgis_mobile_sdk_full:
+        # При зависимости этого пакета от реального приложения используйте:
+        #   dgis_mobile_sdk_full: ^x.y.z
+        # См. https://dart.dev/tools/pub/dependencies#version-constraints
+        # Приложение в примере связано с плагином, поэтому используется зависимость пути от
+        # родительской директории, чтобы использовать текущую версию плагина.
+        path: ../
+}
+```
+
+</TabItem>
+<TabItem value="sdk-map" label="Для версии Map">
+
+```yaml
+dependencies:
+    flutter:
+        sdk: flutter
+
+    dgis_mobile_sdk_map:
+        # При зависимости этого пакета от реального приложения используйте:
+        #   dgis_mobile_sdk_map: ^x.y.z
+        # См. https://dart.dev/tools/pub/dependencies#version-constraints
+        # Приложение в примере связано с плагином, поэтому используется зависимость пути от
+        # родительской директории, чтобы использовать текущую версию плагина.
+        path: ../
+```
+
+</TabItem>
+</Tabs>
+
+Полные примеры файлов см. в GitHub-репозитории: [pubspec.yaml](https://github.com/2gis/dgis_mobile_sdk_full/blob/master/example/pubspec.yaml).
+
+Выполните дополнительные шаги установки для [Android](#android) и [ОС Аврора](#aurora-os).
+
+### Android {#android}
+
+При сборке для Android используется бинарный артефакт в формате `.aar`. Для правильного подключения добавьте репозиторий с этим артефактом в `build.gradle` вашего приложения:
+
+```gradle
+repositories {
+    maven {
+        url "https://artifactory.2gis.dev/sdk-maven-release"
+    }
+}
+```
+
+### Аврора {#aurora-os}
+
+:::note[Доступность версий]
+
+Для установки SDK для ОС Аврора временно доступна только версия **Full**.
+
+:::
+
+Чтобы установить Flutter SDK:
+
+1. Клонируйте [репозиторий с SDK для версии Full](https://github.com/2gis/dgis_mobile_sdk_full).
+
+2. Переключитесь на тег нужной версии релиза, например [версии 12.6.3](https://github.com/2gis/dgis_mobile_sdk_full/releases/tag/aurora-release-12.6.3).
+
+3. Скопируйте в ваше приложение Flutter [реализацию SDK для ОС Аврора](https://github.com/2gis/dgis_mobile_sdk_full/tree/aurora-release/aurora).
+
+4. В файле `CMakeLists.txt` вашего приложения включите копирование ресурсов, необходимых для корректной работы SDK:
+
+   ```yaml
+   set(DGIS_DATA_DIR ${CMAKE_CURRENT_LIST_DIR}/../../aurora/data)
+   ```
+
+   Полный пример файла см. в GitHub-репозитории: [CMakeLists.txt](https://github.com/2gis/dgis_mobile_sdk_full/blob/aurora-release/example/aurora/CMakeLists.txt#L44).
+
+5. Чтобы библиотека `dgis_c_bindings_linux` корректно подключалась к приложению, добавьте в `rpm` приложения следующую строку:
+
+   ```yaml
+   %global __requires_exclude ^lib(dgis_c_bindings_linux|dconf|flutter-embedder|maliit-glib|.+_platform_plugin)\\.so.*$
+   ```
+
+   Полный пример файла см. в GitHub-репозитории: [ru.dgis.flutter\_app.spec](https://github.com/2gis/dgis_mobile_sdk_full/blob/aurora-release/example/aurora/rpm/ru.dgis.flutter_app.spec#L2).
+
+6. Для корректной работы SDK внутри ОС Аврора добавьте следующие разрешения:
+
+   ```yaml
+   [Desktop Entry]
+   Type=Application
+   Name=flutter_app
+   Comment=A new Flutter project.
+   Icon=ru.dgis.flutter_app
+   Exec=/usr/bin/ru.dgis.flutter_app
+   X-Nemo-Application-Type=silica-qt5
+
+   [X-Application]
+   Permissions=Audio;Sensors;SecureStorage;DeviceInfo;Internet;Location;UserDirs
+   OrganizationName=ru.dgis
+   ApplicationName=flutter_app
+   ```
+
+   Полный пример файла см. в GitHub-репозитории: [ru.dgis.flutter\_app.desktop](https://github.com/2gis/dgis_mobile_sdk_full/blob/aurora-release/example/aurora/desktop/ru.dgis.flutter_app.desktop).
+
+## 3. Инициализация SDK
+
+1. Добавьте [полученный файл ключа](#get-api-key) `dgissdk.key` в `assets` приложения.
+
+2. Вызовите метод [initialize()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/DGis/initialize.html) объекта [DGis](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/DGis-class.html), указав контекст приложения:
+
+   ```dart
+   import 'package:dgis_mobile_sdk_map/dgis.dart' as sdk;
+
+   class SomeApp extends StatelessWidget {
+       final sdkContext = sdk.DGis.initialize();
+   }
+   ```
+
+   :::warning
+   
+   `Context` может быть создан в единственном экземпляре.
+
+   :::
+
+3. Дополнительно вы можете указать настройки журналирования [LogOptions](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/LogOptions-class.html) и настройки HTTP-клиента [HttpOptions](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/HttpOptions-class.html), например таймаут запроса:
+
+   ```dart
+   import 'package:dgis_mobile_sdk_map/dgis.dart' as sdk;
+
+   class SomeApp extends StatelessWidget {
+
+     final sdkContext = sdk.DGis.initialize(
+       logOptions: const sdk.LogOptions(
+         customLevel: sdk.LogLevel.verbose,
+         systemLevel: sdk.LogLevel.verbose,
+       ),
+       httpOptions: const sdk.HttpOptions(
+         timeout: Duration(seconds: 5),
+       ),
+     );
+   }
+   ```
+
+## Дополнительные настройки {#additional-settings}
+
+### Vendor Config {#vendor-config}
+
+Для переопределения некоторых настроек работы SDK используется файл в формате [VendorConfig](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/VendorConfig-class.html), который передается при инициализации SDK.
+
+Существует несколько способов создать экземпляр класса `VendorConfig`:
+
+* `VendorConfigFromAsset` — файл необходимо расположить в каталоге `assets` исходного кода приложения и указать имя файла в конструкторе.
+* `VendorConfigFromFile` — файл необходимо расположить в файловой системе устройства и указать абсолютный путь до него.
+* `VendorConfigFromString` — в конструктор необходимо передать строку с содержимым файла формата JSON.
+
+Созданный экземпляр `VendorConfig` передается в метод `DGis.initialize()` параметром `vendorConfig`.
+
+### Работа с офлайн-данными {#offline-mode}
+
+Мобильный SDK (версия Full) позволяет работать с данными карты, справочника и навигатора офлайн из предварительно загруженных пакетов. Это может быть полезно в условиях плохой связи или при её полном отсутствии.
+
+Чтобы настроить работу в режиме офлайн:
+
+1. Обратитесь в [отдел продаж <Brand />](https://dev.2gis.ru/api/mobile-sdk#form), чтобы получить права на работу с офлайн-данными. Вы можете запросить права на офлайн-данные всех компонентов (карта, справочник, построение маршрутов) или выбрать только необходимые.
+
+2. Скачайте файлы с данными для территорий, где необходима офлайн-работа приложения, через [TerritoryManager](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/TerritoryManager-class.html).
+
+ {/*  См. [пример кода для загрузки территорий](https://github.com/2gis/mobile-sdk-android-demo/blob/master/app/src/main/java/ru/dgis/sdk/demo/DownloadTerritoriesActivity.kt).  */}
+
+3. Настройте компоненты SDK для работы с предзагруженными данными:
+
+   * Карта: [создайте источник данных и укажите нужный режим работы](/flutter/sdk/examples/map#offline-mode).
+   * Справочник: используйте нужный [метод для создания справочника объектов](/flutter/sdk/examples/directory#creating-a-search-engine).
+   * Построение маршрутов: по умолчанию настроен гибридный режим. Подробнее см. [документацию о маршрутах](/flutter/sdk/examples/routing#offline-mode).
+
+### Язык приложения {#application-language}
+
+Чтобы установить язык приложения, передайте список локалей ([Locale](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/Locale-class.html)) в методе `overrideLocales()` класса [LocaleManager](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/LocaleManager-class.html).
+
+:::note[Язык навигатора]
+
+В зависимости от выбранной локали меняется язык [звуковых оповещений в навигаторе](/flutter/sdk/examples/navigation#sound-notifications).
+
+:::
+
+Пример установки англоязычной локали:
+
+```dart
+import 'package:dgis_mobile_sdk_map/dgis.dart' as sdk;
+
+// Создание объекта Locale с указанием языка и региона
+final locale = sdk.Locale(language: sdk.Language("en"), region: sdk.Region("EN"));
+
+// Установка локали для приложения
+sdk.getLocaleManager(sdkContext).overrideLocales([locale]);
+```
+
+Доступные значения языков (параметры `language` и `region` соответственно):
+
+* `ru-RU` — русский;
+* `en-EN` — английский;
+* `ar-AE` — арабский.

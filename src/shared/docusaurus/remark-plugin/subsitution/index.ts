@@ -1,0 +1,1 @@
+export { createSubstitutionPlugin } from './plugin';

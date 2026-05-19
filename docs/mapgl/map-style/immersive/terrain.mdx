@@ -1,0 +1,219 @@
+---
+sidebar: mapgljsapi
+---
+# 3D-рельеф
+
+3D-рельеф — это полноценная трёхмерная модель местности (в отличие от [хилшейда](/mapgl/map-style/immersive/hillshade)). В этом режиме поверхность Земли имеет наиболее реалистичную геометрию и внешний вид.
+
+![3D-рельеф](/img/mapgl/relief/introduction.png)
+
+## Включение и отключение
+
+По умолчанию 3D-рельеф отключен. Чтобы включить его, измените [глобальную переменную стиля](/mapgl/map-style/global-style-variables) `terrainEnabled` при помощи метода [map.patchStyleState()](/mapgl/reference/class#map/patch-style-state):
+
+```ts
+// Включить рельеф
+map.patchStyleState({ terrainEnabled: true });
+```
+
+<br  />
+
+```ts
+// Отключить рельеф
+map.patchStyleState({ terrainEnabled: false });
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="3D-рельеф" />
+        <link rel="stylesheet" type="text/css" href="/css/switch.css" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            #buttons {
+                position: absolute;
+                z-index: 2;
+
+                top: 0;
+                left: 0;
+                margin: 8px;
+                padding: 2px 4px;
+
+                display: flex;
+                align-items: center;
+                background-color: white;
+                border-radius: 8px;
+                font: 13px sans-serif;
+            }
+
+            #buttons label {
+                padding: 0 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div id="buttons">
+            <label>3D-рельеф</label>
+            <input type="checkbox" role="switch" onclick="toggleRelief(event)" checked="true"/>
+            <label id="stateCaption">Включен</label>
+        </div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [160.5444267119923, 54.74660368519054],
+                zoom: 12.1,
+                pitch: 42,
+                rotation: 45,
+                key: 'Your API access key',
+                style: '8500c08c-0d73-4147-bb73-e6dcba21fa47',
+                styleState: {
+                    hillshade: true,
+                    terrainEnabled: true,
+                }
+            });
+
+            const stateCaption = document.getElementById('stateCaption');
+
+            function toggleRelief(ev) {
+                const enabled = ev.target.checked;
+                map.patchStyleState({ terrainEnabled: enabled })
+                stateCaption.innerText = enabled ? 'Включен' : 'Выключен';
+            }
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Настройки 3D-рельефа {#3d-terrain-settings}
+
+Рельеф настраивается при помощи [Редактора стилей](https://styles.2gis.com/). Включите режим 3D-рельефа соответствующим переключателем в разделе **Настройки**.
+
+![styleeditor](/img/mapgl/relief/styleeditor.png)
+
+Параметры отображения рельефа настраиваются в левой панели со слоями, во вкладке **Другое**. Ниже приведены описания и примеры значений основных параметров.
+
+### Множитель высоты
+
+Регулирует степень выраженности рельефа. Правильно подобранный множитель высоты позволяет лучше отобразить ландшафт, как в примере ниже:
+
+![Сравнение разных множителей высоты](/img/mapgl/relief/vscale_comparison.png)
+
+### Направление освещения склонов
+
+Направление, с которого рельеф освещается источником света. Рекомендуется использовать традиционное в картографии значение в 315°. Человеческий глаз привык воспринимать карты именно под этим углом освещения, а изменение этого значения может исказить восприятие рельефа (например, горы могут показаться впадинами). Сравните разные направления освещения в примере ниже:
+
+![Сравнение разных направлений освещения](/img/mapgl/relief/direction_comparison.png)
+
+### Степень затемнения или осветления склонов
+
+Регулирует контрастность затенения и освещения склонов.
+
+![Сравнение разных степеней затемнения](/img/mapgl/relief/intensity_comparison.png)
+
+### Палитра рельефа
+
+Палитра рельефа позволяет менять характер затенения/осветления рельефа, что может быть полезно для дополнительной стилизации его внешнего вида.
+
+![palette](/img/mapgl/relief/palette.png)
+
+## Использование вместе с хилшейдом
+
+Вы можете использовать 3D-рельеф в сочетании с векторыми слоями [хилшейда](/mapgl/map-style/immersive/hillshade):
+
+1. В [настройках рельефа](/mapgl/map-style/immersive/terrain#3d-terrain-settings) отключите встроенный механизм затенения склонов, выставив параметр **Степень затемнения или осветления склонов** в `0`.
+2. [Добавьте](/mapgl/map-style/immersive/hillshade#setup-in-style-editor) на карту слои `Хилшейд светлый` и `Хилшейд темный`.
+
+Векторные слои хилшейда дают более четкие очертания гор, однако они не могут отображаться при параметре `zoom` больше 14. Рекомендуемое решение: использовать векторные слои хилшейда для параметра `zoom` меньше 14, а для остальных значений `zoom` использовать встроенный в рельеф хилшейд.
+
+Чтобы обеспечить объемное отображение рельефа на всех уровнях приближения, можно настроить плавное подключение встроенного хилшейда при значении `zoom` от 13 и выше с помощью `interpolate`-выражения:
+
+![Задание интенсивности при помощи interpolate-выражения](/img/mapgl/relief/interpolate.png)
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="3D-рельеф с хилшейдом" />
+        <link rel="stylesheet" type="text/css" href="/css/switch.css" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            #buttons {
+                position: absolute;
+                z-index: 2;
+
+                top: 0;
+                left: 0;
+                margin: 8px;
+                padding: 2px 4px;
+
+                display: flex;
+                align-items: center;
+                background-color: white;
+                border-radius: 8px;
+                font: 13px sans-serif;
+            }
+
+            #buttons label {
+                padding: 0 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div id="buttons">
+            <label>3D-рельеф</label>
+            <input type="checkbox" role="switch" onclick="toggleRelief(event)" checked="true"/>
+            <label id="stateCaption">Включен</label>
+        </div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [160.5444267119923, 54.74660368519054],
+                zoom: 10,
+                pitch: 42,
+                rotation: 45,
+                key: 'Your API access key',
+                style: 'f4c6be30-0b86-45f3-9cf2-e21f773da2ce',
+                styleState: {
+                    hillshade: true,
+                    terrainEnabled: true,
+                }
+            });
+
+            const stateCaption = document.getElementById('stateCaption');
+
+            function toggleRelief(ev) {
+                const enabled = ev.target.checked;
+                map.patchStyleState({ terrainEnabled: enabled })
+                stateCaption.innerText = enabled ? 'Включен' : 'Выключен';
+            }
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

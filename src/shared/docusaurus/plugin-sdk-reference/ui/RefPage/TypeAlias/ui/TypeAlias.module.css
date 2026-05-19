@@ -1,0 +1,13 @@
+.wrapper {
+  padding-bottom: 23px;
+  font-size: 15px;
+  line-height: 20px;
+
+  & + .wrapper {
+    margin-top: 20px;
+  }
+}
+
+.description {
+  margin-bottom: var(--gap-4m);
+}

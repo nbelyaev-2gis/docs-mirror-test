@@ -1,0 +1,1 @@
+export { ApiPlatformHero } from './ui';

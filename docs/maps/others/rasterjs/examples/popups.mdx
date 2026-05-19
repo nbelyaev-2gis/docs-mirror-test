@@ -1,0 +1,209 @@
+---
+sidebar: rasterjsapi
+---
+# Попапы
+
+## Описание
+
+Ниже приведены примеры использования попапов. Для получения подробной информации см. раздел [Попапы](/maps/others/rasterjs/reference/popup).
+
+## Открытие попапа при клике на маркер
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+    <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Открытие попапа при клике на маркер" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+    </head>
+    <body>
+        <div id="map" style="width: 100%; height: 400px;"></div>
+        <script>
+            DG.then(function() {
+                var map = DG.map('map', {
+                    center: [54.98, 82.89],
+                    zoom: 15,
+                    key: 'Your API access key'
+                });
+
+                DG.marker([54.98, 82.89]).addTo(map).bindPopup('Попап');
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Открытие попапа по умолчанию и по требованию
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`    
+    <html>
+        <head>
+            <title>RasterJS API</title>
+            <meta name="description" content="Открытие попапа по умолчанию и по требованию" />
+            <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+        </head>
+        <body>
+            <input id="showPopup" type="button" value="Открыть попап" />
+            <div id="map" style="width: 100%; height: 400px;"></div>
+            <script>
+               var showButton = document.getElementById('showPopup');
+
+               DG.then(function() {
+                  var map, myPopUp;
+
+                  map = DG.map('map', {
+                     center: [54.98, 82.89],
+                     zoom: 13,
+                     key: 'Your API access key'
+                  });
+
+                  DG.popup([54.98, 82.89])
+                     .setLatLng([54.98, 82.89])
+                     .setContent('Попап открыт по умолчанию')
+                     .openOn(map);
+
+                  myPopUp = DG.popup()
+                     .setLatLng([54.98, 82.89])
+                     .setContent('Попап открыт по требованию, предыдущий попап закрыт');
+
+                  showButton.onclick = function () {
+                     myPopUp.openOn(map);
+               };
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Добавление нескольких попапов на карту
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+    <head>
+        <title>RasterJS API</title>
+        <meta name="description" content="Добавление нескольких попапов на карту" />
+        <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+    </head>
+    <body>
+        <div id="map" style="width: 100%; height: 400px"></div>
+        <script>
+            DG.then(function () {
+                var map,
+                    popups = DG.featureGroup(),
+                    coordinates = [];
+
+                map = DG.map('map', {
+                    center: [54.98, 82.89],
+                    zoom: 13,
+                    key: 'Your API access key'
+                });
+
+                // Создание 10 попапов в случайных местах и добавление их в группу
+                for (var i = 0; i < 10; i++) {
+                    coordinates[0] = 54.98 - Math.random();
+                    coordinates[1] = 82.89 + Math.random();
+                    DG.popup()
+                        .setLatLng(coordinates)
+                        .setContent('Попап №' + i)
+                        .addTo(popups);
+                }
+
+                popups.addTo(map);
+
+                // Фокусирование области видимости на попапах
+                map.fitBounds(popups.getBounds());
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Поведение попапа с параметром sprawling
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+    <head>
+        <title>RasterJS API</title>
+        <meta name="description" content="Поведение попапа с параметром sprawling" />
+        <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+    </head>
+    <body>
+        <div id="map" style="width: 300px; height: 150px"></div>
+        <input
+            style="width: 300px"
+            type="button"
+            id="sprawling"
+            value="Попап с включенным параметром sprawling"
+        /><br />
+        <input
+            style="width: 300px"
+            type="button"
+            id="no-sprawling"
+            value="Попап без параметра sprawling"
+        /><br />
+        <input
+            style="width: 300px"
+            type="button"
+            id="minWidth"
+            value="Попап с минимальной шириной 320px"
+        />
+        <script>
+            DG.then(function () {
+                var latLng = DG.latLng([54.98, 82.89]),
+                    map;
+
+                map = DG.map('map', {
+                    center: latLng,
+                    zoom: 13,
+                    fullscreenControl: false,
+                    zoomControl: false,
+                    key: 'Your API access key'
+                });
+
+                // Попап с включенным параметром sprawling
+                // растягивается до границ карты
+                document.getElementById('sprawling').onclick = function () {
+                    DG.popup({
+                        maxWidth: 350,
+                        sprawling: true,
+                    })
+                        .setLatLng(latLng)
+                        .setContent('Попап с включенным параметром sprawling')
+                        .openOn(map);
+                };
+
+                // Попап без параметра sprawling
+                // подстраивается под ширину контента
+                document.getElementById('no-sprawling').onclick = function () {
+                    DG.popup({
+                        maxWidth: 350,
+                    })
+                        .setLatLng(latLng)
+                        .setContent('Попап без параметра sprawling')
+                        .openOn(map);
+                };
+
+                // Попап с минимальной шириной 320px
+                // выходит за границы карты
+                document.getElementById('minWidth').onclick = function () {
+                    DG.popup({
+                        maxWidth: 350,
+                        minWidth: 320,
+                    })
+                        .setLatLng(latLng)
+                        .setContent('Попап с минимальной шириной 320px')
+                        .openOn(map);
+                };
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

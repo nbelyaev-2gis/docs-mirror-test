@@ -1,0 +1,108 @@
+---
+sidebar: floorsjsapi
+---
+# Обзор
+
+Виджет с планом этажей может быть размещён на странице двумя способами.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '450px' }}>
+{`
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <title>FloorsJS API</title>
+   <meta name="description" content="Пример виджета с планом этажей" />
+   <style>
+      html,
+      body {
+         margin: 0;
+         width: 100%;
+         height: 100%;
+         overflow: hidden;
+      }
+   </style>
+</head>
+
+<body>
+   <script charset="utf-8" src="https://floors-widget.api.2gis.ru/loader.js" id="dg-floors-widget-loader"></script>
+   <script charset="utf-8">
+      DG.FloorsWidget.init({
+         width: '100%',
+         height: '100%',
+         initData: {
+            complexId: '70000001007418793',
+            options: {
+               locale: 'ru_RU'
+            }
+         },
+      });
+   </script>
+</body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Простой способ
+
+Этот способ подходит для простых статических страниц. Виджет появится на странице в том месте, куда был вставлен код.
+
+Вставьте на страницу следующий код:
+
+```html
+<script
+   charset="utf-8"
+   src="https://floors-widget.api.2gis.ru/loader.js"
+   id="dg-floors-widget-loader"
+></script>
+<script charset="utf-8">
+   DG.FloorsWidget.init({
+      width: '960px',
+      height: '600px',
+      initData: {
+         complexId: '70000001007418793',
+         options: {
+            locale: 'ru_RU'
+         }
+      },
+   });
+</script>
+```
+
+## Продвинутый способ
+
+Подключите на страницу JS-файл виджета:
+
+```html
+<script
+   charset="utf-8"
+   src="https://floors-widget.api.2gis.ru/loader.js"
+   id="dg-floors-widget-loader"
+></script>
+```
+
+Добавьте на страницу div-элемент, внутри которого хотите разместить виджет:
+
+```html
+<div id="mywidget"></div>
+```
+
+Проинициализируйте виджет:
+
+```js
+DG.FloorsWidget.init({
+   container: 'mywidget',
+   width: '960px',
+   height: '600px',
+   initData: {
+      complexId: '70000001007418793',
+      options: {
+         locale: 'ru_RU'
+      }
+   },
+});
+```
+
+В параметр `container` передаётся ID DOM-элемента или сам DOM-элемент. Этот способ подходит для более сложных случаев, когда требуется динамически создать виджет после открытия страницы (по нажатию на кнопку и т. п.).

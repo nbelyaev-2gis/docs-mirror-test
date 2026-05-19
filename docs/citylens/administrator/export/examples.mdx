@@ -1,0 +1,844 @@
+---
+sidebar: citylens
+---
+# Примеры
+
+Ниже приведены основные сценарии работы и примеры запросов к Export API. В примерах запросов используется [cURL](https://curl.se/). Подробную информацию о параметрах запросов см. в [Справочнике API](/citylens/administrator/export/reference).
+
+Для начала работы с Export API [получите API-ключ](/citylens/administrator/export/overview#get-access-key).
+
+## Список кадров {#frames-list}
+
+Вы можете получить список исходных кадров с данными о них: ID, координатами, временем съёмки, скоростью движения транспортного средства и другими.
+
+Чтобы получить список кадров, отправьте GET-запрос на [/export-api/v1/frames](/citylens/administrator/export/reference) со следующими параметрами:
+
+* `from_dt` (обязательный параметр) — начальная дата и время записи кадра в формате `YYYY-MM-DDTHH:MM:SS`.
+* `to_dt` (обязательный параметр) — конечная дата и время записи кадра в формате `YYYY-MM-DDTHH:MM:SS`.
+* `limit` — максимальное количество кадров в ответе.
+
+**Пример запроса:**
+
+```curl
+curl --request GET \
+  --url 'API_URL/export-api/v1/frames?from_dt=2025-09-11T11:03:00&to_dt=2025-09-11T11:05:00&limit=50' \
+  --header 'X-API-Key: API_KEY'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "frames": [
+        {
+            "id": 10256457,
+            "lon": 44.681605883334,
+            "lat": 39.836679413333,
+            "azimuth": 314.04562,
+            "speed": 17.00964,
+            "date": "2025-09-11T11:04:58.982000",
+            "frame_url": "/export-api/v1/frames/10256457/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256457/predictions-image"
+        },
+        {
+            "id": 10256455,
+            "lon": 44.681897352353,
+            "lat": 39.836469112446,
+            "azimuth": 314.21625,
+            "speed": 17.20307,
+            "date": "2025-09-11T11:04:56.980000",
+            "frame_url": "/export-api/v1/frames/10256455/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256455/predictions-image"
+        },
+        {
+            "id": 10256453,
+            "lon": 44.682180932402,
+            "lat": 39.836254913419,
+            "azimuth": 314.2099,
+            "speed": 17.03207,
+            "date": "2025-09-11T11:04:54.983000",
+            "frame_url": "/export-api/v1/frames/10256453/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256453/predictions-image"
+        },
+        {
+            "id": 10256451,
+            "lon": 44.682459883567,
+            "lat": 39.836042318695,
+            "azimuth": 315.42059,
+            "speed": 16.89306,
+            "date": "2025-09-11T11:04:52.994000",
+            "frame_url": "/export-api/v1/frames/10256451/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256451/predictions-image"
+        },
+        {
+            "id": 10256449,
+            "lon": 44.682738269937,
+            "lat": 39.835824627961,
+            "azimuth": 315.69342,
+            "speed": 16.96426,
+            "date": "2025-09-11T11:04:50.982000",
+            "frame_url": "/export-api/v1/frames/10256449/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256449/predictions-image"
+        },
+        {
+            "id": 10256447,
+            "lon": 44.683019890109,
+            "lat": 39.83560419414,
+            "azimuth": 314.84152,
+            "speed": 17.56087,
+            "date": "2025-09-11T11:04:48.987000",
+            "frame_url": "/export-api/v1/frames/10256447/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256447/predictions-image"
+        },
+        {
+            "id": 10256445,
+            "lon": 44.683314159189,
+            "lat": 39.835377683616,
+            "azimuth": 315.37555,
+            "speed": 17.67723,
+            "date": "2025-09-11T11:04:46.985000",
+            "frame_url": "/export-api/v1/frames/10256445/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256445/predictions-image"
+        },
+        {
+            "id": 10256443,
+            "lon": 44.683606679987,
+            "lat": 39.835151886446,
+            "azimuth": 314.8085,
+            "speed": 17.66222,
+            "date": "2025-09-11T11:04:44.985000",
+            "frame_url": "/export-api/v1/frames/10256443/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256443/predictions-image"
+        },
+        {
+            "id": 10256441,
+            "lon": 44.683903573574,
+            "lat": 39.834928453453,
+            "azimuth": 314.77731,
+            "speed": 17.75508,
+            "date": "2025-09-11T11:04:42.981000",
+            "frame_url": "/export-api/v1/frames/10256441/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256441/predictions-image"
+        },
+        {
+            "id": 10256439,
+            "lon": 44.684202072073,
+            "lat": 39.8347011011,
+            "azimuth": 314.56827,
+            "speed": 17.92071,
+            "date": "2025-09-11T11:04:40.987000",
+            "frame_url": "/export-api/v1/frames/10256439/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256439/predictions-image"
+        },
+        {
+            "id": 10256437,
+            "lon": 44.684502044089,
+            "lat": 39.834473099532,
+            "azimuth": 315.69345,
+            "speed": 18.10821,
+            "date": "2025-09-11T11:04:38.987000",
+            "frame_url": "/export-api/v1/frames/10256437/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256437/predictions-image"
+        },
+        {
+            "id": 10256435,
+            "lon": 44.684797613107,
+            "lat": 39.834239873586,
+            "azimuth": 315.69647,
+            "speed": 18.34848,
+            "date": "2025-09-11T11:04:36.984000",
+            "frame_url": "/export-api/v1/frames/10256435/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256435/predictions-image"
+        },
+        {
+            "id": 10256433,
+            "lon": 44.685099375623,
+            "lat": 39.834003263404,
+            "azimuth": 315.33932,
+            "speed": 18.56462,
+            "date": "2025-09-11T11:04:34.971000",
+            "frame_url": "/export-api/v1/frames/10256433/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256433/predictions-image"
+        },
+        {
+            "id": 10256431,
+            "lon": 44.685398400134,
+            "lat": 39.833765698062,
+            "azimuth": 315.44473,
+            "speed": 18.84073,
+            "date": "2025-09-11T11:04:32.987000",
+            "frame_url": "/export-api/v1/frames/10256431/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256431/predictions-image"
+        },
+        {
+            "id": 10256429,
+            "lon": 44.685710770897,
+            "lat": 39.833524671994,
+            "azimuth": 315.00131,
+            "speed": 18.89574,
+            "date": "2025-09-11T11:04:30.977000",
+            "frame_url": "/export-api/v1/frames/10256429/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256429/predictions-image"
+        },
+        {
+            "id": 10256427,
+            "lon": 44.686025305305,
+            "lat": 39.833282979646,
+            "azimuth": 314.86841,
+            "speed": 18.97895,
+            "date": "2025-09-11T11:04:28.976000",
+            "frame_url": "/export-api/v1/frames/10256427/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256427/predictions-image"
+        },
+        {
+            "id": 10256425,
+            "lon": 44.686337811145,
+            "lat": 39.833045128461,
+            "azimuth": 314.82764,
+            "speed": 18.95196,
+            "date": "2025-09-11T11:04:26.984000",
+            "frame_url": "/export-api/v1/frames/10256425/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256425/predictions-image"
+        },
+        {
+            "id": 10256423,
+            "lon": 44.686646450863,
+            "lat": 39.832810340305,
+            "azimuth": 314.55136,
+            "speed": 18.80874,
+            "date": "2025-09-11T11:04:25.014000",
+            "frame_url": "/export-api/v1/frames/10256423/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256423/predictions-image"
+        },
+        {
+            "id": 10256421,
+            "lon": 44.68696472056,
+            "lat": 39.832569945109,
+            "azimuth": 314.51965,
+            "speed": 18.77693,
+            "date": "2025-09-11T11:04:22.982000",
+            "frame_url": "/export-api/v1/frames/10256421/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256421/predictions-image"
+        },
+        {
+            "id": 10256419,
+            "lon": 44.687270654643,
+            "lat": 39.832331299265,
+            "azimuth": 315.57214,
+            "speed": 18.81657,
+            "date": "2025-09-11T11:04:20.992000",
+            "frame_url": "/export-api/v1/frames/10256419/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256419/predictions-image"
+        },
+        {
+            "id": 10256417,
+            "lon": 44.687583110669,
+            "lat": 39.832086106679,
+            "azimuth": 315.09674,
+            "speed": 18.83513,
+            "date": "2025-09-11T11:04:18.973000",
+            "frame_url": "/export-api/v1/frames/10256417/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256417/predictions-image"
+        },
+        {
+            "id": 10256415,
+            "lon": 44.687888853853,
+            "lat": 39.831846473141,
+            "azimuth": 315.29675,
+            "speed": 18.80245,
+            "date": "2025-09-11T11:04:16.991000",
+            "frame_url": "/export-api/v1/frames/10256415/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256415/predictions-image"
+        },
+        {
+            "id": 10256413,
+            "lon": 44.688202999333,
+            "lat": 39.831597922511,
+            "azimuth": 315.02448,
+            "speed": 18.97176,
+            "date": "2025-09-11T11:04:14.976000",
+            "frame_url": "/export-api/v1/frames/10256413/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256413/predictions-image"
+        },
+        {
+            "id": 10256411,
+            "lon": 44.688507321309,
+            "lat": 39.831367738811,
+            "azimuth": 314.88348,
+            "speed": 18.68733,
+            "date": "2025-09-11T11:04:13.052000",
+            "frame_url": "/export-api/v1/frames/10256411/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256411/predictions-image"
+        },
+        {
+            "id": 10256409,
+            "lon": 44.68882497,
+            "lat": 39.83112343,
+            "azimuth": 315.21484,
+            "speed": 18.61835,
+            "date": "2025-09-11T11:04:11",
+            "frame_url": "/export-api/v1/frames/10256409/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256409/predictions-image"
+        },
+        {
+            "id": 10256399,
+            "lon": 44.689129083334,
+            "lat": 39.830887749999,
+            "azimuth": 314.83286,
+            "speed": 18.28862,
+            "date": "2025-09-11T11:04:08.997000",
+            "frame_url": "/export-api/v1/frames/10256399/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256399/predictions-image"
+        },
+        {
+            "id": 10256383,
+            "lon": 44.689425830831,
+            "lat": 39.830654120787,
+            "azimuth": 316.00461,
+            "speed": 18.1311,
+            "date": "2025-09-11T11:04:06.980000",
+            "frame_url": "/export-api/v1/frames/10256383/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256383/predictions-image"
+        },
+        {
+            "id": 10256370,
+            "lon": 44.689716693333,
+            "lat": 39.83042085,
+            "azimuth": 315.33493,
+            "speed": 17.913,
+            "date": "2025-09-11T11:04:04.995000",
+            "frame_url": "/export-api/v1/frames/10256370/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256370/predictions-image"
+        },
+        {
+            "id": 10256345,
+            "lon": 44.690010638333,
+            "lat": 39.830191965,
+            "azimuth": 315.21204,
+            "speed": 17.70155,
+            "date": "2025-09-11T11:04:02.993000",
+            "frame_url": "/export-api/v1/frames/10256345/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256345/predictions-image"
+        },
+        {
+            "id": 10256328,
+            "lon": 44.690305706667,
+            "lat": 39.82996506,
+            "azimuth": 315.16071,
+            "speed": 17.7105,
+            "date": "2025-09-11T11:04:00.979000",
+            "frame_url": "/export-api/v1/frames/10256328/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256328/predictions-image"
+        },
+        {
+            "id": 10256322,
+            "lon": 44.690595489023,
+            "lat": 39.829739031936,
+            "azimuth": 315.53174,
+            "speed": 17.67549,
+            "date": "2025-09-11T11:03:58.983000",
+            "frame_url": "/export-api/v1/frames/10256322/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256322/predictions-image"
+        },
+        {
+            "id": 10256315,
+            "lon": 44.690884174175,
+            "lat": 39.829513753753,
+            "azimuth": 315.62704,
+            "speed": 17.64746,
+            "date": "2025-09-11T11:03:56.980000",
+            "frame_url": "/export-api/v1/frames/10256315/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256315/predictions-image"
+        },
+        {
+            "id": 10256311,
+            "lon": 44.691171895978,
+            "lat": 39.829287570622,
+            "azimuth": 315.5166,
+            "speed": 17.61649,
+            "date": "2025-09-11T11:03:54.984000",
+            "frame_url": "/export-api/v1/frames/10256311/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256311/predictions-image"
+        },
+        {
+            "id": 10256307,
+            "lon": 44.691460737596,
+            "lat": 39.829061933067,
+            "azimuth": 315.43683,
+            "speed": 17.59815,
+            "date": "2025-09-11T11:03:52.978000",
+            "frame_url": "/export-api/v1/frames/10256307/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256307/predictions-image"
+        },
+        {
+            "id": 10256305,
+            "lon": 44.691750659652,
+            "lat": 39.828838361724,
+            "azimuth": 315.10565,
+            "speed": 17.5874,
+            "date": "2025-09-11T11:03:50.980000",
+            "frame_url": "/export-api/v1/frames/10256305/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256305/predictions-image"
+        },
+        {
+            "id": 10256298,
+            "lon": 44.692041346667,
+            "lat": 39.82861252,
+            "azimuth": 315.24265,
+            "speed": 17.55876,
+            "date": "2025-09-11T11:03:48.983000",
+            "frame_url": "/export-api/v1/frames/10256298/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256298/predictions-image"
+        },
+        {
+            "id": 10256293,
+            "lon": 44.692331427617,
+            "lat": 39.828386029755,
+            "azimuth": 315.53723,
+            "speed": 17.69551,
+            "date": "2025-09-11T11:03:46.987000",
+            "frame_url": "/export-api/v1/frames/10256293/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256293/predictions-image"
+        },
+        {
+            "id": 10256289,
+            "lon": 44.692619841666,
+            "lat": 39.828157633334,
+            "azimuth": 315.13727,
+            "speed": 17.43319,
+            "date": "2025-09-11T11:03:44.987000",
+            "frame_url": "/export-api/v1/frames/10256289/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256289/predictions-image"
+        },
+        {
+            "id": 10256285,
+            "lon": 44.692905999333,
+            "lat": 39.827936596596,
+            "azimuth": 315.28207,
+            "speed": 17.39718,
+            "date": "2025-09-11T11:03:42.983000",
+            "frame_url": "/export-api/v1/frames/10256285/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256285/predictions-image"
+        },
+        {
+            "id": 10256281,
+            "lon": 44.693192125,
+            "lat": 39.82771535,
+            "azimuth": 315.31485,
+            "speed": 17.32084,
+            "date": "2025-09-11T11:03:40.987000",
+            "frame_url": "/export-api/v1/frames/10256281/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256281/predictions-image"
+        },
+        {
+            "id": 10256277,
+            "lon": 44.693479499999,
+            "lat": 39.827494800001,
+            "azimuth": 315.36478,
+            "speed": 17.13435,
+            "date": "2025-09-11T11:03:38.981000",
+            "frame_url": "/export-api/v1/frames/10256277/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256277/predictions-image"
+        },
+        {
+            "id": 10256273,
+            "lon": 44.693758320013,
+            "lat": 39.827277620713,
+            "azimuth": 314.95316,
+            "speed": 16.83536,
+            "date": "2025-09-11T11:03:36.982000",
+            "frame_url": "/export-api/v1/frames/10256273/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256273/predictions-image"
+        },
+        {
+            "id": 10256269,
+            "lon": 44.694034961667,
+            "lat": 39.827064306666,
+            "azimuth": 315.12225,
+            "speed": 16.76621,
+            "date": "2025-09-11T11:03:34.982000",
+            "frame_url": "/export-api/v1/frames/10256269/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256269/predictions-image"
+        },
+        {
+            "id": 10256266,
+            "lon": 44.694309321357,
+            "lat": 39.82685010978,
+            "azimuth": 315.15616,
+            "speed": 17.06853,
+            "date": "2025-09-11T11:03:32.985000",
+            "frame_url": "/export-api/v1/frames/10256266/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256266/predictions-image"
+        },
+        {
+            "id": 10256263,
+            "lon": 44.694591072262,
+            "lat": 39.826631776556,
+            "azimuth": 314.37283,
+            "speed": 17.0579,
+            "date": "2025-09-11T11:03:30.984000",
+            "frame_url": "/export-api/v1/frames/10256263/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256263/predictions-image"
+        },
+        {
+            "id": 10256258,
+            "lon": 44.69487603855,
+            "lat": 39.826414280492,
+            "azimuth": 315.74811,
+            "speed": 17.30903,
+            "date": "2025-09-11T11:03:28.990000",
+            "frame_url": "/export-api/v1/frames/10256258/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256258/predictions-image"
+        },
+        {
+            "id": 10256253,
+            "lon": 44.695154528585,
+            "lat": 39.826195608492,
+            "azimuth": 315.91089,
+            "speed": 17.24115,
+            "date": "2025-09-11T11:03:27.019000",
+            "frame_url": "/export-api/v1/frames/10256253/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256253/predictions-image"
+        },
+        {
+            "id": 10256249,
+            "lon": 44.69543924,
+            "lat": 39.82597296,
+            "azimuth": 315.98392,
+            "speed": 16.77796,
+            "date": "2025-09-11T11:03:24.985000",
+            "frame_url": "/export-api/v1/frames/10256249/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256249/predictions-image"
+        },
+        {
+            "id": 10256246,
+            "lon": 44.695711780001,
+            "lat": 39.825760433333,
+            "azimuth": 315.28079,
+            "speed": 16.88384,
+            "date": "2025-09-11T11:03:23.003000",
+            "frame_url": "/export-api/v1/frames/10256246/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256246/predictions-image"
+        },
+        {
+            "id": 10256241,
+            "lon": 44.695994155822,
+            "lat": 39.825541361362,
+            "azimuth": 315.71988,
+            "speed": 17.31046,
+            "date": "2025-09-11T11:03:20.994000",
+            "frame_url": "/export-api/v1/frames/10256241/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256241/predictions-image"
+        }
+    ],
+    "total_count": 59,
+    "limit": 50,
+    "offset": 0
+}
+```
+
+</details>
+
+## Изображение кадра {#frame-image}
+
+Чтобы получить исходное изображение кадра в формате JPEG, отправьте GET-запрос на [`/export-api/v1/frames/{frame_id}/image`](/citylens/administrator/export/reference), где `{frame_id}` — ID кадра.
+
+**Пример запроса:**
+
+```curl
+curl --request GET \
+  --url 'API_URL/export-api/v1/frames/10256311/image' \
+  --header 'X-API-Key: API_KEY'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.jpeg</code></summary>
+
+<img src="/img/citylens/response-frame.jpeg" alt="Пример изображения кадра" width="900" />
+
+</details>
+
+## Изображение кадра с распознанными объектами {#frame-image-with-predictions}
+
+Если на кадре были распознаны объекты (например, дорожные знаки, светофоры, вывески на зданиях и другие), они будут отмечены на кадре в виде рамки и текстовой подписи.
+
+Чтобы получить изображение кадра с распознанными объектами в виде бинарного файла, отправьте GET-запрос на [`/export-api/v1/frames/{frame_id}/predictions-image`](/citylens/administrator/export/reference), где `{frame_id}` — ID кадра.
+
+**Пример запроса:**
+
+```curl
+curl --request GET \
+  --url 'API_URL/export-api/v1/frames/10256311/predictions-image' \
+  --header 'X-API-Key: API_KEY'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.jpeg</code></summary>
+
+<img src="/img/citylens/response-frame-predictions.jpg" alt="Пример изображения кадра с распознанными объектами" width="900" />
+
+</details>
+
+## Список детекторов {#detector-list}
+
+Детекторы — это категории объектов городской среды, которые можно распознать на кадрах (например, дорожные знаки, светофоры, вывески на зданиях и другие). Список доступных детекторов определяется при интеграции сервиса <Brand /> Ситискан.
+
+Чтобы получить список возможных детекторов, отправьте GET-запрос на [/export-api/v1/detectors](/citylens/administrator/export/reference).
+
+**Пример запроса:**
+
+```curl
+curl --request GET \
+  --url 'API_URL/export-api/v1/detectors' \
+  --header 'X-API-Key: API_KEY'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "detectors": [
+        "barrier-detection",
+        "road-damage-detection",
+        "signs",
+        "traffic-lights"
+    ]
+}
+```
+
+</details>
+
+## Список распознанных объектов {#detected-objects-list}
+
+Чтобы получить список объектов, распознанных на кадрах, отправьте GET-запрос на [/export-api/v1/detections/objects](/citylens/administrator/export/reference) со следующими параметрами:
+
+* `from_dt` (обязательный параметр) — начальная дата и время записи кадра в формате `YYYY-MM-DDTHH:MM:SS`.
+* `to_dt` (обязательный параметр) — конечная дата и время записи кадра в формате `YYYY-MM-DDTHH:MM:SS`.
+* `detector_name` — название [детектора](#detector-list) (категории распознаваемых объектов) для фильтрации. Например, `signs` — дорожные знаки.
+* `locale` — язык названий распознанных объектов в ответе.
+* `limit` — максимальное количество объектов в ответе.
+
+**Пример запроса:**
+
+```curl
+curl --request GET \
+  --url 'API_URL/export-api/v1/detections/objects?from_dt=2025-09-01T00:00:00&to_dt=2025-12-30T00:00:00&detector_name=signs&locale=ru_RU&limit=100' \
+  --header 'X-API-Key: API_KEY'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "detected_objects": [
+        {
+            "id": 409251,
+            "lon": 44.69109857763772,
+            "lat": 39.82937064594726,
+            "type": "signs",
+            "label": "4_2_1",
+            "name": "Знак 4.2.1",
+            "value": null,
+            "is_tmp": false,
+            "first_seen_datetime": "2025-09-11T11:03:54.984000",
+            "last_seen_datetime": "2025-09-11T11:03:54.984000",
+            "bbox": {
+                "x_from": 1670,
+                "y_from": 369,
+                "width": 87,
+                "height": 86
+            },
+            "frame_id": 10256311,
+            "frame_url": "/export-api/v1/frames/10256311/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10256311/predictions-image"
+        },
+        {
+            "id": 422030,
+            "lon": 45.31161451674012,
+            "lat": 39.749436663989144,
+            "type": "signs",
+            "label": "3_24",
+            "name": "Знак 3.24",
+            "value": 50.0,
+            "is_tmp": false,
+            "first_seen_datetime": "2025-11-02T14:07:30.764000",
+            "last_seen_datetime": "2025-11-02T14:07:31.289000",
+            "bbox": {
+                "x_from": 1464,
+                "y_from": 489,
+                "width": 138,
+                "height": 139
+            },
+            "frame_id": 10779055,
+            "frame_url": "/export-api/v1/frames/10779055/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10779055/predictions-image"
+        },
+        {
+            "id": 422031,
+            "lon": 45.311685502259714,
+            "lat": 39.748618444895996,
+            "type": "signs",
+            "label": "2_5",
+            "name": "Знак 2.5",
+            "value": null,
+            "is_tmp": false,
+            "first_seen_datetime": "2025-11-02T14:07:39.755000",
+            "last_seen_datetime": "2025-11-02T14:07:39.755000",
+            "bbox": {
+                "x_from": 1672,
+                "y_from": 330,
+                "width": 117,
+                "height": 105
+            },
+            "frame_id": 10779087,
+            "frame_url": "/export-api/v1/frames/10779087/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10779087/predictions-image"
+        },
+        {
+            "id": 422032,
+            "lon": 45.31152877168696,
+            "lat": 39.75036066557599,
+            "type": "signs",
+            "label": "3_24",
+            "name": "Знак 3.24",
+            "value": 10.0,
+            "is_tmp": false,
+            "first_seen_datetime": "2025-11-02T14:07:24.564000",
+            "last_seen_datetime": "2025-11-02T14:07:24.564000",
+            "bbox": {
+                "x_from": 1511,
+                "y_from": 330,
+                "width": 143,
+                "height": 133
+            },
+            "frame_id": 10779017,
+            "frame_url": "/export-api/v1/frames/10779017/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10779017/predictions-image"
+        },
+        {
+            "id": 422033,
+            "lon": 45.31156437203809,
+            "lat": 39.750479372403134,
+            "type": "signs",
+            "label": "3_24",
+            "name": "Знак 3.24",
+            "value": 70.0,
+            "is_tmp": false,
+            "first_seen_datetime": "2025-11-02T14:07:24.313000",
+            "last_seen_datetime": "2025-11-02T14:07:24.313000",
+            "bbox": {
+                "x_from": 1333,
+                "y_from": 431,
+                "width": 83,
+                "height": 83
+            },
+            "frame_id": 10779015,
+            "frame_url": "/export-api/v1/frames/10779015/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10779015/predictions-image"
+        },
+        {
+            "id": 422034,
+            "lon": 45.31161752061028,
+            "lat": 39.749444042695735,
+            "type": "signs",
+            "label": "2_2",
+            "name": "Знак 2.2",
+            "value": null,
+            "is_tmp": false,
+            "first_seen_datetime": "2025-11-02T14:07:30.764000",
+            "last_seen_datetime": "2025-11-02T14:07:31.289000",
+            "bbox": {
+                "x_from": 1434,
+                "y_from": 210,
+                "width": 153,
+                "height": 153
+            },
+            "frame_id": 10779055,
+            "frame_url": "/export-api/v1/frames/10779055/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10779055/predictions-image"
+        },
+        {
+            "id": 422035,
+            "lon": 45.31161603480356,
+            "lat": 39.74944031054389,
+            "type": "signs",
+            "label": "2_4",
+            "name": "Знак 2.4",
+            "value": null,
+            "is_tmp": false,
+            "first_seen_datetime": "2025-11-02T14:07:30.764000",
+            "last_seen_datetime": "2025-11-02T14:07:31.289000",
+            "bbox": {
+                "x_from": 1441,
+                "y_from": 360,
+                "width": 164,
+                "height": 128
+            },
+            "frame_id": 10779055,
+            "frame_url": "/export-api/v1/frames/10779055/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10779055/predictions-image"
+        },
+        {
+            "id": 422036,
+            "lon": 45.311692231774046,
+            "lat": 39.748703229422745,
+            "type": "signs",
+            "label": "2_4",
+            "name": "Знак 2.4",
+            "value": null,
+            "is_tmp": false,
+            "first_seen_datetime": "2025-11-02T14:07:38.717000",
+            "last_seen_datetime": "2025-11-02T14:07:38.717000",
+            "bbox": {
+                "x_from": 1642,
+                "y_from": 341,
+                "width": 134,
+                "height": 108
+            },
+            "frame_id": 10779083,
+            "frame_url": "/export-api/v1/frames/10779083/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10779083/predictions-image"
+        },
+        {
+            "id": 422037,
+            "lon": 45.311834689373455,
+            "lat": 39.7484869208197,
+            "type": "signs",
+            "label": "5_15_5",
+            "name": "Знак 5.15.5",
+            "value": null,
+            "is_tmp": false,
+            "first_seen_datetime": "2025-11-02T14:07:41.779000",
+            "last_seen_datetime": "2025-11-02T14:07:43.783000",
+            "bbox": {
+                "x_from": 127,
+                "y_from": 528,
+                "width": 70,
+                "height": 79
+            },
+            "frame_id": 10779093,
+            "frame_url": "/export-api/v1/frames/10779093/image",
+            "frame_url_with_detections": "/export-api/v1/frames/10779093/predictions-image"
+        }
+    ],
+    "total_count": 9,
+    "limit": 100,
+    "offset": 0,
+    "processed": false
+}
+```
+
+</details>

@@ -1,0 +1,12 @@
+.toast {
+  color: var(--text-clear);
+  font-size: var(--fs-md);
+  line-height: 18px;
+  background-color: var(--shape-level-5);
+  padding: 7px 12px;
+  border-radius: 6px;
+
+  [data-theme='dark'] & {
+    background-color: var(--shape-level-4);
+  }
+}

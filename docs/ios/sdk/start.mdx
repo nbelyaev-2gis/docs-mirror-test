@@ -1,0 +1,210 @@
+---
+sidebar: iossdk
+---
+
+# Начало работы
+
+## 1. Получение ключа доступа {#get-api-key}
+
+Чтобы подключиться к серверам <Brand />, получать геоданные и включить возможности SDK, получите файл ключа доступа `dgissdk.key`:
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=sdk_ios).
+2. Купите [подписку](/platform-manager/subscription/purchase) для доступа к необходимым API. Набор API зависит от необходимых функциональностей и [версии SDK](/ios/sdk/overview#versions). См. подробнее в разделе [API для работы SDK](/ios/sdk/overview#api-list).
+3. Создайте [ключ доступа](/platform-manager/subscription/keys#production) или [настройте существующий ключ для работы с мобильным SDK](/platform-manager/subscription/managing-keys#sdk-key-configuration).
+4. Скачайте файл ключа `dgissdk.key`.
+
+Работать с ключами можно в Менеджере Платформы: подробнее см. в документации [личного кабинета](/platform-manager/overview).
+
+### Требования к работе с ключами {#key-requirements}
+
+* При работе с SDK версии 13.3.0 и выше указание App ID при создании ключа необязательно. Укажите App ID, только если вы используете SDK более низких версий или планируете работать с [офлайн-данными](#offline-mode).
+* Если в ключе указан App ID, вы можете использовать этот ключ только для одного приложения. Отдельные ключи требуются в следующих случаях:
+  * Если приложение доступно для разных операционных систем.
+  * Если у приложения есть несколько вариантов для одной ОС (например, приложение для водителя и приложение для пассажира).
+  * Если используются разные версии SDK (**Full** и **Map**).
+* Изменение файла ключа во время работы приложения не поддерживается. Так как выбор файла ключа происходит при инициализации SDK, вы можете задать им разные названия (по умолчанию используется `dgissdk.key`): для этого передайте ключ с другим названием через параметр `keySource` в `DGis.Container`.
+
+## 2. Установка SDK {#install}
+
+### Swift Package Manager {#swift-package-manager}
+
+Чтобы установить iOS SDK через Swift Package Manager, добавьте в проект пакетную зависимость. См. инструкции по установке Swift-пакетов в [документации Apple](https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app).
+
+Для подключения SDK укажите URL в зависимости от версии:
+
+* `https://github.com/2gis/mobile-sdk-full-swift-package` — для версии SDK **Full**.
+* `https://github.com/2gis/mobile-sdk-map-swift-package` — для версии SDK **Map**.
+
+### CocoaPods {#cocoa-pods}
+
+Чтобы установить iOS SDK через CocoaPods, добавьте зависимость `DGisMobileSDK`.
+
+Используйте версионирование из Swift Package Manager, при этом добавьте постфикс `-full` или `-map` в зависимости от необходимой версии SDK.
+
+Спецификацию пода вы можете посмотреть по одному из следующих URL:
+
+* `https://github.com/2gis/mobile-sdk-full-swift-package/blob/master/DGisMobileSDK.podspec` — для версии SDK **Full**.
+* `https://github.com/2gis/mobile-sdk-map-swift-package/blob/master/DGisMobileSDK.podspec` — для версии SDK **Map**.
+
+### Бинарный артефакт {#binary-artifact}
+
+Вы можете загрузить фреймворки напрямую, не используя пакетные менеджеры. Для этого обратитесь к репозиторию, содержащему спецификацию пакетов для CocoaPods или Swift Package Manager:
+
+* `https://github.com/2gis/mobile-sdk-full-swift-package` — для версии SDK **Full**.
+* `https://github.com/2gis/mobile-sdk-map-swift-package` — для версии SDK **Map**.
+
+В файле `Package.swift` будет указан URL, ведущий на загрузку архива с SDK по прямой ссылке. Для навигации по версиям используйте теги git.
+
+## 3. Инициализация SDK {#initialize}
+
+1. Создайте специальный объект [Container](/ios/sdk/reference/stable/class#container), который будет хранить все сущности, связанные с картой. При создании объекта укажите путь до [полученного файла ключа](#get-api-key) `dgissdk.key` одним из способов:
+
+   * Из `Bundle.main` приложения с помощью метода [fromAsset()](/ios/sdk/reference/stable/enumeration#key-source) (способ по умолчанию). Ключ должен быть прикреплён к корню приложения:
+
+     ```swift
+     // Получение файла ключа
+     let key = KeySource.fromAsset(KeyFromAsset(path: "dgissdk.key"))
+
+     // Создание контейнера
+     let sdk = DGis.Container(keySource: key)
+     ```
+
+   * C указанием абсолютного пути до файла ключа с помощью метода [fromFile()](/ios/sdk/reference/stable/enumeration#key-source):
+
+     ```swift
+     // Получение файла ключа
+     let key = Bundle.main.path(forResource: "dgissdk", ofType: "key").map {
+           KeySource.fromFile(KeyFromFile(path: $0))
+         }
+
+     // Создание контейнера
+     let sdk = DGis.Container(keySource: key)
+     ```
+
+   * С указанием строки для получения файла ключа с помощью метода [fromString()](/ios/sdk/reference/stable/enumeration#key-source):
+
+     ```swift
+     // Получение файла ключа
+     let key = KeySource.fromString(KeyFromString(contents: "some content"))
+
+     // Создание контейнера
+     let sdk = DGis.Container(keySource: key)
+     ```
+
+   :::warning
+   
+   `DGis.Container` может быть создан в единственном экземпляре. Вы можете его пересоздать, чтобы освободить неиспользуемые ресурсы (например, кеш после первого создания карты).
+
+   :::
+
+2. Дополнительно вы можете указать настройки журналирования ([LogOptions](/ios/sdk/reference/stable/struct#log-options)) и настройки HTTP-клиента ([HTTPOptions](/ios/sdk/reference/stable/struct#http-options)), такие как время ожидания ответа и кеширование.
+
+   ```swift
+   // Настройки журналирования
+   let logOptions = LogOptions(systemLevel: .info)
+
+   // Настройки HTTP-клиента
+   let httpOptions = HttpOptions.init()
+
+   // Настройки сбора анонимной статистики использования
+   let personalDataCollectionOptions = PersonalDataCollectionOptions(personalDataCollectionConsent: .granted)
+
+   // Создание контейнера
+   let sdk = DGis.Container(
+       keySource: key,
+       logOptions: logOptions,
+       httpOptions: httpOptions,
+       personalDataCollectionOptions: personalDataCollectionOptions
+   )
+   ```
+
+## Дополнительные настройки {#additional-settings}
+
+### Vendor Config {#vendor-config}
+
+Для переопределения некоторых настроек работы SDK используется файл в формате `VendorConfig`, который передается при инициализации контейнера SDK.
+
+1. Добавьте файл в формате `VendorConfig` в бандл при сборке приложения и создайте экземпляр класса [File](/ios/sdk/reference/stable/class#file).
+
+   Для файла, добавленного в корень бандла и имеющего имя `vendor-config.json`, код будет выглядеть так:
+
+   ```swift
+   let vendorConfigFile = Bundle.main.path(forResource: "vendor-config", ofType: "jsonx").map {
+       VendorConfig.fromFile(VendorConfigFromFile(path: $0))
+   }
+   ```
+
+2. Передайте созданную переменную в качестве значения параметра `vendorConfigFile` при инициализации [Container](/ios/sdk/reference/stable/class#container):
+
+   ```swift
+   let sdk = DGis.Container(
+       keySource: key,
+       logOptions: logOptions,
+       httpOptions: httpOptions,
+       vendorConfigFile: vendorConfigFile ?? .none
+   )
+   ```
+
+### Работа с офлайн-данными {#offline-mode}
+
+Мобильный SDK (версия **Full**) позволяет работать с данными карты, справочника и навигатора офлайн из предварительно загруженных пакетов. Это может быть полезно в условиях плохой связи или при её полном отсутствии.
+
+Чтобы настроить работу в режиме офлайн:
+
+1. Обратитесь в [отдел продаж <Brand />](https://dev.2gis.ru/api/mobile-sdk#form), чтобы получить права на работу с офлайн-данными. Вы можете запросить права на офлайн-данные всех компонентов (карта, справочник, построение маршрутов) или выбрать только необходимые.
+
+2. Скачайте файлы с данными для территорий, где необходима офлайн-работа приложения, через [TerritoryManager](/ios/sdk/reference/stable/class#territory-manager).
+
+   См. пример кода для загрузки территории:
+
+   * [для версии SDK 13.0.0 и выше](https://github.com/2gis/mobile-sdk-ios-demo/tree/develop/app/Views/DemoPages/TerritoryManager/SwiftUI),
+   * [для версии SDK 12.x и ниже](https://github.com/2gis/mobile-sdk-ios-demo/tree/master/app/Views/DemoPages/PackageManager/SwiftUI).
+
+3. Настройте компоненты SDK для работы с предзагруженными данными:
+
+   * Карта: [создайте источник данных и укажите нужный режим работы](/ios/sdk/examples/map#offline-mode).
+   * Справочник: используйте нужный [метод для создания справочника объектов](/ios/sdk/examples/directory#creating-a-search-engine).
+   * Построение маршрутов: по умолчанию настроен гибридный режим. Подробнее см. [документацию о маршрутах](/ios/sdk/examples/routing#offline-mode).
+
+### Язык приложения {#application-language}
+
+Чтобы установить язык приложения, передайте список локалей ([Locale](/ios/sdk/reference/stable/struct#locale)) в методе `overrideLocales()` класса [LocaleManager](/ios/sdk/reference/stable/class#locale-manager).
+
+:::note[Язык навигатора]
+
+В зависимости от выбранной локали меняется язык [звуковых оповещений в навигаторе](/ios/sdk/examples/navigation#sound-notifications).
+
+:::
+
+Пример установки англоязычной локали:
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+```swift
+// Создание объекта Locale с указанием языка и региона
+let locale = Locale(language: "en", region: "EN")
+
+// Установка локали для приложения
+LocaleManager.instance(context: sdkContext).overrideLocales(locales: [locale])
+```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+```swift
+// Создание объекта Locale с указанием языка и региона
+let locale = Locale(language: "en", region: "EN")
+
+// Установка локали для приложения
+getLocaleManager(context: sdkContext).overrideLocales(locales: [locale])
+```
+
+</TabItem>
+</Tabs>
+
+Доступные значения языков (параметры `language` и `region` соответственно):
+
+* `ru-RU` — русский;
+* `en-EN` — английский;
+* `ar-AE` — арабский.

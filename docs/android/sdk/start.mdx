@@ -1,0 +1,217 @@
+---
+sidebar: androidsdk
+---
+
+# Начало работы
+
+## 1. Получение ключа доступа {#get-api-key}
+
+Чтобы подключиться к серверам <Brand />, получать геоданные и включить возможности SDK, получите файл ключа доступа `dgissdk.key`:
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=sdk_android).
+2. Купите [подписку](/platform-manager/subscription/purchase) для доступа к необходимым API. Набор API зависит от необходимых функциональностей и [версии SDK](/android/sdk/overview#versions). См. подробнее в разделе [API для работы SDK](/android/sdk/overview#api-list).
+3. Создайте [ключ доступа](/platform-manager/subscription/keys#production) или [настройте существующий ключ для использования с мобильным SDK](/platform-manager/subscription/managing-keys#sdk-key-configuration).
+4. Скачайте файл ключа `dgissdk.key`.
+
+Работать с ключами можно в Менеджере Платформы: подробнее см. в документации [личного кабинета](/platform-manager/overview).
+
+### Требования к работе с ключами {#key-requirements}
+
+* При работе с SDK версии 13.3.0 и выше указание App ID при создании ключа необязательно. Укажите App ID, только если вы используете SDK более низких версий или планируете работать с [офлайн-данными](#offline-mode).
+* Если в ключе указан App ID, вы можете использовать этот ключ только для одного приложения. Отдельные ключи требуются в следующих случаях:
+  * Если приложение доступно для разных операционных систем.
+  * Если у приложения есть несколько вариантов для одной ОС (например, приложение для водителя и приложение для пассажира).
+  * Если используются разные версии SDK (**Full** и **Map**).
+* Изменение файла ключа во время работы приложения не поддерживается.
+
+## 2. Установка SDK {#install}
+
+1. Укажите пользовательский репозиторий в вашем файле `settings.gradle.kts`:
+
+   ```gradle
+   dependencyResolutionManagement {
+       repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+       repositories {
+           google()
+           mavenCentral()
+           maven {
+               url = URI("https://artifactory.2gis.dev/sdk-maven-release")
+           }
+       }
+   }
+   ```
+
+2. Добавьте зависимость:
+
+    <Tabs>
+    <TabItem value="sdk-full" label="Для версии Full" default>
+
+    ```gradle
+    dependencies {
+        implementation 'ru.dgis.sdk:sdk-full:latest.release'
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="sdk-map" label="Для версии Map">
+
+    ```gradle
+    dependencies {
+        implementation 'ru.dgis.sdk:sdk-map:latest.release'
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+## 3. Инициализация SDK {#initialize}
+
+1. Добавьте [полученный файл ключа](#get-api-key) `dgissdk.key` в `assets` приложения.
+
+2. Вызовите метод `initialize()` объекта [DGis](/android/sdk/reference/stable/class#ru.dgis.sdk.dgis), указав контекст приложения:
+
+   ```kotlin
+   class Application : Application() {
+       lateinit var sdkContext: Context
+
+       override fun onCreate() {
+           super.onCreate()
+
+           sdkContext = DGis.initialize(
+               this
+           )
+       }
+   }
+   ```
+
+   :::warning
+
+   `Context` может быть создан в единственном экземпляре.
+
+   :::
+
+3. Дополнительно вы можете указать настройки журналирования ([LogOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.log-options)) и настройки HTTP-клиента ([HttpOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.http-options)), такие как кеширование. С помощью [LogOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.log-options) также можно [настроить отправку логов в Firebase Crashlytics](#sending-logs).
+
+   ```kotlin
+   // Настройки журналирования
+   val logOptions = LogOptions(
+       LogLevel.VERBOSE
+   )
+
+   // Настройки HTTP-клиента
+   val httpOptions = HttpOptions(
+       useCache = false
+   )
+
+   // Согласие на сбор и отправку персональных данных
+   val dataCollectConsent = PersonalDataCollectionConsent.GRANTED
+
+   sdkContext = DGis.initialize(
+       appContext = this,
+       dataCollectConsent = dataCollectConsent,
+       logOptions = logOptions,
+       httpOptions = httpOptions
+   )
+   ```
+
+## Дополнительные настройки {#additional-settings}
+
+### Отправка логов в Firebase Crashlytics {#sending-logs}
+
+Объект класса [LogOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.log-options), кроме настройки уровня логирования, также позволяет использовать собственный приёмник логов с помощью параметра [customSink](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.log-options/val-custom-sink). [LogSink](/android/sdk/reference/stable/interface#ru.dgis.sdk.platform.log-sink) – интерфейс с единственным методом `write()`, который необходимо реализовать.
+
+Реализация для отправки сообщений лога в Firebase Crashlytics может выглядеть так:
+
+```kotlin
+class FirebaseLogSink : LogSink {
+    override fun write(message: LogMessage) {
+        FirebaseCrashlytics.getInstance().log(message.text)
+    }
+}
+```
+
+Передайте экземпляр этого класса в метод `initialize()` объекта [DGis](/android/sdk/reference/stable/class#ru.dgis.sdk.dgis):
+
+```kotlin
+sdkContext = DGis.initialize(
+            ...
+            logOptions = LogOptions(
+                ...
+                customSink = FirebaseLogSink()
+            )
+            ...
+        )
+```
+
+### Vendor Config {#vendor-config}
+
+Для переопределения некоторых настроек работы SDK используется файл в формате [VendorConfig](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.vendor-config), который передается при инициализации SDK.
+
+Существует несколько способов создать экземпляр класса `VendorConfig`:
+
+* [VendorConfigFromAsset](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.vendor-config-from-asset) – файл необходимо расположить в каталоге assets исходного кода приложения и указать имя файла в конструкторе.
+* [VendorConfigFromFile](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.vendor-config-from-file) – файл необходимо расположить на файловой системе устройства и указать абсолютный путь до него.
+* [VendorConfigFromString](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.vendor-config-from-string) – в конструктор необходимо передать строку с содержимым файла формата json.
+
+Созданный экземпляр [VendorConfig](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.vendor-config) передается в метод [DGis.initialize()](/android/sdk/reference/stable/class#ru.dgis.sdk.dgis) параметром `vendorConfig`.
+
+### Работа с офлайн-данными {#offline-mode}
+
+Мобильный SDK (версия **Full**) позволяет работать с данными карты, справочника и навигатора офлайн из предварительно загруженных пакетов. Это может быть полезно в условиях плохой связи или при её полном отсутствии.
+
+Чтобы настроить работу в режиме офлайн:
+
+1. Обратитесь в [отдел продаж <Brand />](https://dev.2gis.ru/api/mobile-sdk#form), чтобы получить права на работу с офлайн-данными. Вы можете запросить права на офлайн-данные всех компонентов (карта, справочник, построение маршрутов) или выбрать только необходимые.
+
+2. Скачайте файлы с данными для территорий, где необходима офлайн-работа приложения, через [TerritoryManager](/android/sdk/reference/stable/class#ru.dgis.sdk.update.territory-manager).
+
+   См. [пример кода для загрузки территорий](https://github.com/2gis/mobile-sdk-android-demo/blob/master/app/src/main/java/ru/dgis/sdk/demo/DownloadTerritoriesActivity.kt).
+
+3. Настройте компоненты SDK для работы с предзагруженными данными:
+
+   * Карта: [создайте источник данных и укажите нужный режим работы](/android/sdk/examples/map#offline-mode).
+   * Справочник: используйте нужный [метод для создания справочника объектов](/android/sdk/examples/directory#creating-a-search-engine).
+   * Построение маршрутов: по умолчанию настроен гибридный режим. Подробнее см. [документацию о маршрутах](/android/sdk/examples/routing#offline-mode).
+
+### Язык приложения {#application-language}
+
+Чтобы установить язык приложения, передайте список локалей ([Locale](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.locale)) в методе `overrideLocales()` класса [LocaleManager](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.locale-manager).
+
+:::note[Язык навигатора]
+
+В зависимости от выбранной локали меняется язык [звуковых оповещений в навигаторе](/android/sdk/examples/navigation#sound-notifications).
+
+:::
+
+Пример установки англоязычной локали:
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+```kotlin
+// Создание объекта Locale с указанием языка и региона
+val locale = Locale(language = "en", region = "EN")
+
+// Установка локали для приложения
+LocaleManager.instance(sdkContext).overrideLocales(listOf(locale))
+```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+```kotlin
+// Создание объекта Locale с указанием языка и региона
+val locale = Locale(language = "en", region = "EN")
+
+// Установка локали для приложения
+getLocaleManager(sdkContext).overrideLocales(listOf(locale))
+```
+
+</TabItem>
+</Tabs>
+
+Доступные значения языков (параметры `language` и `region` соответственно):
+
+* `ru-RU` — русский;
+* `en-EN` — английский;
+* `ar-AE` — арабский.

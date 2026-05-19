@@ -1,0 +1,295 @@
+---
+sidebar: mapgljsapi
+---
+# Линейка
+
+Вы можете добавлять линейку на карту с помощью плагина [Ruler](/mapgl/plugins/ruler/overview) (Линейка).
+
+Линейка работает в двух режимах:
+
+* Полилиния: для измерения расстояний между произвольными точками на карте.
+* Полигон: для измерения площадей и периметров многоугольников на карте.
+
+## Начало работы
+
+Чтобы добавить линейку на карту, создайте экземпляр [Ruler](/mapgl/plugins/ruler/reference/class#ruler):
+
+```js
+const ruler = new mapgl.Ruler(map, { mode: 'polyline' });
+```
+
+Если вы используете npm:
+
+```js
+// Импортируйте плагин как ES-модуль...
+import { Ruler } from '@2gis/mapgl-ruler';
+// ... или как модуль CommonJS
+const { Ruler } = require('@2gis/mapgl-ruler');
+
+const ruler = new Ruler(map, { mode: 'polyline' });
+```
+
+## Примеры использования
+
+### Режим полилинии
+
+Чтобы поставить точки, кликайте по карте.
+
+Вы можете строить ломаные линии из нескольких точек, а также добавлять точки на уже нарисованную линию.
+
+Рядом с каждой точкой отображается расстояние от стартовой точки.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Линейка в режиме полилинии с помощью плагина Ruler" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            .button {
+                padding: 4px 10px;
+                background: #00a81f;
+                border-radius: 4px;
+                box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+                border: none;
+                color: #fff;
+                font-size: 12px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_RULER_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.778005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const ruler = new mapgl.Ruler(map, {
+                mode: 'polyline',
+                points: [
+                  [37.615655, 55.768005],
+                  [37.615655, 55.788005],
+                  [37.635655, 55.768005],
+                ],
+            });
+
+            const resetControl = new mapgl.Control(
+                map,
+                '<button class="button">Сбросить точки</button>',
+                {
+                    position: 'topLeft',
+                },
+            );
+
+            resetControl
+                .getContainer()
+                .querySelector('button')
+                .addEventListener('click', function () {
+                    ruler.destroy();
+                    ruler.enable();
+                });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+### Режим полигона
+
+Чтобы поставить точки, кликайте по карте.
+
+Вы можете строить многоугольники (полигоны) из нескольких точек, а также добавлять точки на уже нарисованные стороны полигона.
+
+Рядом с каждой точкой отображается расстояние от стартовой точки, а также отображается площадь полигона.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Линейка в режиме полигона с помощью плагина Ruler" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            .button {
+                padding: 4px 10px;
+                background: #00a81f;
+                border-radius: 4px;
+                box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+                border: none;
+                color: #fff;
+                font-size: 12px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_RULER_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.778005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const ruler = new mapgl.Ruler(map, {
+                mode: 'polygon',
+                points: [
+                    [37.615655, 55.768005],
+                    [37.615655, 55.788005],
+                    [37.635655, 55.768005],
+                ],
+            });
+
+            const resetControl = new mapgl.Control(
+                map,
+                '<button class="button">Сбросить точки</button>',
+                {
+                    position: 'topLeft',
+                },
+            );
+
+            resetControl
+                .getContainer()
+                .querySelector('button')
+                .addEventListener('click', function () {
+                    ruler.destroy();
+                    ruler.enable();
+                });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Использование UI-элемента
+
+Вы можете добавить на карту UI-элемент управления [RulerControl](/mapgl/plugins/ruler/reference/class#ruler-control), чтобы включать и отключать режим линейки.
+
+Экземпляр RulerControl является оболочкой экземпляра [Ruler](/mapgl/plugins/ruler/reference/class#ruler) и расширяет функциональность [Control](/mapgl/reference/class#control).
+
+Чтобы добавить UI-элемент на карту, создайте экземпляр RulerControl:
+
+```js
+const rulerControl = new RulerControl(map, { position: 'centerRight', mode: 'polyline' });
+```
+
+Вы можете получить экземпляр [Ruler](/mapgl/plugins/ruler/reference/class#ruler) с помощью метода `getRuler()`:
+
+```js
+rulerControl.getRuler().setPoints([
+    [37.615655, 55.768005],
+    [37.615655, 55.788005],
+    [37.635655, 55.768005],
+]);
+```
+
+Чтобы включить или отключить режим линейки, нажмите значок линейки на карте.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="UI-элемент для линейки с помощью плагина Ruler" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            .button {
+                padding: 4px 10px;
+                background: #00a81f;
+                border-radius: 4px;
+                box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+                border: none;
+                color: #fff;
+                font-size: 12px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_RULER_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.778005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            let mode = 'polyline';
+            let control = new mapgl.RulerControl(map, { position: 'centerRight', mode });
+            control.getRuler().setPoints([
+                [37.615655, 55.768005],
+                [37.615655, 55.788005],
+                [37.635655, 55.768005],
+            ]);
+
+            const resetControl = new mapgl.Control(
+                map,
+                '<button class="button">Переключить режим</button>',
+                {
+                    position: 'topLeft',
+                },
+            );
+
+            resetControl
+                .getContainer()
+                .querySelector('button')
+                .addEventListener('click', function () {
+                    const data = control.getRuler().getData();
+                    control.destroy();
+
+                    let points = [];
+                    switch (data.type) {
+                        case 'polyline':
+                            points = data.coordinates;
+                            break;
+                        case 'polygon':
+                            points = data.coordinates[0];
+                            break;
+                    }
+
+                    mode = mode === 'polyline' ? 'polygon' : 'polyline';
+                    control = new mapgl.RulerControl(map, { position: 'centerRight', mode });
+                    control.getRuler().setPoints(points);
+                });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

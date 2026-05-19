@@ -1,0 +1,621 @@
+﻿---
+sidebar: tspapi
+---
+# Обзор
+
+TSP API позволяет решить [задачу коммивояжёра](https://ru.wikipedia.org/wiki/Задача_коммивояжёра) (TSP/VRP): построить кратчайший по времени или расстоянию маршрут обхода указанных точек. Для обхода точек можно указать как одного курьера, так и нескольких. Если указано несколько курьеров, маршрут будет разделён между ними наиболее оптимальным способом (некоторые курьеры могут быть исключены, если использование меньшего числа курьеров будет более оптимально).
+
+Для маршрута можно указать до 200 точек и до 50 курьеров.
+
+## Получение ключа доступа {#getting-access-key}
+
+Чтобы работать с API сервиса, получите ключ доступа:
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=api_tsp).
+2. Создайте [демо-ключ](/platform-manager/subscription/keys#demo) или купите [подписку](/platform-manager/subscription/purchase) для доступа к API. Подробнее о стоимости сервиса см. в разделе [Тарифы](#tariffs).
+
+Работать с ключами можно в Менеджере Платформы: подробнее см. в документации [личного кабинета](/platform-manager/overview).
+
+## Пример задачи {#task-example}
+
+Доставить груз со склада до пяти разных точек со следующими условиями:
+
+* Могут быть использованы два курьера с рабочим временем с 8:00 до 18:00.
+* Каждый курьер может перевозить до 150 единиц груза.
+* В каждую точку нужно доставить по 50 единиц груза.
+* Все курьеры начинают путь из одной точки (склада).
+* В каждой точке курьер должен провести 10 минут.
+* У двух из пяти точек есть фиксированное время посещения (окно): с 8:00 до 10:00.
+
+Точки для посещения отмечены на карте. Чтобы посмотреть параметры каждой точки, наведите курсор на соответствующий маркер.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>TSP API</title>
+    <meta name="description" content="Решение задачи коммивояжёра с помощью TSP API" />
+    <style>
+        html, body, #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #tooltip {
+            padding: 10px 20px;
+            background: #fff;
+            box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            display: none;
+            position: fixed;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="tooltip"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [37.615655, 55.701005],
+            zoom: 10,
+            key: 'Your API access key',
+        });
+
+        const tooltipEl = document.getElementById('tooltip');
+
+        const wareHouseIcon = 'https://docs.2gis.com/img/mapgl/point-red.svg';
+
+        const startMarker = new mapgl.Marker(map, {
+            coordinates: [37.59866603365515, 55.582334626941034],
+            icon: wareHouseIcon,
+        });
+
+        startMarker.on('mouseover', (event) => {
+            const offset = 5;
+            tooltipEl.style.top = \`\${event.point[1] + offset}px\`;
+            tooltipEl.style.left = \`\${event.point[0] + offset}px\`;
+            tooltipEl.innerHTML = '<strong>Склад (точка 0)</strong><br/>Координаты: 55.4847, 37.5767';
+            tooltipEl.style.display = 'block';
+        });
+
+        startMarker.on('mouseout', () => {
+            tooltipEl.style.display = 'none';
+        });
+
+        const markers = [
+            { coordinates: [37.53086589478259, 55.7010743761165], label: '<strong>Точка 1</strong><br/>Координаты: 55.7011, 37.5309<br/>Временное окно: 8:00-10:00<br/>Работа в точке: 10 минут' },
+            { coordinates: [37.55596751554285, 55.72523735978362], label: '<strong>Точка 2</strong><br/>Координаты: 55.7252, 37.5560<br/>Работа в точке: 10 минут' },
+            { coordinates: [37.64224270924294, 55.745965069946045], label: '<strong>Точка 3</strong><br/>Координаты: 55.7460, 37.6422<br/>Работа в точке: 10 минут' },
+            { coordinates: [37.58023157392096, 55.75864347204347], label: '<strong>Точка 4</strong><br/>Координаты: 55.7586, 37.5802<br/>Работа в точке: 10 минут' },
+            { coordinates: [37.749414711518185, 55.79427118434125], label: '<strong>Точка 5</strong><br/>Координаты: 55.7943, 37.7494<br/>Временное окно: 8:00—10:00<br/>Работа в точке: 10 минут' },
+            ];
+
+        markers.forEach((markerData) => {
+            const marker = new mapgl.Marker(map, {
+                coordinates: markerData.coordinates,
+            });
+
+            marker.on('mouseover', (event) => {
+                const offset = 5;
+                tooltipEl.style.top = \`\${event.point[1] + offset}px\`;
+                tooltipEl.style.left = \`\${event.point[0] + offset}px\`;
+                tooltipEl.innerHTML = markerData.label;
+                tooltipEl.style.display = 'block';
+            });
+
+            marker.on('mouseout', () => {
+                tooltipEl.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+TSP API решает задачу коммивояжёра в асинхронном режиме. Чтобы построить маршрут (последовательность прохождения точек), выполните следующие шаги:
+
+1. Отправьте запрос, чтобы создать задачу на построение маршрута.
+2. Периодически проверяйте статус задачи, пока не завершится расчёт маршрута.
+3. Получите готовый маршрут после завершения задачи.
+
+Подробнее о всех параметрах из запросов ниже см. в [Справочнике API](/api/navigation/tsp/reference/create_110).
+
+:::tip
+
+TSP API предлагает наиболее оптимальный *порядок* прохождения указанных точек с учётом всех особенностей дорожной ситуации. Чтобы получить детальный маршрут проезда или прохода, используйте [Routing API](/api/navigation/routing/overview) после получения решения от TSP API.
+
+:::
+
+### 1. Создание задачи
+
+Чтобы создать задачу на построение маршрута, отправьте POST-запрос на endpoint `/logistics/vrp/1.1.0/create`. В строке запроса укажите ваш ключ API в качестве значения параметра `key`:
+
+```http
+https://routing.api.2gis.com/logistics/vrp/1.1.0/create?key=API_KEY
+```
+
+Координаты точек маршрута, количество курьеров и другие параметры передайте в виде JSON в теле запроса. Например, чтобы задать параметры обхода из [примера задачи](#task-example):
+
+1. Перечислите все точки для посещения в массиве `waypoints` и укажите параметры:
+
+   * `waypoint_id` (обязательный параметр): произвольный идентификатор точки.
+   * `point` (обязательный параметр): координаты точки (ширина и долгота).
+   * `service_time`: сколько времени курьер должен провести в точке в секундах. В текущем примере задачи — 10 минут для всех точек, кроме точки 0 (она будет выступать в роли склада, для неё этот параметр не учитывается).
+   * `time_windows`: [временное окно](/api/navigation/tsp/examples#time-windows), когда точка доступна для посещения, в секундах. В текущем примере только точки 1 и 5 имеют окно с 8:00 до 10:00, остальные точки не ограничивают время посещения.
+   * `delivery_value`: объём груза, который нужно доставить в точку. В текущем примере задачи — 50 единиц для всех точек, кроме точки 0 (склад). Подробнее см. в разделе [Перевозка грузов](/api/navigation/tsp/examples#pickup-and-delivery).
+
+   ```json
+   {
+       "waypoints": [
+           {
+               "waypoint_id": 0,
+               "point": {
+                   "lat": 55.4846963066064,
+                   "lon": 37.5767069795753
+               }
+           },
+           {
+               "waypoint_id": 1,
+               "point": {
+                   "lat": 55.7010743761165,
+                   "lon": 37.53086589478259
+               },
+               "time_windows": [
+                   {
+                       "start": 28800, // 8:00
+                       "end": 36000 // 10:00
+                   }
+               ],
+               "service_time": 600, // 10 минут
+               "delivery_value": 50
+           },
+           {
+               "waypoint_id": 2,
+               "point": {
+                   "lat": 55.72523735978362,
+                   "lon": 37.55596751554285
+               },
+               "service_time": 600,
+               "delivery_value": 50
+           },
+           {
+               "waypoint_id": 3,
+               "point": {
+                   "lat": 55.745965069946045,
+                   "lon": 37.64224270924294
+               },
+               "service_time": 600,
+               "delivery_value": 50
+           },
+           {
+               "waypoint_id": 4,
+               "point": {
+                   "lat": 55.75864347204347,
+                   "lon": 37.58023157392096
+               },
+               "service_time": 600,
+               "delivery_value": 50
+           },
+           {
+               "waypoint_id": 5,
+               "point": {
+                   "lat": 55.79427118434125,
+                   "lon": 37.749414711518185
+               },
+               "time_windows": [
+                   {
+                       "start": 28800,
+                       "end": 36000
+                   }
+               ],
+               "service_time": 600,
+               "delivery_value": 50
+           }
+       ]
+   }
+   ```
+
+2. Перечислите курьеров в массиве `agents` и укажите параметры:
+
+   * `agent_id` (обязательный параметр): произвольный идентификатор курьера.
+   * `start_waypoint_id` (обязательный параметр): идентификатор начальной точки. В текущем примере задачи — `0` (точка склада).
+   * `work_time_window`: рабочее время курьера в секундах. В текущем примере задачи — с 8:00 до 18:00.
+   * `capacity`: объём груза, который может перевозить курьер. В текущем примере задачи — 150 единиц.
+
+   ```json
+   {
+       "agents": [
+           {
+               "agent_id": 0,
+               "start_waypoint_id": 0, // склад
+               "work_time_window": {
+                   "start": 28800, // 8:00
+                   "end": 64800 // 18:00
+               },
+               "capacity": 150
+           },
+           {
+               "agent_id": 1,
+               "start_waypoint_id": 0,
+               "work_time_window": {
+                   "start": 28800,
+                   "end": 64800
+               },
+               "capacity": 150
+           }
+       ]
+   }
+   ```
+
+3. Укажите время и дату начала движения (`start_time`):
+
+   ```json
+   {
+       "start_time": "2025-05-12T05:05:00Z"
+   }
+   ```
+
+#### Пример запроса
+
+```bash
+curl --location --request POST 'https://routing.api.2gis.com/logistics/vrp/1.1.0/create?key=API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+  "start_time": "2025-05-12T05:05:00Z",
+  "agents": [
+    {
+      "agent_id": 0,
+      "start_waypoint_id": 0,
+      "work_time_window": {
+        "start": 28800,
+        "end": 64800
+      },
+      "capacity": 150
+    },
+    {
+      "agent_id": 1,
+      "start_waypoint_id": 0,
+      "work_time_window": {
+        "start": 28800,
+        "end": 64800
+      },
+      "capacity": 150
+    }
+  ],
+  "waypoints": [
+    {
+      "waypoint_id": 0,
+      "point": {
+        "lat": 55.4846963066064,
+        "lon": 37.5767069795753
+      }
+    },
+    {
+      "waypoint_id": 1,
+      "point": {
+        "lat": 55.7010743761165,
+        "lon": 37.53086589478259
+      },
+      "time_windows": [
+        {
+          "start": 28800,
+          "end": 36000
+        }
+      ],
+      "service_time": 600,
+      "delivery_value": 50
+    },
+    {
+      "waypoint_id": 2,
+      "point": {
+        "lat": 55.72523735978362,
+        "lon": 37.55596751554285
+      },
+      "service_time": 600,
+      "delivery_value": 50
+    },
+    {
+      "waypoint_id": 3,
+      "point": {
+        "lat": 55.745965069946045,
+        "lon": 37.64224270924294
+      },
+      "service_time": 600,
+      "delivery_value": 50
+    },
+    {
+      "waypoint_id": 4,
+      "point": {
+        "lat": 55.75864347204347,
+        "lon": 37.58023157392096
+      },
+      "service_time": 600,
+      "delivery_value": 50
+    },
+    {
+      "waypoint_id": 5,
+      "point": {
+        "lat": 55.79427118434125,
+        "lon": 37.749414711518185
+      },
+      "time_windows": [
+        {
+          "start": 28800,
+          "end": 36000
+        }
+      ],
+      "service_time": 600,
+      "delivery_value": 50
+    }
+  ]
+}'
+```
+
+Запрос вернёт информацию о созданной задаче, включая её идентификатор (`task_id`), который нужно будет использовать для проверки статуса:
+
+```json
+{
+    "task_id": "99af8aeab7ab459553fcfb7f7708dcfc",
+    "status": "Run",
+    "urls": null,
+    "dm_queue": null,
+    "dm": null,
+    "vrp_queue": null,
+    "vrp": null
+}
+```
+
+#### Ограничения
+
+Запрос не будет выполнен при следующих условиях:
+
+* Если суммарный вес грузов для доставки или погрузки больше, чем суммарная вместимость курьеров.
+* Если стартовая или конечная точка курьера была исключена из маршрута.
+* Если время выполнения запроса не входит в рабочее время ни одного из курьеров.
+
+### 2. Проверка статуса задачи {#check-task-status}
+
+Чтобы проверить статус задачи, отправьте GET-запрос на endpoint `/logistics/vrp/1.1.0/status`. В строке запроса укажите два параметра:
+
+* `task_id` — идентификатор задачи;
+* `key` — ваш ключ API.
+
+```bash
+curl --location --request GET 'https://routing.api.2gis.com/logistics/vrp/1.1.0/status?task_id=99af8aeab7ab459553fcfb7f7708dcfc&key=API_KEY'
+```
+
+Если задача в процессе обработки, запрос вернёт тот же ответ, что и при создании задачи (поле `status` будет содержать значение `"Run"`):
+
+```json
+{
+    "task_id": "99af8aeab7ab459553fcfb7f7708dcfc",
+    "status": "Run",
+    "urls": null,
+    "dm_queue": null,
+    "dm": null,
+    "vrp_queue": null,
+    "vrp": null
+}
+```
+
+Если задача завершена, тело ответа будет содержат следующие данные:
+
+* `status`: одно из следующих значений:
+
+  * `Done` — маршрут успешно построен.
+  * `Partial` — маршрут построен, но из него были исключены точки или курьеры.
+  * `Fail` — при построении маршрута возникла ошибка.
+
+* `url_vrp_solution`: ссылка на файл с решением задачи. Доступно только при статусах `Done` и `Partial`.
+
+* `url_excluded`: ссылка на файл со списком исключённых из маршрута точек или курьеров (файл может быть пустым, если все точки и курьеры были задействованы). Подробнее см. в разделе [Исключение точек и курьеров](/api/navigation/tsp/examples#excluding-points-agents).
+
+* `dm_queue`: время ожидания расчёта матрицы достижимости (расстояний и времени в пути между всеми возможными парами точек из задачи).
+
+* `dm`: время расчёта матрицы достижимости.
+
+* `vrp`: время решения задачи коммивояжёра.
+
+* `vrp_queue`: время ожидания решения задачи коммивояжёра.
+
+```json
+{
+    "task_id": "99af8aeab7ab459553fcfb7f7708dcfc",
+    "status": "Done",
+    "urls": {
+        // ссылка на файл с решением
+        "url_vrp_solution": "https://disk.2gis.com/navi-docs/99af8aeab7ab459553fcfb7f7708dcfc-sln.json",
+        // ссылка на файл со списком исключенных точек (файл будет пустым, если статус задачи не "Partial")
+        "url_excluded": "https://disk.2gis.com/navi-docs/99af8aeab7ab459553fcfb7f7708dcfc-excluded.json"
+    },
+    // набор полей, содержащих время, потраченное на поиск решения
+    "dm_queue": 2,
+    "dm": 3,
+    "vrp": 1,
+    "vrp_queue": 1
+}
+```
+
+#### Пример ответа
+
+Файл с решением содержит JSON-объект, в котором указан список маршрутов для каждого курьера и общее время в пути. Подробнее см. в разделе [Расчёт длины маршрута](/api/navigation/tsp/examples#route-duration). Решение текущего примера задачи:
+
+```json
+{
+    "routes": [
+        {
+            "agent_id": 0, // идентификатор курьера
+            "points": [0, 1, 2, 4], // идентификатор точек, которые посетит курьер
+            "duration": 7973, // продолжительность маршрута данного курьера (в секундах)
+            "distance": 43009, // протяженность маршрута данного курьера (в метрах)
+            "waypoints": [
+                {
+                    "waypoint_id": 1, // идентификатор точки
+                    "duration_waypoint": 4853, // время в пути до точки
+                    "distance_to_waypoint": 29202 // протяженность пути до точки
+                },
+                {
+                    "waypoint_id": 2,
+                    "duration_waypoint": 6219,
+                    "distance_to_waypoint": 35060
+                },
+                {
+                    "waypoint_id": 4,
+                    "duration_waypoint": 7973,
+                    "distance_to_waypoint": 43009
+                }
+            ]
+        },
+        {
+            "agent_id": 1,
+            "points": [0, 3, 5],
+            "duration": 6685,
+            "distance": 44524,
+            "waypoints": [
+                {
+                    "waypoint_id": 3,
+                    "duration_waypoint": 4710,
+                    "distance_to_waypoint": 32394
+                },
+                {
+                    "waypoint_id": 5,
+                    "duration_waypoint": 6685,
+                    "distance_to_waypoint": 44524
+                }
+            ]
+        }
+    ],
+    "summary_duration": 14658, // общее время в пути всех курьеров (в секундах)
+    "summary_distance": 87533 // общая протяженность пути всех курьеров (в метрах)
+}
+```
+
+Рассчитанный маршрут движения курьеров отмечен на карте.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>TSP API</title>
+    <meta name="description" content="Решение задачи коммивояжёра с помощью TSP API" />
+    <style>
+        html, body, #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #tooltip {
+            padding: 10px 20px;
+            background: #fff;
+            box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            display: none;
+            position: fixed;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="tooltip"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [37.615655, 55.701005],
+            zoom: 10,
+            key: 'Your API access key',
+        });
+
+        const tooltipEl = document.getElementById('tooltip');
+
+        const wareHouseIcon = 'https://docs.2gis.com/img/mapgl/point-red.svg';
+
+        const startMarker = new mapgl.Marker(map, {
+            coordinates: [37.59866603365515, 55.582334626941034],
+            icon: wareHouseIcon,
+        });
+
+        startMarker.on('mouseover', (event) => {
+            const offset = 5;
+            tooltipEl.style.top = \`\${event.point[1] + offset}px\`;
+            tooltipEl.style.left = \`\${event.point[0] + offset}px\`;
+            tooltipEl.innerHTML = '<strong>Склад (точка 0)</strong><br/>Координаты: 55.4847, 37.5767<br/>ID курьеров: 0, 1';
+            tooltipEl.style.display = 'block';
+        });
+
+        startMarker.on('mouseout', () => {
+            tooltipEl.style.display = 'none';
+        });
+
+        const markers = [
+            { coordinates: [37.53086589478259, 55.7010743761165], label: '<strong>Точка 1</strong><br/>Координаты: 55.7011, 37.5309<br/>ID курьера: 0' },
+            { coordinates: [37.55596751554285, 55.72523735978362], label: '<strong>Точка 2</strong><br/>Координаты: 55.7252, 37.5560<br/>ID курьера: 0' },
+            { coordinates: [37.64224270924294, 55.745965069946045], label: '<strong>Точка 3</strong><br/>Координаты: 55.7460, 37.6422<br/>ID курьера: 1' },
+            { coordinates: [37.58023157392096, 55.75864347204347], label: '<strong>Точка 4</strong><br/>Координаты: 55.7586, 37.5802<br/>ID курьера: 0' },
+            { coordinates: [37.749414711518185, 55.79427118434125], label: '<strong>Точка 5</strong><br/>Координаты: 55.7943, 37.7494<br/>ID курьера: 1' },
+            ];
+
+        markers.forEach((markerData) => {
+            const marker = new mapgl.Marker(map, {
+                coordinates: markerData.coordinates,
+            });
+
+            marker.on('mouseover', (event) => {
+                const offset = 5;
+                tooltipEl.style.top = \`\${event.point[1] + offset}px\`;
+                tooltipEl.style.left = \`\${event.point[0] + offset}px\`;
+                tooltipEl.innerHTML = markerData.label;
+                tooltipEl.style.display = 'block';
+            });
+
+            marker.on('mouseout', () => {
+                tooltipEl.style.display = 'none';
+            });
+        });
+
+        const polyline1 = new mapgl.Polyline(map, {
+            coordinates: [
+                [37.59866603365515, 55.582334626941034],
+                [37.53086589478259, 55.7010743761165],
+                [37.55596751554285, 55.72523735978362],
+                [37.58023157392096, 55.75864347204347],
+            ],
+            width: 7,
+            color: '#ff8c00',
+        });
+
+        const polyline2 = new mapgl.Polyline(map, {
+            coordinates: [
+                [37.59866603365515, 55.582334626941034],
+                [37.64224270924294, 55.745965069946045],
+                [37.749414711518185, 55.79427118434125],
+            ],
+            width: 7,
+            color: '#0037ff',
+        });
+    </script>
+</body>
+</html>`}
+</HtmlExampleWithSrcCode>
+
+## Тарифы {#tariffs}
+
+* Стоимость сервиса рассчитывается исходя из количества маршрутов в месяц. 
+* Актуальные тарифы можно посмотреть в [Менеджере Платформы](https://platform.2gis.ru/ru/tariffs?utm_source=docs&utm_medium=referral&utm_campaign=api_tsp).
+
+## Варианты размещения {#distribution}
+
+- **Облако**: все методы TSP API доступны через публичные endpoint-ы <Brand />.
+- **On-Premise**: все методы TSP API доступны при установке API-платформы <Brand /> в закрытом контуре. Подробнее см. в разделе [API-платформа для сервера](/on-premise-api-platform/overview/summary).

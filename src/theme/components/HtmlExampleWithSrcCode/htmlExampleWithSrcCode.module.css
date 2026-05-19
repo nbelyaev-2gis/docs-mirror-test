@@ -1,0 +1,35 @@
+.wrapper {
+  width: 100%;
+  margin: 40px 0;
+}
+
+.tabs {
+  @media screen and (--media-s) {
+    width: 100%;
+  }
+}
+
+.tabButton {
+  @media screen and (--media-s) {
+    flex: 1;
+  }
+}
+
+.srcCodeWrapper {
+  height: 100%;
+}
+
+.srcCode {
+  max-height: 480px;
+  box-shadow: none;
+
+  :global(.clean-btn) {
+    display: none;
+  }
+}
+
+.contentWrapper {
+  margin-top: 20px;
+  border-radius: var(--default-border-radius);
+  overflow: hidden;
+}

@@ -1,0 +1,1119 @@
+---
+sidebar: iossdk
+---
+# Справочник
+
+Вы можете искать объекты в справочнике <Brand />, обрабатывать результаты поиска, а также использовать подсказки для уточнения поисковых запросов. В справочнике вы можете найти информацию по объектам следующих типов:
+
+* компании и их филиалы;
+* здания;
+* парковки;
+* остановки общественного транспорта и станции метро;
+* дороги (улицы, перекрёстки, проезды);
+* населённые пункты разного размера (страны, города, регионы, деревни, микрорайоны и т.д.);
+* различные площадные объекты (парки, пляжи и т.д.).
+
+Полный список доступных типов объектов см. в описании класса [ObjectType](/ios/sdk/reference/stable/enumeration#object-type).
+
+***
+
+Чтобы начать работу со справочником:
+
+1. Создайте [поисковый движок](#creating-a-search-engine).
+2. Сформируйте [поисковый запрос](#create-search-query).
+3. Получите, обработайте и отобразите на карте [результаты поиска](#get-search-results).
+
+## Создание поисковика {#creating-a-search-engine}
+
+Для поиска объектов в справочнике создайте объект [SearchManager](/ios/sdk/reference/stable/class#search-manager) и вызовите один из методов, который определяет режим работы справочника:
+
+* [SearchManager.createOnlineManager()](/ios/sdk/reference/stable/class#search-manager/create-offline-manager) — создаёт онлайн-справочник.
+* [SearchManager.createOfflineManager()](/ios/sdk/reference/stable/class#search-manager/create-offline-manager) — создаёт офлайн-справочник, работающий только с предзагруженными данными.
+* [SearchManager.createSmartManager()](/ios/sdk/reference/stable/class#search-manager/create-offline-manager) — создаёт комбинированный справочник, работающий с онлайн-данными при наличии сети и с предзагруженными данными при отсутствии сети.
+
+Пример создания поискового движка с онлайн-справочником:
+
+```swift
+let searchManager = SearchManager.createOnlineManager(context: sdk.context)
+```
+
+:::note[Режимы работы справочника]
+
+Некоторые методы работают только в определённом режиме справочника. Возможные ограничения указаны в описании методов.
+
+:::
+
+## Формирование поискового запроса {#create-search-query}
+
+Чтобы отправить поисковый запрос, создайте объект [SearchQuery](/ios/sdk/reference/stable/class#search-query) с помощью [SearchQueryBuilder](/ios/sdk/reference/stable/class#search-query-builder) и передайте его в метод [search()](/ios/sdk/reference/stable/class#search-manager/create-offline-manager).
+
+Поисковый запрос должен состоять из трёх логических компонентов:
+
+* Запрос для поиска объекта (что нужно искать?). Вы можете сформулировать запрос с помощью одного из методов ниже:
+
+  * Из текстовой строки с помощью метода [fromQueryText()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids). Вы можете сформулировать текстовый запрос для поиска конкретного объекта (`храм Василия Блаженного`) или для получения списка множества объектов по критерию (`магазины музыкальных инструментов`).
+  * По идентификаторам рубрик с помощью метода [fromRubricIds()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids) или в сочетании с текстовой строкой с помощью метода [fromQueryTextAndRubricIds()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids). Этот способ полезен для создания выборки объектов определённого типа.
+  * По идентификатору:
+
+    * Организации с помощью метода [fromOrgId()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids). Если у компании несколько филиалов, в ответе будут перечислены все точки.
+    * Здания с помощью метода [fromBuildingId()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids).
+    * Любого объекта с помощью метода поискового движка [searchById()](/ios/sdk/reference/stable/class#search-manager/create-offline-manager).
+
+* Геоограничение поиска (где нужно искать?). Вы можете ограничить зону поиска с помощью одного из методов ниже:
+
+  * Поиск внутри полигона: задайте координаты с помощью метода [setSpatialRestriction()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids).
+
+  * Поиск в прямоугольной области интереса: задайте координаты с помощью метода [setAreaOfInterest()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids). Этот метод задаёт приоритетную зону поиска, но не ограничивает поиск строго: если внутри области интереса результаты не найдены, поиск продолжится за пределами области.
+
+  * Поиск в радиусе вокруг точки: задайте центр поиска с помощью метода [setGeoPoint()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids) или [fromGeoPoint()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids) и, если необходимо, радиус поиска с помощью метода [setRadius()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids).
+
+    Метод [fromGeoPoint()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids) работает только в режиме поиска онлайн.
+
+  * Произвольный запрос: если запрос для поиска объекта сформирован с помощью метода [fromQueryText()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids), вы можете в этом же тексте указать и геоограничение (`цветы у Бауманской`).
+
+* (Необязательный компонент) Дополнительные ограничения результатов поиска с помощью одного или нескольких методов ниже:
+
+  * Поиск объектов только определённого типа: перечислите интересующие вас типы объектов с помощью метода [setAllowedResultTypes()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids) (например, только здания).
+  * Фильтрация результатов: задайте критерий фильтрации с помощью метода [setDirectoryFilter()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids) (например, по времени работы).
+  * Сортировка результатов: задайте критерий сортировки с помощью метода [setSortingType()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids) (например, по рейтингу).
+  * Количество результатов на странице: задайте ограничение с помощью метода [setPageSize()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids). Если вы используете демо-ключ с доступом к Places API, максимальное количество результатов на странице поисковой выдачи — 10.
+  * Номер страницы поисковой выдачи: по умолчанию возвращается первая страница. Чтобы получить следующие страницы, используйте метод [fetchNextPage()](/ios/sdk/reference/stable/class#page/fetch-next-page). Если вы используете демо-ключ с доступом к Places API, максимально возможно загрузить до 5 страниц.
+  * Локаль для поискового запроса: задайте язык и регион с помощью метода [setLocale()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids).
+
+### Примеры
+
+* Найти рестораны итальянской кухни в Пресненском районе Москвы, которые открыты сейчас, с сортировкой по рейтингу:
+
+  ```swift
+  // Создаём фильтр по времени работы
+  let filter = DirectoryFilter(
+      workTime: .openNow // оставить только открытые сейчас объекты
+  )
+
+  let searchQuery = SearchQueryBuilder
+      .fromQueryText(queryText: "рестораны итальянской кухни в Пресненском районе Москвы")
+      .setDirectoryFilter(filter: filter) // фильтрация по времени работы
+      .setSortingType(sortingType: .byRating) // сортировка по рейтингу
+      .setPageSize(pageSize: 10) // максимум 10 объектов на странице результатов
+      .build()
+  ```
+
+* Найти все парковки в радиусе 1 км с сортировкой по удалённости:
+
+  ```swift
+  let searchQuery = SearchQueryBuilder
+      .setAllowedResultTypes(allowedResultTypes: [.parking]) // только парковки
+      .setGeoPoint(geoPoint: GeoPoint(latitude: 59.936, longitude: 30.351)) // центр поиска
+      .setRadius(radius: Meter(value: 1000)) // радиус поиска
+      .setSortingType(sortingType: .byDistance) // сортировка по удалённости
+      .build()
+  ```
+
+* Найти все населённые пункты (города, деревни, посёлки и т.д.) внутри полигона:
+
+  ```swift
+  // Создаём область поиска в виде полигона
+  let polygon = [
+      GeoPoint(latitude: 55.751244, longitude: 37.618423),
+      GeoPoint(latitude: 55.760244, longitude: 37.628423),
+      GeoPoint(latitude: 55.770244, longitude: 37.618423),
+      GeoPoint(latitude: 55.751244, longitude: 37.608423)]
+
+  let searchQuery = SearchQueryBuilder
+      .setAllowedResultTypes(allowedResultTypes: [.admDivCity, .admDivSettlement]) // только города и мелкие населённые пункты
+      .setSpatialRestriction(spatialRestriction: polygon) // область поиска
+      .build()
+  ```
+
+* Найти все объекты, которые оказывают услуги печати документов, в области интереса:
+
+  ```swift
+  // Создаём прямоугольную область интереса по координатам двух углов
+  let areaOfInterest = GeoRect(
+          southWestPoint: GeoPoint(latitude: 59.931, longitude: 30.344), // юго-западный угол
+          northEastPoint: GeoPoint(latitude: 59.936, longitude: 30.351)  // северо-восточный угол
+  )
+
+  let searchQuery = SearchQueryBuilder
+      .fromQueryText(queryText: "печать документов")
+      .setAreaOfInterest(rect: areaOfInterest)
+      .build()
+  ```
+
+* Найти все компании по адресу «Новосибирск, площадь Карла Маркса, 7»:
+
+  ```swift
+  let searchQuery = SearchQueryBuilder
+      .fromQueryText(queryText: "Новосибирск, площадь Карла Маркса, 7")
+      .setAllowedResultTypes(allowedResultTypes: [.branch]) // только компании
+      .setPageSize(pageSize: 10) // максимум 10 объектов на странице результатов
+      .build()
+  ```
+
+* Найти все филиалы компании по известному идентификатору:
+
+  ```swift
+  let id = 4504136498310300
+
+  let searchQuery = SearchQueryBuilder
+      .fromOrgId(orgId: id)
+      .build()
+  ```
+
+* Найти конкретный объект по известному идентификатору:
+
+    <Tabs>
+    <TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+    ```swift
+    let id = 70000001035164789
+
+    searchManager.searchById(id: id).sinkOnMainThread { object in
+        print(object?.title)
+    } failure: { error in
+        print(error)
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+    ```swift
+    let id = 70000001035164789
+
+    searchManager.searchById(id: id).sink { object in
+        print(object?.title)
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+### Геокодирование {#geocoding}
+
+С помощью SDK вы можете решать задачи геокодирования: определять координаты объекта на карте по его адресу ([прямое геокодирование](#direct-geocoding)) и наоборот, определять адрес объекта на карте по его координатам ([обратное геокодирование](#reverse-geocoding)).
+
+#### Прямое геокодирование {#direct-geocoding}
+
+Чтобы получить координаты объекта по его адресу, сформируйте поисковый запрос, указав следующие данные:
+
+* Адрес в текстовом запросе с помощью метода [fromQueryText()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids).
+
+  Для более точных результатов укажите в тексте город (посёлок, деревню), где выполняется поиск. Название небольшого населённого пункта (например, деревни) рекомендуется указывать вместе с названием области и другими объединениями, к которым он относится (например, сельским или городским поселением).
+
+* (Рекомендуется) Тип объекта, координаты которого нужно получить, с помощью метода [setAllowedResultTypes()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids).
+
+Например, чтобы получить координаты здания по адресу «Москва, ул. Тверская 19а»:
+
+```swift
+let searchQuery = SearchQueryBuilder
+    .fromQueryText(queryText: "Москва, ул. Тверская 19а")
+    .setAllowedResultTypes(allowedResultTypes: [.building])
+    .build()
+```
+
+В [результате поиска](#get-search-results) вы получите объект справочника [DirectoryObject](/ios/sdk/reference/stable/class#directory-object). Координаты объекта будут представлены в поле `markerPosition` в виде объекта [GeoPointWithElevation](/ios/sdk/reference/stable/struct#geo-point-with-elevation). Пример:
+
+```swift
+markerPosition:
+    GeoPointWithElevation(
+        latitude: Latitude(value: 55.7659),
+        longitude: Longitude(value: 37.602827),
+        elevation: Elevation(value: 18.0)
+    ),
+```
+
+Подробнее о другой информации в результатах поиска см. в разделе [Структура данных объекта](#object-data-structure).
+
+#### Обратное геокодирование {#reverse-geocoding}
+
+Чтобы получить адрес объекта по его координатам, сформируйте поисковый запрос, указав координаты объекта с помощью метода [fromGeoPoint()](/ios/sdk/reference/stable/class#search-query-builder/from-geo-point).
+
+Например, найти адрес объекта по координатам `55.7659, 37.602827`:
+
+```swift
+let searchQuery = SearchQueryBuilder
+    .fromGeoPoint(geoPoint: GeoPoint(latitude: 55.7659, longitude: 37.602827))
+    .build()
+```
+
+В [результате поиска](#get-search-results) вы получите объект справочника [DirectoryObject](/ios/sdk/reference/stable/class#directory-object). Адрес объекта будет представлен в поле `address` в виде объекта [Address](/ios/sdk/reference/stable/struct#address). Пример:
+
+```swift
+address:
+    Address(
+        drillDown: [
+            AddressAdmDiv(type: .country, name: "Россия"),
+            AddressAdmDiv(type: .region, name: "Москва"),
+            AddressAdmDiv(type: .city, name: "Москва"),
+            AddressAdmDiv(type: .district, name: "Тверской")
+        ],
+        components: [
+            AddressComponent(AddressStreet(street: "Тверская улица", number: "19а", fiasCode: nil))
+        ],
+        buildingName: nil,
+        buildingId: BuildingId(value: 4504235282747324),
+        postCode: "125009",
+        buildingCode: nil,
+        fiasCode: nil,
+        addressComment: "1-2 этаж"
+    ),
+```
+
+Подробнее о другой информации в результатах поиска см. в разделе [Структура данных объекта](#object-data-structure).
+
+### Изменение параметров поиска {#modify-search-params}
+
+Вы можете изменять или дополнять параметры уже созданного поискового запроса. Для этого создайте новый объект [SearchQuery](/ios/sdk/reference/stable/class#search-query), укажите существующий запрос с помощью метода [fromQuery()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids) и укажите параметры, которые нужно дополнительно применить. Например, изменить тип сортировки результатов при поиске парковок:
+
+```swift
+// Создаём изначальный запрос
+let searchQuery = SearchQueryBuilder
+    .fromGeoPoint(geoPoint: GeoPoint(latitude: 59.936, longitude: 30.351))
+    .setRadius(radius: Meter(value: 1000))
+    .setAllowedResultTypes(allowedResultTypes: [.parking])
+    .setSortingType(sortingType: .byDistance) // сортировка по удалённости
+    .build()
+
+// Создаём новый запрос с другим типом сортировки
+let searchQueryUpdated = SearchQueryBuilder
+    .fromQuery(query: searchQuery)  // указание на изначальный запрос
+    .setSortingType(sortingType: .byRating) // сортировка по рейтингу
+    .build()
+```
+
+Остальные параметры изначального запроса сохраняются.
+
+## Получение результатов поиска {#get-search-results}
+
+Вызов метода [search()](/ios/sdk/reference/stable/class#search-manager) возвращает отложенный результат [SearchResult](/ios/sdk/reference/stable/class#search-result), содержащий список найденных объектов ([DirectoryObject](/ios/sdk/reference/stable/class#directory-object)), разделенный на страницы:
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+```swift
+searchManager.search(query: searchQuery).sinkOnMainThread { searchResult in
+    // Получаем название первого объекта с первой страницы
+    let directoryObjectTitle = searchResult.firstPage?.items?.first?.title ?? "NotFound"
+    print(directoryObjectTitle)
+} failure: { error in
+    print(error)
+}
+```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+```swift
+searchManager.search(query: searchQuery).sink { searchResult in
+// Получаем название первого объекта с первой страницы
+    let directoryObjectTitle = searchResult.firstPage?.items?.first?.title ?? "NotFound"
+    print(directoryObjectTitle)
+}
+```
+
+</TabItem>
+</Tabs>
+
+Чтобы получить следующую страницу результатов поиска, вызовите метод страницы [fetchNextPage()](/ios/sdk/reference/stable/class#Page), который вернёт отложенный результат [Page](/ios/sdk/reference/stable/class#Page):
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+```swift
+firstPage?.fetchNextPage().sinkOnMainThread { nextPage in
+    let directoryObject = nextPage?.items?.first
+} failure: { error in
+    print(error)
+}
+```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+```swift
+firstPage?.fetchNextPage().sink { nextPage in
+    let directoryObject = nextPage?.items?.first
+}
+```
+
+</TabItem>
+</Tabs>
+
+### Отображение результатов на карте {#display-search-results}
+
+Координаты всех найденных объектов возвращаются в поле `itemMarkerInfos` результата поиска [SearchResult](/ios/sdk/reference/stable/class#SearchResult) в виде списка элементов [ItemMarkerInfo](/ios/sdk/reference/stable/class#ItemMarkerInfo). Список может содержать не более 15000 элементов.
+
+Чтобы отобразить на карте маркеры всех найденных объектов:
+
+1. Подготовьте список объектов [Marker](/ios/sdk/reference/stable/class#Marker). Чтобы задать позицию маркера (параметр `position`), используйте координаты из поля [ItemMarkerInfo.geoPoint](/ios/sdk/reference/stable/class#ItemMarkerInfo).
+2. Добавьте готовый набор маркеров на карту с помощью метода `addObjects()` менеджера объектов [MapObjectManager](/ios/sdk/reference/stable/class#MapObjectManager). Подробнее см. в инструкции [Добавление нескольких объектов на карту](/ios/sdk/examples/map#add-multiple-objects).
+
+Пример:
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+```swift
+func displaySearchResultMarkers(map: Map, searchResult: SearchResult, sdk: DGis.Container) {
+    // Получаем список маркеров из результатов поиска
+    let cancellable = searchResult.itemMarkerInfos.sinkOnMainThread { markerInfos in
+        guard let markerInfos = markerInfos else { return }
+
+        do {
+            // Создаём менеджер объектов для добавления маркеров на карту
+            let mapObjectManager = MapObjectManager(map: map)
+
+            // Подготавливаем список маркеров
+            let markers = try markerInfos.compactMap { itemMarkerInfo -> Marker? in
+                let position = itemMarkerInfo.geoPoint
+                let icon = try sdk.imageFactory.make(image: UIImage(systemName: "mappin.circle.fill")!)
+                let options = MarkerOptions(
+                    position: position,
+                    icon: icon
+                )
+                return try Marker(options: options)
+            }
+
+            // Добавляем маркеры на карту
+            mapObjectManager.addObjects(objects: markers)
+        } catch {
+            print("Ошибка создания маркеров: \(error.localizedDescription)")
+        }
+    } failure: { error in
+        print("Ошибка получения маркеров: \(error.localizedDescription)")
+    }
+}
+```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+```swift
+func displaySearchResultMarkers(map: Map, searchResult: SearchResult, sdk: DGis.Container) {
+    // Получаем список маркеров из результатов поиска
+    let cancellable = searchResult.itemMarkerInfos.sink { markerInfos in
+        guard let markerInfos = markerInfos else { return }
+
+        do {
+            // Создаём менеджер объектов для добавления маркеров на карту
+            let mapObjectManager = MapObjectManager(map: map)
+
+            // Подготавливаем список маркеров
+            let markers = try markerInfos.compactMap { itemMarkerInfo -> Marker? in
+                let position = itemMarkerInfo.geoPoint
+                let icon = try sdk.imageFactory.make(image: UIImage(systemName: "mappin.circle.fill")!)
+                let options = MarkerOptions(
+                    position: position,
+                    icon: icon
+                )
+                return try Marker(options: options)
+            }
+
+            // Добавляем маркеры на карту
+            mapObjectManager.addObjects(objects: markers)
+        } catch {
+            print("Ошибка создания маркеров: \(error.localizedDescription)")
+        }
+    } failure: { error in
+        print("Ошибка получения маркеров: \(error.localizedDescription)")
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+### Структура данных объекта {#object-data-structure}
+
+Результаты поиска по справочнику представлены в виде списка объектов [DirectoryObject](/ios/sdk/reference/stable/class#directory-object) с наборами свойств. В зависимости от типа объекта часть свойств может не содержать значений.
+
+:::note[Доступ к данным]
+
+Получение некоторой информации об объектах доступно при дополнительной настройке ключа за отдельную плату: см. описания полей объектов [DirectoryObject](/ios/sdk/reference/stable/class#directory-object), [Address](/ios/sdk/reference/stable/struct#address) и [ItemMarkerInfo](/ios/sdk/reference/stable/class#item-marker-info). Чтобы обновить настройки вашего ключа доступа, обратитесь в [службу поддержки <Brand />](mailto:api@2gis.ru)
+
+:::
+
+* Основные свойства для классификации объекта:
+
+  * Тип объекта (`types`) из [ObjectType](/ios/sdk/reference/stable/enumeration#object-type). Один объект может относиться к нескольким типам (например, ТЦ Сан Сити — это одновременно и филиал организации и здание). В этом случае все типы будут перечислены в списке, где первый элемент — основной тип объекта.
+  * Название объекта (`title`) в зависимости от его типа: название организации, достопримечательности, географического объекта. Для жилых домов без названия — адрес.
+  * Подтип объекта (`subtitle`) для уточнения. Например, кофейня как подтип организации или жилой дом как подтип здания.
+  * Описание объекта (`description`).
+  * Категории, к которым относится объект (`rubricIds`).
+  * Идентификатор организации в справочнике и информация о ней (`orgInfo`). Для компаний с множеством филиалов — информация о головной организации.
+  * (Данные по запросу) Объединение объектов разного типа в одной карточке справочника (`group`). Подробнее см. [ниже](#hybrid-objects).
+
+* Уникальный идентификатор объекта в справочнике (`id`). Для компаний с множеством филиалов — идентификатор конкретного филиала.
+
+* Географические свойства:
+
+  * Координаты для размещения маркера на карте (`markerPosition`).
+  * Полный адрес объекта (`address`). Некоторые компоненты адреса доступны только по запросу: см. описание объекта [Address](/ios/sdk/reference/stable/struct#address).
+  * (Данные по запросу) Информация об этаже здания, на котором расположен объект (`levelId` и `buildingLevels`). Актуально для компаний, которые расположены на определённом этаже многоэтажного здания.
+  * (Данные по запросу) Информация о входах в объект (`entrances`) с координатами и другими данными. Актуально как для компаний и зданий, так и для других объектов с физически обозначенными входами (например, парков).
+  * (Данные по запросу) Дополнительная информация для уточнения адреса (`titleAddition`). Например, номер подъезда или номер квартиры.
+
+* Время работы:
+
+  * Смещение локального времени объекта от UTC в виде временной метки (`timeZoneOffset`). Например, `03:00:00` для часового пояса UTC+3.
+  * Время работы (`openingHours`) в виде списка временных промежутков или флага круглосуточной работы. Актуально для компаний.
+  * Текущий статус работы (`workStatus`).
+
+* Прочие данные:
+
+  * (Данные по запросу) Информация о торговой лицензии организации (`tradeLicense`).
+  * Контакты для связи с организацией (`contactInfos`): номер телефона, e-mail, ссылки на сайт и соцсети и другое.
+  * Рейтинг объекта на основе отзывов пользователей (`reviews`).
+  * Дополнительные свойства парковок (`parkingInfo`).
+  * Дополнительные свойства электрозаправок (`chargingStation`).
+  * Информация о здании (`buildingInfo`).
+
+#### Объединение объектов {#hybrid-objects}
+
+Некоторые геообъекты в справочнике могут быть представлены в виде группы объектов разного типа. Например, здание суда — это одновременно и отдельно стоящее здание, и организация внутри этого здания, то есть, два разных [DirectoryObject](/ios/sdk/reference/stable/class#directory-object) с характеристиками здания и организации соответственно. Но поскольку эти `DirectoryObject` относятся к одному и тому же геообъекту, в их структуре данных содержатся ссылки друг на друга.
+
+Информация о связанных объектах содержится в поле `group` в виде списка элементов [GroupItem](/ios/sdk/reference/stable/struct#group-item). Для каждого связанного объекта представлен его тип и идентификатор ([DgisObjectId](/ios/sdk/reference/stable/struct#dgis-object-id)), который вы можете в дальнейшем использовать для обращения к этому объекту.
+
+:::note[Доступ к данным]
+
+Доступ к данным в поле `group` предоставляется при дополнительной настройке ключа за отдельную плату. Чтобы обновить настройки вашего ключа доступа, обратитесь в [службу поддержки <Brand />](mailto:api@2gis.ru).
+
+:::
+
+Пример наполнения поля `group` с одним связанным объектом:
+
+```swift
+group: [
+    GroupItem(
+        id: DgisObjectId(objectId: 70030076538159915, entranceId: 0),
+        type: .attraction
+    )
+]
+```
+
+#### Примеры
+
+Ниже представлены примеры [DirectoryObject](/ios/sdk/reference/stable/class#directory-object) разных типов объектов справочника.
+
+* Филиал организации:
+
+  <details>
+  <summary><code>DirectoryObject</code></summary>
+
+  ```swift
+  // Тип объекта — организация
+  types: [.branch],
+  // Название организации
+  title: "Шоколадница",
+  titleAddition: nil,
+  // Подтип организации — кофейня
+  subtitle: "Кофейня",
+  // ID объекта (данного филиала организации)
+  id: DgisObjectId(objectId: 4504128908451067, entranceId: 0),
+  // Координаты маркера для размещения на карте
+  markerPosition: GeoPointWithElevation(
+      latitude: Latitude(value: 55.7659),
+      longitude: Longitude(value: 37.602827),
+      elevation: Elevation(value: 18.0)
+  ),
+  // Адрес организации — Москва, ул. Тверская 19а
+  address: Address(
+      drillDown: [
+          AddressAdmDiv(type: .country, name: "Россия"),
+          AddressAdmDiv(type: .region, name: "Москва"),
+          AddressAdmDiv(type: .city, name: "Москва"),
+          AddressAdmDiv(type: .district, name: "Тверской")
+      ],
+      components: [
+          AddressComponent(AddressStreet(street: "Тверская улица", number: "19а", fiasCode: nil))
+      ],
+      buildingName: nil,
+      buildingId: BuildingId(value: 4504235282747324),
+      postCode: "125009",
+      buildingCode: nil,
+      fiasCode: nil,
+      addressComment: "1-2 этаж"
+  ),
+  attributes: [],
+  contextAttributes: [],
+  // Локальный часовой пояс — UTC+3
+  timeZoneOffset: 3 * 3600,
+  // Время работы филиала: воскресенье-четверг с 7:00 до 23:00, пятница с 7:00 до 24:00, суббота круглосуточно
+  openingHours: OpeningHours(
+      weekOpeningHours: [
+          [WeekTimeInterval(
+              startTime: WeekTime(weekDay: .monday, time: DayTime(hours: 7, minutes: 0)),
+              finishTime: WeekTime(weekDay: .monday, time: DayTime(hours: 23, minutes: 0))
+          )],
+          [WeekTimeInterval(
+              startTime: WeekTime(weekDay: .tuesday, time: DayTime(hours: 7, minutes: 0)),
+              finishTime: WeekTime(weekDay: .tuesday, time: DayTime(hours: 23, minutes: 0))
+          )],
+          [WeekTimeInterval(
+              startTime: WeekTime(weekDay: .wednesday, time: DayTime(hours: 7, minutes: 0)),
+              finishTime: WeekTime(weekDay: .wednesday, time: DayTime(hours: 23, minutes: 0))
+          )],
+          [WeekTimeInterval(
+              startTime: WeekTime(weekDay: .thursday, time: DayTime(hours: 7, minutes: 0)),
+              finishTime: WeekTime(weekDay: .thursday, time: DayTime(hours: 23, minutes: 0))
+          )],
+          [WeekTimeInterval(
+              startTime: WeekTime(weekDay: .friday, time: DayTime(hours: 7, minutes: 0)),
+              finishTime: WeekTime(weekDay: .friday, time: DayTime(hours: 24, minutes: 0))
+          )],
+          [WeekTimeInterval(
+              startTime: WeekTime(weekDay: .saturday, time: DayTime(hours: 0, minutes: 0)),
+              finishTime: WeekTime(weekDay: .saturday, time: DayTime(hours: 24, minutes: 0))
+          )],
+          [WeekTimeInterval(
+              startTime: WeekTime(weekDay: .sunday, time: DayTime(hours: 0, minutes: 0)),
+              finishTime: WeekTime(weekDay: .sunday, time: DayTime(hours: 23, minutes: 0))
+          )]
+      ],
+      isOpen24x7: false
+  ),
+  contactInfos: [],
+  // Рейтинг 3.4 на основе 85 отзывов
+  reviews: Reviews(rating: 3.4, count: 85),
+  parkingInfo: nil,
+  // В данный момент филиал открыт и работает до 23:00
+  workStatus: WorkStatus(isOpen: true, description: "Открыто до 23:00"),
+  levelId: nil,
+  buildingLevels: nil,
+  // У организации один вход
+  entrances: [
+      EntranceInfo(
+          id: DgisObjectId(objectId: 4504128908451067, entranceId: 70030076156031010),
+          buildingNumber: nil,
+          porchName: nil,
+          porchNumber: nil,
+          apartmentRanges: [],
+          geometry: EntranceGeometry(
+              entrancePoints: [
+                  GeoPoint(
+                      latitude: Latitude(value: 55.76590646318491),
+                      longitude: Longitude(value: 37.60283837242394)
+                  )
+              ],
+              entrancePolylines: [
+                  [
+                      GeoPoint(
+                          latitude: Latitude(value: 55.765971),
+                          longitude: Longitude(value: 37.602949)
+                      ),
+                      GeoPoint(
+                          latitude: Latitude(value: 55.765906),
+                          longitude: Longitude(value: 37.602838)
+                      )
+                  ]
+              ]
+          )
+      )
+  ],
+  chargingStation: nil,
+  // Объект относится к трём категориям
+  rubricIds: [
+      RubricId(value: 162),
+      RubricId(value: 1203),
+      RubricId(value: 161)
+  ],
+  // Информация о головной организации и общем количестве филиалов
+  orgInfo: OrgInfo(
+      branchCount: 225,
+      id: OrgId(value: 4504136498310300),
+      name: "Шоколадница, кофейня"
+  ),
+  group: []
+  ```
+
+  </details>
+
+* Жилое здание:
+
+    <details>
+    <summary><code>DirectoryObject</code></summary>
+
+  ```swift
+  // Тип объекта — здание
+  types: [.building],
+  // Название объекта — адрес здания
+  title: "2-я Черногрязская улица, 1",
+  titleAddition: nil,
+  // Подтип объекта — жилой дом
+  subtitle: "Жилой дом",
+  // ID объекта
+  id: DgisObjectId(objectId: 4504235282792806, entranceId: 0),
+  // Координаты маркера для размещения на карте
+  markerPosition: GeoPointWithElevation(
+      latitude: Latitude(value: 55.760651),
+      longitude: Longitude(value: 37.545995),
+      elevation: Elevation(value: 3.0)
+  ),
+  // Адрес объекта — Москва, 2-я Черногрязская улица 1
+  address: Address(
+      drillDown: [
+          AddressAdmDiv(type: .country, name: "Россия"),
+          AddressAdmDiv(type: .region, name: "Москва"),
+          AddressAdmDiv(type: .city, name: "Москва"),
+          AddressAdmDiv(type: .district, name: "Пресненский")
+      ],
+      components: [
+          AddressComponent(AddressStreet(street: "2-я Черногрязская улица", number: "1", fiasCode: "91e0431b-5721-40b9-8bf0-5eb5377063a8"))
+      ],
+      buildingName: nil,
+      buildingId: BuildingId(value: 4504235282792806),
+      postCode: "123100",
+      buildingCode: nil,
+      fiasCode: nil,
+      addressComment: nil
+  ),
+  attributes: [],
+  contextAttributes: [],
+  timeZoneOffset: nil,
+  openingHours: nil,
+  contactInfos: [],
+  // Нет отзывов об объекте для подсчёта рейтинга
+  reviews: Reviews(rating: 0.0, count: 0),
+  parkingInfo: nil,
+  workStatus: WorkStatus(isOpen: false, description: ""),
+  levelId: nil,
+  buildingLevels: nil,
+  // У жилого здания два входа
+  entrances: [
+      EntranceInfo(
+          id: DgisObjectId(objectId: 4504235282792806, entranceId: 4504643304435799),
+          buildingNumber: nil,
+          porchName: nil,
+          porchNumber: nil,
+          apartmentRanges: [],
+          geometry: EntranceGeometry(
+              entrancePoints: [
+                  GeoPoint(
+                      latitude: Latitude(value: 55.76073452440514),
+                      longitude: Longitude(value: 37.54591428882596)
+                  )
+              ],
+              entrancePolylines: [
+                  [
+                      GeoPoint(
+                          latitude: Latitude(value: 55.760822),
+                          longitude: Longitude(value: 37.545949)
+                      ),
+                      GeoPoint(
+                          latitude: Latitude(value: 55.760735),
+                          longitude: Longitude(value: 37.545914)
+                      )
+                  ]
+              ]
+          )
+      ),
+      EntranceInfo(
+          id: DgisObjectId(objectId: 4504235282792806, entranceId: 70030076156588095),
+          buildingNumber: nil,
+          porchName: "1 подъезд",
+          porchNumber: 1,
+          apartmentRanges: [
+              ApartmentRange(start: 1, end: 80)
+          ],
+          geometry: EntranceGeometry(
+              entrancePoints: [
+                  GeoPoint(
+                      latitude: Latitude(value: 55.7605167221199),
+                      longitude: Longitude(value: 37.54581996572112)
+                  )
+              ],
+              entrancePolylines: [
+                  [
+                      GeoPoint(
+                          latitude: Latitude(value: 55.760497),
+                          longitude: Longitude(value: 37.545975)
+                      ),
+                      GeoPoint(
+                          latitude: Latitude(value: 55.760517),
+                          longitude: Longitude(value: 37.54582)
+                      )
+                  ]
+              ]
+          )
+      )
+  ],
+  chargingStation: nil,
+  rubricIds: [],
+  orgInfo: nil,
+  group: []
+  ```
+
+    </details>
+
+* Улица:
+
+    <details>
+    <summary><code>DirectoryObject</code></summary>
+
+  ```swift
+  // Тип объекта — улица
+  types: [.street],
+  // Название объекта
+  title: "Улица Петрова",
+  titleAddition: nil,
+  // Подтип объекта — улица
+  subtitle: "Street",
+  // ID объекта
+  id: DgisObjectId(objectId: 4504338361766218, entranceId: 0),
+  // Координаты маркера для размещения на карте
+  markerPosition: GeoPointWithElevation(
+      latitude: Latitude(value: 55.643536),
+      longitude: Longitude(value: 38.053038),
+      elevation: Elevation(value: 0.0)
+  ),
+  // Адрес объекта — Московская область, пгт Удельная
+  address: Address(
+      drillDown: [
+          AddressAdmDiv(type: .country, name: "Россия"),
+          AddressAdmDiv(type: .region, name: "Московская область"),
+          AddressAdmDiv(type: .districtArea, name: "Раменский муниципальный округ"),
+          AddressAdmDiv(type: .settlement, name: "пгт Удельная")
+      ],
+      components: [],
+      buildingName: nil,
+      buildingId: nil,
+      postCode: nil,
+      buildingCode: nil,
+      fiasCode: "0d8e2b4c-eef7-4176-bbec-be9ac0ace587",
+      addressComment: nil
+  ),
+  attributes: [],
+  contextAttributes: [],
+  timeZoneOffset: nil,
+  openingHours: nil,
+  contactInfos: [],
+  reviews: nil,
+  parkingInfo: nil,
+  workStatus: WorkStatus(isOpen: false, description: ""),
+  levelId: nil,
+  buildingLevels: nil,
+  entrances: [],
+  chargingStation: nil,
+  rubricIds: [],
+  orgInfo: nil,
+  group: []
+  ```
+
+    </details>
+
+* Площадной объект (парк):
+
+  <details>
+  <summary><code>DirectoryObject</code></summary>
+
+  ```swift
+  // Основной тип объекта — площадной объект, дополнительный — достопримечательность
+  types: [.admDivPlace, .attraction],
+  // Название объекта
+  title: "Парк \"Красногвардейские пруды\"",
+  titleAddition: nil,
+  // Подтип объекта — место
+  subtitle: "Место",
+  // ID объекта
+  id: DgisObjectId(objectId: 4504286822138295, entranceId: 0),
+  // Координаты маркера для размещения на карте
+  markerPosition: GeoPointWithElevation(
+      latitude: Latitude(value: 55.756656),
+      longitude: Longitude(value: 37.545756),
+      elevation: Elevation(value: 0.0)
+  ),
+  // Адрес объекта — Москва
+  address: Address(
+      drillDown: [
+          AddressAdmDiv(type: .country, name: "Россия"),
+          AddressAdmDiv(type: .region, name: "Москва"),
+          AddressAdmDiv(type: .city, name: "Москва")
+      ],
+      components: [],
+      buildingName: nil,
+      buildingId: nil,
+      postCode: nil,
+      buildingCode: nil,
+      fiasCode: nil,
+      addressComment: nil
+  ),
+  attributes: [],
+  contextAttributes: [],
+  timeZoneOffset: nil,
+  openingHours: nil,
+  contactInfos: [],
+  // Рейтинг 4.8 на основе 62 отзывов
+  reviews: Reviews(rating: 4.8, count: 62),
+  parkingInfo: nil,
+  workStatus: WorkStatus(isOpen: false, description: ""),
+  levelId: nil,
+  buildingLevels: nil,
+  entrances: [],
+  chargingStation: nil,
+  // Объект относится к одной категории
+  rubricIds: [RubricId(value: 168)],
+  orgInfo: nil,
+  // Объект одновременно является и площадным объектом, и достопримечательностью
+  group: [
+      GroupItem(
+          id: DgisObjectId(objectId: 70030076538159915, entranceId: 0),
+          type: .attraction
+      )
+  ]
+  ```
+
+  </details>
+
+## Поисковые подсказки {#search-suggestions}
+
+Вы можете формировать подсказки для пользователей при текстовом поиске объектов. Для этого создайте объект [SuggestQuery](/ios/sdk/reference/stable/class#suggest-query) с помощью [SuggestQueryBuilder](/ios/sdk/reference/stable/class#suggest-query-builder) и передайте его в метод [suggest()](/ios/sdk/reference/stable/class#search-manager/create-offline-manager):
+
+```swift
+let query = SuggestQueryBuilder.fromQueryText(queryText: "пицц").setLimit(limit: 10).build()
+
+searchManager.suggest(query: query).sink { suggestResult in
+    // Получаем первую подсказку из списка
+    let firstSuggestTitle = suggestResult.suggests.first ?? ""
+    print(firstSuggestTitle)
+}
+```
+
+Вызов вернёт отложенный результат [SuggestResult](/ios/sdk/reference/stable/class#suggest-result), содержащий список подсказок ([Suggest](/ios/sdk/reference/stable/class#suggest)). Подробнее о формировании подсказок см. в документации [Suggest API](/api/search/suggest/overview).
+
+Когда пользователь выбирает одну из предложенных подсказок, вы можете настроить реакцию на это событие с помощью обработчика [SuggestHandler](/ios/sdk/reference/stable/enumeration#suggest-handler) одного из следующих типов:
+
+* [SuggestObjectHandler](/ios/sdk/reference/stable/class#suggest-object-handler) — возвращает объект справочника [DirectoryObject](/ios/sdk/reference/stable/class#directory-object).
+* [PerformSearchHandler](/ios/sdk/reference/stable/class#perform-search-handler) — возвращает объект поискового запроса [SearchQuery](/ios/sdk/reference/stable/class#search-query). Вы можете использовать этот объект для дальнейшего поиска: передайте его в метод [SearchManager.search()](/ios/sdk/reference/stable/class#search-manager/create-offline-manager) или создайте на его основе новый [SearchQuery](/ios/sdk/reference/stable/class#search-query) с дополнительными параметрами с помощью метода [fromQuery()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids) (подробнее см. в разделе [Изменение параметров поиска](#modify-search-params)).
+* [IncompleteTextHandler](/ios/sdk/reference/stable/class#incomplete-text-handler) — возвращает автоматически дополненный текст подсказки, который можно использовать для дальнейшего формирования поискового запроса с помощью метода [fromQueryText()](/ios/sdk/reference/stable/class#search-query-builder/from-query-text-and-rubric-ids).
+
+Пример функции для применения всех типов обработчика:
+
+```swift
+func apply(suggest: Suggest) {
+    switch suggest.handler {
+    // Вернуть дополненный текст подсказки
+    case .incompleteTextHandler(let incompleteTextHandler):
+        let queryText = incompleteTextHandler?.queryText
+        let searchQuery = queryText.map { SearchQueryBuilder.fromQueryText(queryText: $0).build() }
+        showSearchResults(searchQuery: searchQuery)
+    // Вернуть объект справочника
+    case .objectHandler(let objectHandler):
+        showObjectInfo(object: objectHandler?.item)
+    // Вернуть объект поискового запроса
+    case .performSearchHandler(let performSearchHandler):
+        showSearchResults(searchQuery: performSearchHandler?.searchQuery)
+    @unknown default:
+        fatalError()
+    }
+}
+```
+
+## История поиска {#search-history}
+
+Вы можете работать с историей поиска с помощью [SearchHistory](/ios/sdk/reference/stable/class#search-history).
+
+В истории поиска могут храниться элементы двух типов: объекты справочника ([DirectoryObject](/ios/sdk/reference/stable/class#directory-object)) и поисковые запросы ([SearchQueryWithInfo](/ios/sdk/reference/stable/class#search-query-with-info)).
+
+### Добавление элементов в историю поиска {#add-elements-to-history}
+
+Вы можете добавить элементы в историю поиска в виде объектов [SearchHistoryItem](/ios/sdk/reference/stable/enumeration#search-history-item) по одному или списком. Порядок элементов в списке сохранится при добавлении в историю.
+
+1. Создайте объект [SearchHistoryItem](/ios/sdk/reference/stable/enumeration#search-history-item) и передайте ему один из следующих объектов в зависимости от типа добавляемого элемента:
+
+   * Для поискового запроса: [SearchQueryWithInfo](/ios/sdk/reference/stable/class#search-query-with-info) с указанием нужного поискового запроса в параметре `searchQuery`. Дополнительно `SearchQueryWithInfo` может содержать заголовок и подзаголовок, которые отобразятся в выдаче истории поиска.
+
+     ```swift
+     // Создаём объект SearchQueryWithInfo
+     let searchQueryWithInfo = SearchQueryWithInfo(
+         searchQuery: searchQuery,   // готовый поисковый запрос
+         title: "Кафе рядом",
+         subtitle: "Рестораны и кафе поблизости"
+     )
+
+     let searchHistoryItem = SearchHistoryItem.searchQuery(searchQueryWithInfo)
+     ```
+
+   * Для объекта справочника: [DirectoryObject](/ios/sdk/reference/stable/class#directory-object).
+
+     ```swift
+     let searchHistoryItem = SearchHistoryItem.directoryObject(directoryObject)
+     ```
+
+2. Создайте объект [SearchHistory](/ios/sdk/reference/stable/class#search-history):
+
+   ```swift
+   let searchHistory = SearchHistory(context: context)
+   ```
+
+3. Добавьте элементы в историю поиска по одному или списком с помощью методов `addItem()` или `addItems()` объекта [SearchHistory](/ios/sdk/reference/stable/class#search-history) соответственно:
+
+   * Добавить один элемент:
+
+     ```swift
+     searchHistory.addItem(item: searchHistoryItem)
+     ```
+
+   * Добавить список элементов:
+
+     ```swift
+     searchHistory.addItems(items: searchHistoryItemsList)
+     ```
+
+Если в истории поиска уже существует добавленный элемент, более старый дубликат будет удалён.
+
+### Отображение истории поиска {#show-history-page}
+
+Чтобы показать страницу поиска со списком элементов, создайте объект [SearchHistoryPage](/ios/sdk/reference/stable/struct#search-history-page) и передайте его в метод [items()](/ios/sdk/reference/stable/class#search-history). Дополнительно вы можете настроить следующие параметры:
+
+* Ограничить количество элементов на странице (параметр `limit`). Значение по умолчанию — 100.
+* Задать смещение относительно начала списка (параметр `offset`): сколько элементов с начала списка пропустить. Значение по умолчанию — 0 (смещение отсутствует, список отображается с самого начала).
+* Отфильтровать список по типу элементов (параметр `filter`). Доступные фильтры перечислены в [SearchHistoryFilter](/ios/sdk/reference/stable/enumeration#search-history-filter). Например, чтобы показывать в истории только поисковые запросы, используйте значение `SEARCH_QUERY`. По умолчанию фильтрация отсутствует.
+
+Пример:
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+```swift
+// Создаём объект SearchHistory
+let searchHistory = SearchHistory(context: context)
+
+// Создаём страницу истории с лимитом 10 элементов и смещением 0
+let page = SearchHistoryPage(
+    limit: 10,        // Максимум 10 элементов на странице
+    offset: 0,        // Смещение 0 (начало списка)
+    filter: []        // Без фильтров
+)
+
+// Получаем элементы страницы истории
+searchHistory.items(page: page).sinkOnMainThread { result in
+    result.items.forEach { item in
+        // Логируем каждый элемент истории
+        print("Элемент истории: \(item)")
+    }
+} failure: { error in
+    print("Ошибка при получении страницы из истории поиска: \(error)")
+}
+```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+```swift
+// Создаём объект SearchHistory
+let searchHistory = SearchHistory(context: context)
+
+// Создаём страницу истории с лимитом 10 элементов и смещением 0
+let page = SearchHistoryPage(
+    limit: 10,        // Максимум 10 элементов на странице
+    offset: 0,        // Смещение 0 (начало списка)
+    filter: []        // Без фильтров
+)
+
+// Получаем элементы страницы истории
+searchHistory.items(page: page).sink { result in
+    result.items.forEach { item in
+        // Логируем каждый элемент истории
+        print("Элемент истории: \(item)")
+    }
+} failure: { error in
+    print("Ошибка при получении страницы из истории поиска: \(error)")
+}
+```
+
+</TabItem>
+</Tabs>
+
+Элементы на странице упорядочены по времени добавления в историю (от новых к старым).
+
+### Очистка истории поиска {#clean-history}
+
+Чтобы убрать отдельные элементы из истории поиска:
+
+* Чтобы убрать один элемент, используйте метод `removeItem()` объекта [SearchHistory](/ios/sdk/reference/stable/class#search-history) и передайте ему нужный объект [SearchHistoryItem](/ios/sdk/reference/stable/enumeration#search-history-item). Подробнее о наполнении `SearchHistoryItem` см. в инструкции [Добавить элементы в историю поиска](#add-elements-to-history).
+
+  ```swift
+  searchHistory.removeItem(item: searchHistoryItem)
+  ```
+
+* Чтобы убрать несколько элементов, используйте метод `removeItems()` объекта [SearchHistory](/ios/sdk/reference/stable/class#search-history) и передайте ему список нужных объектов [SearchHistoryItem](/ios/sdk/reference/stable/enumeration#search-history-item). Подробнее о наполнении `SearchHistoryItem` см. в инструкции [Добавить элементы в историю](#add-elements-to-history).
+
+  ```swift
+  searchHistory.removeItems(items: searchHistoryItemsList)
+  ```
+
+Чтобы очистить историю поиска полностью, используйте метод `clear()` объекта [SearchHistory](/ios/sdk/reference/stable/class#search-history):
+
+```swift
+searchHistory.clear()
+```
+
+### Подписка на изменения истории {#subscribe-to-history-changes}
+
+Чтобы отслеживать изменения истории поиска (добавление и удаление элементов), вы можете подписаться на канал [onHistoryChanged](/ios/sdk/reference/stable/class#search-history/var-on-history-changed):
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+```swift
+let searchHistory = SearchHistory.instance(context: context)
+
+searchHistory.onHistoryChanged.sinkOnMainThread { changeType in
+    switch changeType {
+    case .add:
+        print("Элемент добавлен в историю")
+    case .remove:
+        print("Элемент удалён из истории")
+    @unknown default:
+        print("Неизвестное изменение в истории")
+    }
+}
+```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+```swift
+let searchHistory = SearchHistory(context: context)
+
+searchHistory.onHistoryChanged.sink { changeType in
+    switch changeType {
+    case .add:
+        print("Элемент добавлен в историю")
+    case .remove:
+        print("Элемент удалён из истории")
+    @unknown default:
+        print("Неизвестное изменение в истории")
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Информация о подъездах в справочнике
+
+Вы можете искать адреса в справочнике с точностью до квартиры или подъезда.
+
+Например, по запросу `"Томск Кирова 17 кв 5"` вы получите объект, который содержит информацию с точностью до подъезда.
+
+[DgisObjectId](/ios/sdk/reference/stable/struct#dgis-object-id) содержит два идентификатора:
+
+* [objectId](/ios/sdk/reference/stable/struct#dgis-object-id/val-entrance-id%20objectId) — стабильный числовой идентификатор объекта;
+* [entranceId](/ios/sdk/reference/stable/struct#dgis-object-id/val-entrance-id) — стабильный числовой идентификатор входа/подъезда для объекта.
+
+Если [entranceId](/ios/sdk/reference/stable/struct#dgis-object-id/val-entrance-id) отличен от нуля, то результатом поиска является не просто дом, а конкретный подъезд в доме.
+
+Если необходимо нарисовать маркер на конкретном подъезде или взять его координаты для построения маршрута, не используйте [markerPosition](/ios/sdk/reference/stable/class#directory-object/val-marker-position). В этом свойстве будет располагаться позиция, относящаяся к маркеру дома. Для получения позиции подъезда используйте информацию из [entrances](/ios/sdk/reference/stable/class#directory-object/val-marker-position%20entrances):
+
+```swift
+func getMarkerPosition(directoryObject: DirectoryObject) -> GeoPoint? {
+	guard let entranceId = directoryObject.id?.entranceId,
+		  let info = directoryObject.entrances.first(where: { $0.id.entranceId == entranceId }),
+		  let entrancePoint = info.geometry?.entrancePoints.first else {
+		return directoryObject.markerPosition?.point
+	}
+	return entrancePoint
+}
+```

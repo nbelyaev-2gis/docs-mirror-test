@@ -1,0 +1,964 @@
+---
+sidebar: mapgljsapi
+---
+# Работа с геометриями
+
+Для манипуляций с GeoJSON рекомендуется использовать библиотеку [turf.js](https://turfjs.org/). Ниже описывается использование данной библиотеки в связке с MapGL JS API.
+
+## Граничный прямоугольник (bbox) {#bbox}
+
+Метод `turf.bbox` рассчитывает прямоугольную область, в которой находятся заданные объекты или группа объектов.
+
+```js
+const line = turf.lineString([
+    [32.013931, 55.491648],
+    [35.491901, 56.392901],
+    [37.144102, 55.491648],
+    [40.371536, 56.392901],
+    [42.128462, 55.491648],
+]);
+const bbox = turf.bbox(line); // [minX, minY, maxX, maxY]
+```
+
+Документация на метод: [@turf/bbox](https://turfjs.org/docs/api/bbox)
+
+**Примеры использования**
+
+* Спозиционировать карту так, чтобы все объекты поместились на экран при помощи метода [map.fitBounds](/mapgl/reference/class#map/fit-bounds).
+
+  ```js
+  map.fitBounds({ southWest: bbox.slice(0, 2), northEast: bbox.slice(2, 4) });
+  ```
+
+* Запросить дополнительные данные к имеющимся. Например, имея полигоны муниципальных районов, запросить близлежащие объекты застройки.
+
+Граничный прямоугольник является наиболее распространенным и быстрым способом определить границы нахождения объектов. Обратной стороной является то, что границы таким образом определяются достаточно грубо. Если нужна большая точность, воспользуйтесь [выпуклой оболочкой](#convex-hull).
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Граничный прямоугольник (bbox)" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const line = turf.lineString([[32.013931, 55.491648], [35.491901, 56.392901], [37.144102, 55.491648], [40.371536, 56.392901], [42.128462, 55.491648]]);
+            const bbox = turf.bbox(line);
+
+            const geojson = turf.featureCollection([line, turf.bboxPolygon(bbox)]);
+
+            const map = new mapgl.Map('container', {
+                center: turf.getCoord(turf.center(geojson)),
+                zoom: 6.5,
+                key: 'Your API access key',
+            });
+
+            new mapgl.GeoJsonSource(map, {
+                data: geojson,
+                attributes: {
+                    foo: 'bar'
+                }
+            });
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'polygons',
+                    type: 'polygon',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DD50'
+                    }
+                });
+                map.addLayer({
+                    id: 'lines',
+                    type: 'line',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DDA0',
+                        width: 3
+                    }
+                });
+                map.addLayer({
+                    id: 'points',
+                    type: 'point',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        iconImage: 'ent_i',
+                        iconWidth: 16,
+                        iconPriority: 100
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Выпуклая оболочка (convex hull) {#convex-hull}
+
+Метод `turf.convex` принимает на вход объект или группу объектов и создаёт на их основе [выпуклую оболочку](https://ru.wikipedia.org/wiki/Выпуклая_оболочка).
+
+```js
+const line = turf.lineString([
+    [32.013931, 55.491648],
+    [35.491901, 56.392901],
+    [37.144102, 55.491648],
+    [40.371536, 56.392901],
+    [42.128462, 55.491648],
+]);
+const convexHull = turf.convex(line);
+```
+
+Документация на метод: [@turf/convex](https://turfjs.org/docs/api/convex)
+
+**Пример использования**
+
+Выпуклая оболочка — более точный по сравнению с [граничным прямоугольником](#bbox) метод определения границ объекта. Обратной стороной является большая вычислительная сложность данного метода.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Выпуклая оболочка (convex hull)" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const line = turf.lineString([[32.013931, 55.491648], [35.491901, 56.392901], [37.144102, 55.491648], [40.371536, 56.392901], [42.128462, 55.491648]]);
+            const convexHull = turf.convex(line);
+
+            const geojson = turf.featureCollection([line, convexHull]);
+
+            const map = new mapgl.Map('container', {
+                center: turf.getCoord(turf.center(geojson)),
+                zoom: 6.5,
+                key: 'Your API access key',
+            });
+
+            new mapgl.GeoJsonSource(map, {
+                data: geojson,
+                attributes: {
+                    foo: 'bar'
+                }
+            });
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'polygons',
+                    type: 'polygon',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DD50'
+                    }
+                });
+                map.addLayer({
+                    id: 'lines',
+                    type: 'line',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DDA0',
+                        width: 3
+                    }
+                });
+                map.addLayer({
+                    id: 'points',
+                    type: 'point',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        iconImage: 'ent_i',
+                        iconWidth: 16,
+                        iconPriority: 100
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Буфер вокруг объекта (buffer) {#buffer}
+
+Метод `turf.buffer` позволяет пропорционально увеличить или уменьшить объект.
+
+```js
+const line = turf.lineString([
+    [32.013931, 55.491648],
+    [35.491901, 56.392901],
+    [37.144102, 55.491648],
+    [40.371536, 56.392901],
+    [42.128462, 55.491648],
+]);
+const buffer = turf.buffer(line, 40);
+```
+
+Документация на метод: [@turf/buffer](https://turfjs.org/docs/api/buffer)
+
+**Примеры использования**
+
+* Отобразить различного рода охранные зоны, полосы отчуждения и т. п.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Буфер вокруг объекта (buffer)" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const line = turf.lineString([[32.013931, 55.491648], [35.491901, 56.392901], [37.144102, 55.491648], [40.371536, 56.392901], [42.128462, 55.491648]]);
+            const buffer = turf.buffer(line, 40);
+
+            const geojson = turf.featureCollection([line, buffer]);
+
+            const map = new mapgl.Map('container', {
+                center: turf.getCoord(turf.center(geojson)),
+                zoom: 6.5,
+                key: 'Your API access key',
+            });
+
+            new mapgl.GeoJsonSource(map, {
+                data: geojson,
+                attributes: {
+                    foo: 'bar'
+                }
+            });
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'polygons',
+                    type: 'polygon',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DD50'
+                    }
+                });
+                map.addLayer({
+                    id: 'lines',
+                    type: 'line',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DDA0',
+                        width: 3
+                    }
+                });
+                map.addLayer({
+                    id: 'points',
+                    type: 'point',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        iconImage: 'ent_i',
+                        iconWidth: 16,
+                        iconPriority: 100
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+* Показать на карте места, равноудаленные от какого-либо объекта.
+
+  Однако это работает хорошо только на малых расстояниях (до 50-100 м). При расчёте больших расстояний начинает сказываться тот факт, что `turf.buffer` рассчитывает удалённость чисто геометрически, а в действительности на кратчайшем геометрическом пути обычно содержатся препятствия: дома, реки, заборы, которые требуется обходить/объезжать. В этом случае нужно применять более точный и специализированный инструмент: [изохроны](/api/navigation/isochrone/overview).
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Буфер вокруг объекта (buffer)" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const points = [
+               [37.615655, 55.768005],
+               [37.615643, 55.764817],
+               [37.611931, 55.76285],
+               [37.606251, 55.765179],
+               [37.606402, 55.76756],
+               [37.603082, 55.766587]
+            ];
+            const geojson = turf.featureCollection([]);
+            for (const pt of points) {
+                const feature = turf.point(pt);
+                geojson.features.push(feature);
+                geojson.features.push(turf.buffer(feature, 0.1));
+            }
+
+            const map = new mapgl.Map('container', {
+                center: turf.getCoord(turf.center(geojson)),
+                zoom: 14,
+                key: 'Your API access key',
+            });
+
+            new mapgl.GeoJsonSource(map, {
+                data: geojson,
+                attributes: {
+                    foo: 'bar'
+                }
+            });
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'polygons',
+                    type: 'polygon',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DD50'
+                    }
+                });
+                map.addLayer({
+                    id: 'lines',
+                    type: 'line',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DDA0',
+                        width: 3
+                    }
+                });
+                map.addLayer({
+                    id: 'points',
+                    type: 'point',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        iconImage: 'ent_i',
+                        iconWidth: 16,
+                        iconPriority: 100
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Получение центра (centroid) {#centroid}
+
+Методы `turf.center`, `turf.centroid` и `turf.centerOfMass` позволяют получить тот или иной центр объекта или группы объектов.
+
+```js
+const polygon = turf.polygon([
+    [
+      [32.013931, 55.491648],
+      [35.491901, 56.392901],
+      [37.144102, 55.491648],
+      [40.371536, 56.392901],
+      [42.128462, 55.491648],
+      [32.013931, 55.491648],
+    ],
+]);
+const center = turf.center(polygon);
+const centroid = turf.centroid(polygon);
+const centerOfMass = turf.centerOfMass(polygon);
+```
+
+Документация на методы:
+
+* [@turf/center](https://turfjs.org/docs/api/center),
+* [@turf/centroid](https://turfjs.org/docs/api/centroid),
+* [@turf/centerOfMass](https://turfjs.org/docs/api/centerOfMass).
+
+**Примеры использования**
+
+Есть 3 метода получения центра:
+
+* `center` получает центр граничного прямоугольника объекта или группы.
+* `centroid` вычисляет [геометрический центр](https://ru.wikipedia.org/wiki/Барицентр) объекта или группы.
+* `centerOfMass` получает [центр масс](https://ru.wikipedia.org/wiki/Центр_масс) фигуры.
+
+На правильных и симметричных полигонах между этими методами практически нет разницы. В случае невыпуклых полигонов или других полигонов неправильной формы лучше всего работает `centerOfMass`.
+
+Эти методы удобны для расстановки подписей объектов.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Получение центра (centroid)" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const polygon = turf.polygon([[[32.013931, 55.491648], [35.491901, 56.392901], [37.144102, 55.491648], [40.371536, 56.392901], [42.128462, 55.491648], [32.013931, 55.491648]]]);
+            const center = turf.center(polygon, { properties: { name: 'Центр' } });
+            const centroid = turf.centroid(polygon, { properties: { name: 'Центроид' } });
+            const centerOfMass = turf.centerOfMass(polygon, { properties: { name: 'Центр масс' } });
+
+            const geojson = turf.featureCollection([polygon, center, centroid, centerOfMass]);
+
+            const map = new mapgl.Map('container', {
+                center: turf.getCoord(turf.center(geojson)),
+                zoom: 7.5,
+                key: 'Your API access key',
+            });
+
+            new mapgl.GeoJsonSource(map, {
+                data: geojson,
+                attributes: {
+                    foo: 'bar'
+                }
+            });
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'polygons',
+                    type: 'polygon',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DD50'
+                    }
+                });
+                map.addLayer({
+                    id: 'lines',
+                    type: 'line',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DDA0',
+                        width: 3
+                    }
+                });
+                map.addLayer({
+                    id: 'points',
+                    type: 'point',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        iconImage: 'ent_i',
+                        iconWidth: 16,
+                        iconPriority: 100,
+                        textFont: 'Noto_Sans',
+                        textFontSize: 12,
+                        textField: ['get', 'name'],
+                        textPriority: 100
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Ближайшая точка (nearestPoint) {#nearest-point}
+
+Метод `turf.nearestPoint` получает ближайшую точку из множества точек.
+
+```js
+const line = turf.lineString([
+    [32.013931, 55.491648],
+    [35.491901, 56.392901],
+    [37.144102, 55.491648],
+    [40.371536, 56.392901],
+    [42.128462, 55.491648],
+]);
+const target = turf.point([35.491901, 55.491648]);
+
+const points = turf.explode(line);
+const nearest = turf.nearestPoint(target, points);
+```
+
+Документация на метод: [@turf/nearestPoint](https://turfjs.org/docs/api/nearestPoint)
+
+Особенностью метода является работа только с множеством точек. Чтобы преобразовать произвольный объект в множество точек, воспользуйтесь методом [@turf/explode](https://turfjs.org/docs/api/explode).
+
+**Пример использования**
+
+Найти ближайший к заданному объект.
+
+## Точка на линии (nearestPointOnLine) {#nearest-point-on-line}
+
+Метод `turf.nearestPointOnLine` получает ближайшую к заданной точку на линии или на группе линий.
+
+```js
+const line = turf.lineString([
+    [32.013931, 55.491648],
+    [35.491901, 56.392901],
+    [37.144102, 55.491648],
+    [40.371536, 56.392901],
+    [42.128462, 55.491648],
+]);
+const target = turf.point([35.491901, 55.491648], { name: 'Target' });
+
+const nearestOnLine = turf.nearestPointOnLine(line, target);
+```
+
+Документация на метод: [@turf/nearestPointOnLine](https://turfjs.org/docs/api/nearestPointOnLine)
+
+**Пример использования**
+
+Найти ближайшую точку на маршруте или дороге. Как и в случае с методом [turf.buffer](#buffer), это работает только в самых простых случаях, когда не требуется учитывать препятствия на местности. В остальных случаях воспользуйтесь [Routing API](/api/navigation/routing/start).
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Точка на линии (nearestPointOnLine)" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const line = turf.lineString([[32.013931, 55.491648], [35.491901, 56.392901], [37.144102, 55.491648], [40.371536, 56.392901], [42.128462, 55.491648]]);
+            const target = turf.point([35.491901, 55.491648], { name: 'Целевая точка' });
+
+            const nearestOnLine = turf.nearestPointOnLine(line, target);
+            nearestOnLine.properties = { name: 'Ближайшая точка на линии' };
+
+            const points = turf.explode(line);
+            const nearest = turf.nearestPoint(target, points);
+            nearest.properties = { name: 'Ближайшая точка' };
+
+            const geojson = turf.featureCollection([line, target, nearest, nearestOnLine]);
+
+            const map = new mapgl.Map('container', {
+                center: turf.getCoord(turf.center(geojson)),
+                zoom: 7,
+                key: 'Your API access key',
+            });
+
+            new mapgl.GeoJsonSource(map, {
+                data: geojson,
+                attributes: {
+                    foo: 'bar'
+                }
+            });
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'polygons',
+                    type: 'polygon',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DD50'
+                    }
+                });
+                map.addLayer({
+                    id: 'lines',
+                    type: 'line',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DDA0',
+                        width: 3
+                    }
+                });
+                map.addLayer({
+                    id: 'points',
+                    type: 'point',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        iconImage: 'ent_i',
+                        iconWidth: 16,
+                        iconPriority: 100,
+                        textFont: 'Noto_Sans',
+                        textFontSize: 12,
+                        textField: ['get', 'name'],
+                        textPriority: 100
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Объединение (union) {#union}
+
+Метод `turf.union` объединяет несколько фигур в одну.
+
+```js
+const points = [
+    [38.771739, 55.491648],
+    [37.144102, 56.392901],
+];
+const circleA = turf.buffer(turf.point([38.771739, 55.491648]), 150);
+const circleB = turf.buffer(turf.point([37.144102, 56.392901]), 150);
+const united = turf.union(circleA, circleB);
+```
+
+Документация на метод: [@turf/union](https://turfjs.org/docs/api/union)
+
+**Примеры использования**
+
+* Отобразить на карте область, которую составляют несколько объектов, как один объект.
+* Собрать излишне фрагментированные объекты, что иногда случается при обработке геоданных.
+
+## Пересечение (intersect) {#intersect}
+
+Метод `turf.intersect` находит фигуру, образованную пересечением заданных фигур.
+
+```js
+const points = [
+    [32.013931, 55.491648],
+    [35.491901, 56.392901],
+];
+const circleA = turf.buffer(turf.point([38.771739, 55.491648]), 150);
+const circleB = turf.buffer(turf.point([37.144102, 56.392901]), 150);
+const intersected = turf.intersect(circleA, circleB);
+```
+
+Документация на метод: [@turf/intersect](https://turfjs.org/docs/api/intersect)
+
+**Пример использования**
+
+Отобразить на карте область, являющуюся пересечением других областей. Например, бесплатную парковку в пределах заданного радиуса от объекта.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Пересечение (intersect)" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const points = [[32.013931, 55.491648], [35.491901, 56.392901]];
+            const circleA = turf.buffer(turf.point([38.771739, 55.491648]), 150);
+            const circleB = turf.buffer(turf.point([37.144102, 56.392901]), 150);
+            const united = turf.transformTranslate(turf.union(circleA, circleB), 1200, 90);
+            const intersected = turf.transformTranslate(turf.intersect(circleA, circleB), 1200, -90);
+
+            const geojson = turf.featureCollection([circleA, circleB, united, intersected]);
+
+            const map = new mapgl.Map('container', {
+                center: turf.getCoord(turf.center(geojson)),
+                zoom: 5,
+                key: 'Your API access key',
+            });
+
+            new mapgl.GeoJsonSource(map, {
+                data: geojson,
+                attributes: {
+                    foo: 'bar'
+                }
+            });
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'polygons',
+                    type: 'polygon',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DD50'
+                    }
+                });
+                map.addLayer({
+                    id: 'lines',
+                    type: 'line',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DDA0',
+                        width: 3
+                    }
+                });
+                map.addLayer({
+                    id: 'points',
+                    type: 'point',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        iconImage: 'ent_i',
+                        iconWidth: 16,
+                        iconPriority: 100
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Маска (mask) {#mask}
+
+Метод `turf.mask` позволяет «вывернуть наизнанку» полигон: превратить остальное пространство вокруг него в полигон.
+
+```js
+const poly = turf.polygon([
+    [
+      [36.803769, 56.009657],
+      [37.142487, 56.164165],
+      [37.841187, 56.120356],
+      [38.199158, 55.907578],
+      [38.202972, 55.591507],
+      [37.834930, 55.311997],
+      [37.131653, 55.305538],
+      [36.586609, 55.484630],
+      [36.365356, 55.818146],
+      [36.803769, 56.009657],
+    ],
+]);
+turf.mask(poly);
+```
+
+Документация на метод: [@turf/mask](https://turfjs.org/docs/api/mask)
+
+**Пример использования**
+
+Акцентировать внимание на одной или нескольких областях карты и затенить остальное пространство.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Маска (mask)" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const aPlace = turf.polygon([[
+                [36.803769, 56.009657],
+                [37.142487, 56.164165],
+                [37.841187, 56.120356],
+                [38.199158, 55.907578],
+                [38.202972, 55.591507],
+                [37.834930, 55.311997],
+                [37.131653, 55.305538],
+                [36.586609, 55.484630],
+                [36.365356, 55.818146],
+                [36.803769, 56.009657],
+            ]]);
+            const bbox = turf.bbox(aPlace);
+
+            const map = new mapgl.Map('container', {
+                center: turf.getCoord(turf.center(aPlace)),
+                zoom: 7.5,
+                key: 'Your API access key',
+            });
+
+            new mapgl.GeoJsonSource(map, {
+                data: turf.mask(aPlace),
+                attributes: {
+                    foo: 'bar'
+                }
+            });
+
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'polygons',
+                    type: 'polygon',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DD50'
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Упрощение (simplify) {#simplify}
+
+Метод `turf.simplify` упрощает геометрию при помощи [алгоритма Рамера-Дугласа-Пекера](https://ru.wikipedia.org/wiki/Алгоритм_Рамера_—_Дугласа_—_Пекера).
+
+```js
+const gpsTrack = turf.lineString([
+    [37.588144, 55.733842],
+    [37.593771, 55.740372],
+    [37.601547, 55.742088],
+    [37.608223, 55.750391],
+]);
+const simplifiedTrack = turf.simplify(gpsTrack, { tolerance: 0.2 });
+// { ... geometry: { ..., coordinates: [[37.588144, 55.733842], [37.601547, 55.742088], [37.608223, 55.750391]] } }
+```
+
+Степень упрощения геометрии определяется параметром `tolerance`, который обозначает максимальную ошибку, которую может допустить алгоритм при упрощении. Величина `tolerance` имеет ту же размерность, что и исходные данные. То есть, если геокоординаты указываются в градусах, то и `tolerance` будет в градусах.
+
+Документация на метод: [@turf/simplify](https://turfjs.org/docs/api/simplify)
+
+**Примеры использования**
+
+* Получить менее сложные геометрии, которые будут отрисовываться быстрее.
+* Отфильтровать данные, когда известно, что их точность не может превышать определённое значение.
+* Отобразить точные данные на большом масштабе: упрощённые геометрии имеют более эстетичный внешний вид и плавные линии без визуального шума.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Упрощение (simplify)" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const gpsTrack = turf.lineString([[37.588144, 55.733842], [37.593771, 55.740372], [37.601547, 55.742088], [37.608223, 55.750391]]);
+            const simplifiedTrack = turf.simplify(gpsTrack, { tolerance: 0.2 });
+            simplifiedTrack.properties.simplified = true;
+            const bbox = turf.bbox(gpsTrack);
+
+            console.log(gpsTrack, simplifiedTrack);
+            const geojson = turf.featureCollection([gpsTrack, simplifiedTrack]);
+
+            const map = new mapgl.Map('container', {
+                center: turf.getCoord(turf.center(geojson)),
+                zoom: 5,
+                key: 'Your API access key',
+            });
+            map.fitBounds(
+                { southWest: bbox.slice(0, 2), northEast: bbox.slice(2, 4) },
+                { padding: { left: 20, top: 20, right: 20, bottom: 20 } }
+            );
+
+            new mapgl.GeoJsonSource(map, {
+                data: geojson,
+                attributes: {
+                    foo: 'bar'
+                }
+            });
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'lines',
+                    type: 'line',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: ['match', 
+                            ['get', 'simplified'], 
+                            [true], '#FF9387',
+                            '#00B2DDA0'
+                        ],
+                        width: ['match', 
+                            ['get', 'simplified'], 
+                            [true], 3,
+                            5
+                        ]
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

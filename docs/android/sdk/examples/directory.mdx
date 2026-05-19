@@ -1,0 +1,1015 @@
+---
+sidebar: androidsdk
+---
+# Справочник
+
+Вы можете искать объекты в справочнике <Brand />, обрабатывать результаты поиска, а также использовать подсказки для уточнения поисковых запросов. В справочнике вы можете найти информацию по объектам следующих типов:
+
+* компании и их филиалы;
+* здания;
+* парковки;
+* остановки общественного транспорта и станции метро;
+* дороги (улицы, перекрёстки, проезды);
+* населённые пункты разного размера (страны, города, регионы, деревни, микрорайоны и т.д.);
+* различные площадные объекты (парки, пляжи и т.д.).
+
+Полный список доступных типов объектов см. в описании класса [ObjectType](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.directory.object-type).
+
+***
+
+Чтобы начать работу со справочником:
+
+1. Создайте [поисковый движок](#creating-a-search-engine).
+2. Сформируйте [поисковый запрос](#create-search-query).
+3. Получите, обработайте и отобразите на карте [результаты поиска](#get-search-results).
+
+## Создание поисковика {#creating-a-search-engine}
+
+Для поиска объектов в справочнике создайте объект [SearchManager](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager) и вызовите один из методов, который определяет режим работы справочника:
+
+* [SearchManager.createOnlineManager()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/create-offline-manager) — создаёт онлайн-справочник.
+* [SearchManager.createOfflineManager()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/create-offline-manager) — создаёт офлайн-справочник, работающий только с предзагруженными данными.
+* [SearchManager.createSmartManager()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/create-offline-manager) — создаёт комбинированный справочник, работающий с онлайн-данными при наличии сети и с предзагруженными данными при отсутствии сети.
+
+Пример создания поисковика с комбинированным справочником:
+
+```kotlin
+val searchManager = SearchManager.createSmartManager(sdkContext)
+```
+
+:::note[Режимы работы справочника]
+
+Некоторые методы работают только в определённом режиме справочника. Возможные ограничения указаны в описании методов.
+
+:::
+
+## Формирование поискового запроса {#create-search-query}
+
+Чтобы отправить поисковый запрос, создайте объект [SearchQuery](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query) с помощью [SearchQueryBuilder](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder) и передайте его в метод [search()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/create-offline-manager).
+
+Поисковый запрос должен состоять из трёх логических компонентов:
+
+* Запрос для поиска объекта (что нужно искать?). Вы можете сформулировать запрос с помощью одного из методов ниже:
+
+  * Из текстовой строки с помощью метода [fromQueryText()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids). Вы можете сформулировать текстовый запрос для поиска конкретного объекта (`храм Василия Блаженного`) или для получения списка множества объектов по критерию (`магазины музыкальных инструментов`).
+  * По идентификаторам рубрик с помощью метода [fromRubricIds()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids) или в сочетании с текстовой строкой с помощью метода [fromQueryTextAndRubricIds()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids). Этот способ полезен для создания выборки объектов определённого типа.
+  * По идентификатору:
+
+    * Организации с помощью метода [fromOrgId()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids). Если у компании несколько филиалов, в ответе будут перечислены все точки.
+    * Здания с помощью метода [fromBuildingId()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids).
+    * Любого объекта с помощью метода поискового движка [searchById()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/create-offline-manager).
+
+* Геоограничение поиска (где нужно искать?). Вы можете ограничить зону поиска с помощью одного из методов ниже:
+
+  * Поиск внутри полигона: задайте координаты с помощью метода [setSpatialRestriction()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids).
+
+  * Поиск в прямоугольной области интереса: задайте координаты с помощью метода [setAreaOfInterest()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids). Этот метод задаёт приоритетную зону поиска, но не ограничивает поиск строго: если внутри области интереса результаты не найдены, поиск продолжится за пределами области.
+
+  * Поиск в радиусе вокруг точки: задайте центр поиска с помощью метода [setGeoPoint()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids) или [fromGeoPoint()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids) и, если необходимо, радиус поиска с помощью метода [setRadius()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids).
+
+    Метод [fromGeoPoint()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids) работает только в режиме поиска онлайн.
+
+  * Произвольный запрос: если запрос для поиска объекта сформирован с помощью метода [fromQueryText()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids), вы можете в этом же тексте указать и геоограничение (`цветы у Бауманской`).
+
+* (Необязательный компонент) Дополнительные ограничения результатов поиска с помощью одного или нескольких методов ниже:
+
+  * Поиск объектов только определённого типа: перечислите интересующие вас типы объектов с помощью метода [setAllowedResultTypes()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids) (например, только здания).
+  * Фильтрация результатов: задайте критерий фильтрации с помощью метода [setDirectoryFilter()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids) (например, по времени работы).
+  * Сортировка результатов: задайте критерий сортировки с помощью метода [setSortingType()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids) (например, по рейтингу).
+  * Количество результатов на странице: задайте ограничение с помощью метода [setPageSize()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids). Если вы используете демо-ключ с доступом к Places API, максимальное количество результатов на странице поисковой выдачи — 10.
+  * Номер страницы поисковой выдачи: по умолчанию возвращается первая страница. Чтобы получить следующие страницы, используйте метод [fetchNextPage()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.page/fetch-next-page). Если вы используете демо-ключ с доступом к Places API, максимально возможно загрузить до 5 страниц.
+  * Локаль для поискового запроса: задайте язык и регион с помощью метода [setLocale()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids).
+
+### Примеры
+
+* Найти рестораны итальянской кухни в Пресненском районе Москвы, которые открыты сейчас, с сортировкой по рейтингу:
+
+  ```kotlin
+  // Создаём фильтр по времени работы
+  val filter = DirectoryFilter(
+      WorkTimeFilter(IsOpenNow()), // оставить только открытые сейчас объекты
+      listOf<DynamicFilter>()
+  )
+
+  val searchQuery = SearchQueryBuilder
+      .fromQueryText("рестораны итальянской кухни в Пресненском районе Москвы")
+      .setDirectoryFilter(filter) // фильтрация по времени работы
+      .setSortingType(SortingType.BY_RATING) // сортировка по рейтингу
+      .setPageSize(10) // максимум 10 объектов на странице результатов
+      .build()
+  ```
+
+* Найти все парковки в радиусе 1 км с сортировкой по удалённости:
+
+  ```kotlin
+  val searchQuery = SearchQueryBuilder
+      .fromQueryText("Парковки")
+      .setAllowedResultTypes(allowedResultTypes = listOf(ObjectType.PARKING)) // только парковки
+      .setGeoPoint(GeoPoint(59.936, 30.351)) // центр поиска
+      .setRadius(Meter(1000f)) // радиус поиска
+      .setSortingType(SortingType.BY_DISTANCE) // сортировка по удалённости
+      .build()
+  ```
+
+* Найти все населённые пункты (города, деревни, посёлки и т.д.) внутри полигона:
+
+  ```kotlin
+  // Создаём область поиска в виде полигона
+  val polygon = listOf(
+      GeoPoint(55.751244, 37.618423),
+      GeoPoint(55.760244, 37.628423),
+      GeoPoint(55.770244, 37.618423),
+      GeoPoint(55.751244, 37.608423)
+  )
+
+  val searchQuery = SearchQueryBuilder
+      .fromQueryText("Название города")
+      .setAllowedResultTypes(allowedResultTypes = listOf(ObjectType.ADM_DIV_CITY, ObjectType.ADM_DIV_SETTLEMENT)) // только города и мелкие населённые пункты
+      .setSpatialRestriction(polygon) // область поиска
+      .build()
+  ```
+
+* Найти все объекты, которые оказывают услуги печати документов, в области интереса:
+
+  ```kotlin
+  // Создаём прямоугольную область интереса по координатам двух углов
+  val areaOfInterest = GeoRect(
+      southWestPoint = GeoPoint(59.931, 30.344), // юго-западный угол
+      northEastPoint = GeoPoint(59.936, 30.351)  // северо-восточный угол
+  )
+
+  val searchQuery = SearchQueryBuilder
+      .fromQueryText("печать документов")
+      .setAreaOfInterest(areaOfInterest)
+      .build()
+  ```
+
+* Найти все компании по адресу «Новосибирск, площадь Карла Маркса, 7»:
+
+  ```kotlin
+  val searchQuery = SearchQueryBuilder
+      .fromQueryText("Новосибирск, площадь Карла Маркса, 7")
+      .setAllowedResultTypes(allowedResultTypes = listOf(ObjectType.BRANCH)) // только компании
+      .setPageSize(10) // максимум 10 объектов на странице результатов
+      .build()
+  ```
+
+* Найти все филиалы компании по известному идентификатору:
+
+  ```kotlin
+  val id = 4504136498310300
+
+  val searchQuery = SearchQueryBuilder.fromOrgId(OrgId(id)).build()
+  ```
+
+* Найти конкретный объект по известному идентификатору:
+
+  ```kotlin
+  val id = 70000001035164789
+
+  searchManager.searchById(id)
+  ```
+
+### Геокодирование {#geocoding}
+
+С помощью SDK вы можете решать задачи геокодирования: определять координаты объекта на карте по его адресу ([прямое геокодирование](#direct-geocoding)) и наоборот, определять адрес объекта на карте по его координатам ([обратное геокодирование](#reverse-geocoding)).
+
+#### Прямое геокодирование {#direct-geocoding}
+
+Чтобы получить координаты объекта по его адресу, сформируйте поисковый запрос, указав следующие данные:
+
+* Адрес в текстовом запросе с помощью метода [fromQueryText()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids).
+
+  Для более точных результатов укажите в тексте город (посёлок, деревню), где выполняется поиск. Название небольшого населённого пункта (например, деревни) рекомендуется указывать вместе с названием области и другими объединениями, к которым он относится (например, сельским или городским поселением).
+
+* (Рекомендуется) Тип объекта, координаты которого нужно получить, с помощью метода [setAllowedResultTypes()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids).
+
+Например, чтобы получить координаты здания по адресу «Москва, ул. Тверская 19а»:
+
+```kotlin
+val searchQuery = SearchQueryBuilder
+    .fromQueryText("Москва, ул. Тверская 19а")
+    .setAllowedResultTypes(allowedResultTypes = listOf(ObjectType.BUILDING))
+    .build()
+```
+
+В [результате поиска](#get-search-results) вы получите объект справочника [DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object). Координаты объекта будут представлены в поле `markerPosition` в виде объекта [GeoPointWithElevation](/android/sdk/reference/stable/class#ru.dgis.sdk.geometry.geo-point-with-elevation). Пример:
+
+```yaml
+markerPosition: GeoPointWithElevation(
+    latitude=Latitude(value=55.7659),
+    longitude=Longitude(value=37.602827),
+    elevation=Elevation(value=18.0)
+    ),
+```
+
+Подробнее о другой информации в результатах поиска см. в разделе [Структура данных объекта](#object-data-structure).
+
+#### Обратное геокодирование {#reverse-geocoding}
+
+Чтобы получить адрес объекта по его координатам, сформируйте поисковый запрос, указав координаты объекта с помощью метода [fromGeoPoint()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-geo-point).
+
+Например, найти адрес объекта по координатам `55.7659, 37.602827`:
+
+```kotlin
+val searchQuery = SearchQueryBuilder
+    .fromGeoPoint(GeoPoint(55.7659, 37.602827))
+    .build()
+```
+
+В [результате поиска](#get-search-results) вы получите объект справочника [DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object). Адрес объекта будет представлен в поле `address` в виде объекта [Address](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.address). Пример:
+
+```yaml
+address: Address(
+    drillDown=[
+    AddressAdmDiv(type=country, name=Россия),
+    AddressAdmDiv(type=region, name=Москва),
+    AddressAdmDiv(type=city, name=Москва),
+    AddressAdmDiv(type=district, name=Тверской)
+    ],
+    components=[
+    AddressComponent(AddressStreet(street=Тверская улица, number=19а, fiasCode=null))
+    ],
+    buildingName=null,
+    buildingId=BuildingId(value=4504235282747324),
+    postCode=125009,
+    buildingCode=null,
+    fiasCode=null,
+    addressComment=1-2 этаж
+    ),
+```
+
+Подробнее о другой информации в результатах поиска см. в разделе [Структура данных объекта](#object-data-structure).
+
+### Изменение параметров поиска {#modify-search-params}
+
+Вы можете изменять или дополнять параметры уже созданного поискового запроса. Для этого создайте новый объект [SearchQuery](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query), укажите существующий запрос с помощью метода [fromQuery()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids) и укажите параметры, которые нужно дополнительно применить. Например, изменить тип сортировки результатов при поиске парковок:
+
+```kotlin
+// Создаём изначальный запрос
+val searchQuery = SearchQueryBuilder
+    .fromQueryText("Парковки")
+    .setAllowedResultTypes(allowedResultTypes = listOf(ObjectType.PARKING))
+    .setGeoPoint(GeoPoint(59.936, 30.351))
+    .setRadius(Meter(1000f))
+    .setSortingType(SortingType.BY_DISTANCE) // сортировка по удалённости
+    .build()
+
+// Создаём новый запрос с другим типом сортировки
+val searchQueryUpdated = SearchQueryBuilder
+    .fromQuery(searchQuery) // указание на изначальный запрос
+    .setSortingType(SortingType.BY_RATING) // сортировка по рейтингу
+    .build()
+```
+
+Остальные параметры изначального запроса сохраняются.
+
+## Получение результатов поиска {#get-search-results}
+
+Вызов метода [search()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/create-offline-manager) возвращает отложенный результат [SearchResult](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-result), содержащий список найденных объектов ([DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object)), разделенный на страницы:
+
+```kotlin
+searchManager.search(searchQuery).onResult { searchResult ->
+    // Получаем первый объект с первой страницы
+    val directoryObject = searchResult.firstPage?.items?.getOrNull(0) ?: return
+    Log.d("APP", "Название объекта: ${directoryObject.title}")
+}
+```
+
+Чтобы получить следующую страницу результатов поиска, вызовите метод страницы [fetchNextPage()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.page/fetch-next-page), который вернёт отложенный результат [Page](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.page):
+
+```kotlin
+firstPage.fetchNextPage().onResult { nextPage
+    val directoryObject = nextPage?.items?.getOrNull(0) ?: return
+}
+```
+
+### Отображение результатов на карте {#display-search-results}
+
+Координаты всех найденных объектов возвращаются в поле `itemMarkerInfos` результата поиска [SearchResult](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-result) в виде списка элементов [ItemMarkerInfo](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.item-marker-info). Список может содержать не более 15000 элементов.
+
+Чтобы отобразить на карте маркеры всех найденных объектов:
+
+1. Подготовьте список объектов [Marker](/android/sdk/reference/stable/class#ru.dgis.sdk.map.marker). Чтобы задать позицию маркера (параметр `position`), используйте координаты из поля [ItemMarkerInfo.geoPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.item-marker-info).
+2. Добавьте готовый набор маркеров на карту с помощью метода `addObjects()` менеджера объектов [MapObjectManager](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager). Подробнее см. в инструкции [Добавление нескольких объектов на карту](/android/sdk/examples/map#add-multiple-objects).
+
+```kotlin
+fun displaySearchResultMarkers(map: Map, searchResult: SearchResult) {
+    // Получаем список маркеров из результатов поиска
+    searchResult.itemMarkerInfos.onResult { markerInfos ->
+        if (markerInfos == null) return@onResult
+
+        // Создаём менеджер объектов для добавления маркеров на карту
+        val mapObjectManager = MapObjectManager(map)
+
+        // Подготавливаем список маркеров
+        val markers = markerInfos.mapNotNull { itemMarkerInfo ->
+            val position = itemMarkerInfo.geoPoint ?: return@mapNotNull null
+            Marker(
+                MarkerOptions(
+                    position = position,
+                    icon = imageFromResource(sdkContext, R.drawable.ic_marker)
+                )
+            )
+        }
+
+        // Добавляем маркеры на карту
+        mapObjectManager.addObjects(markers)
+    }
+}
+```
+
+### Структура данных объекта {#object-data-structure}
+
+Результаты поиска по справочнику представлены в виде списка объектов [DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object) с наборами свойств. В зависимости от типа объекта часть свойств может не содержать значений.
+
+:::note[Доступ к данным]
+
+Получение некоторой информации об объектах доступно при дополнительной настройке ключа за отдельную плату: см. описания полей объектов [DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object), [Address](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.address) и [ItemMarkerInfo](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.item-marker-info). Чтобы обновить настройки вашего ключа доступа, обратитесь в [службу поддержки <Brand />](mailto:api@2gis.ru).
+
+:::
+
+* Основные свойства для классификации объекта:
+
+  * Тип объекта (`types`) из [ObjectType](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.directory.object-type). Один объект может относиться к нескольким типам (например, ТЦ Сан Сити — это одновременно и филиал организации, и здание). В этом случае все типы будут перечислены в списке, где первый элемент — основной тип объекта.
+  * Название объекта (`title`) в зависимости от его типа: организации, достопримечательности, географического объекта. Для жилых домов без названия — адрес.
+  * Подтип объекта (`subtitle`) для уточнения. Например, кофейня как подтип организации или жилой дом как подтип здания.
+  * Описание объекта (`description`).
+  * Категории, к которым относится объект (`rubricIds`).
+  * Идентификатор организации в справочнике и информация о ней (`orgInfo`). Для компаний с множеством филиалов — информация о головной организации.
+  * (Данные по запросу) Объединение объектов разного типа в одной карточке справочника (`group`). Подробнее см. [ниже](#hybrid-objects).
+
+* Уникальный идентификатор объекта в справочнике (`id`). Для компаний с множеством филиалов — идентификатор конкретного филиала.
+
+* Географические свойства:
+
+  * Координаты для размещения маркера на карте (`markerPosition`).
+  * Полный адрес объекта (`address`). Некоторые компоненты адреса доступны только по запросу: см. описание объекта [Address](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.address).
+  * (Данные по запросу) Информация об этаже здания, на котором расположен объект (`levelId` и `buildingLevels`). Актуально для компаний, которые расположены на определённом этаже многоэтажного здания.
+  * (Данные по запросу) Информация о входах в объект (`entrances`) с координатами и другими данными. Актуально как для компаний и зданий, так и для других объектов с физически обозначенными входами (например, парков).
+  * (Данные по запросу) Дополнительная информация для уточнения адреса (`titleAddition`). Например, номер подъезда или номер квартиры.
+
+* Время работы:
+
+  * Смещение локального времени объекта от UTC в виде временной метки (`timeZoneOffset`). Например, `03:00:00` для часового пояса UTC+3.
+  * Время работы (`openingHours`) в виде списка временных промежутков или флага круглосуточной работы. Актуально для компаний.
+  * Текущий статус работы (`workStatus`).
+
+* Прочие данные:
+
+  * (Данные по запросу) Информация о торговой лицензии организации (`tradeLicense`).
+  * Контакты для связи с организацией (`contactInfos`): номер телефона, e-mail, ссылки на сайт и соцсети и другое.
+  * Рейтинг объекта на основе отзывов пользователей (`reviews`).
+  * Дополнительные свойства парковок (`parkingInfo`).
+  * Дополнительные свойства электрозаправок (`chargingStation`).
+  * Информация о здании (`buildingInfo`).
+
+#### Объединение объектов {#hybrid-objects}
+
+Некоторые геообъекты в справочнике могут быть представлены в виде группы объектов разного типа. Например, здание суда — это одновременно и отдельно стоящее здание, и организация внутри этого здания, то есть, два разных [DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object) с характеристиками здания и организации соответственно. Но поскольку эти `DirectoryObject` относятся к одному и тому же геообъекту, в их структуре данных содержатся ссылки друг на друга.
+
+Информация о связанных объектах содержится в поле `group` в виде списка элементов [GroupItem](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.group-item). Для каждого связанного объекта представлен его тип и идентификатор ([DgisObjectId](/android/sdk/reference/stable/class#ru.dgis.sdk.dgis-object-id)), который вы можете в дальнейшем использовать для обращения к этому объекту.
+
+:::note[Доступ к данным]
+
+Доступ к данным в поле `group` предоставляется при дополнительной настройке ключа за отдельную плату. Чтобы обновить настройки вашего ключа доступа, обратитесь в [службу поддержки <Brand />](mailto:api@2gis.ru).
+
+:::
+
+Пример наполнения поля `group` с одним связанным объектом:
+
+```yaml
+group: [
+        GroupItem(
+        id=DgisObjectId(objectId=70030076538159915,
+        entranceId=0),
+        type=ATTRACTION
+        ),
+    ]
+```
+
+#### Примеры
+
+Ниже представлены примеры [DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object) разных типов объектов справочника.
+
+* Филиал организации:
+
+  <details>
+  <summary><code>DirectoryObject</code></summary>
+
+  ```yaml
+  # Тип объекта — организация
+  types: [BRANCH]
+  # Название организации
+  title: Шоколадница
+  titleAddition:
+  # Подтип организации — кофейня
+  subtitle: Кофейня
+  # ID объекта (данного филиала организации)
+  id: DgisObjectId(objectId=4504128908451067, entranceId=0)
+  # Координаты маркера для размещения на карте
+  markerPosition: GeoPointWithElevation(
+      latitude=Latitude(value=55.7659),
+      longitude=Longitude(value=37.602827),
+      elevation=Elevation(value=18.0)
+  )
+  # Адрес организации — Москва, ул. Тверская 19а
+  address: Address(
+      drillDown=[
+          AddressAdmDiv(type=country, name=Россия),
+          AddressAdmDiv(type=region, name=Москва),
+          AddressAdmDiv(type=city, name=Москва),
+          AddressAdmDiv(type=district, name=Тверской)
+      ],
+      components=[
+          AddressComponent(AddressStreet(street=Тверская улица, number=19а, fiasCode=null))
+      ],
+      buildingName=null,
+      buildingId=BuildingId(value=4504235282747324),
+      postCode=125009,
+      buildingCode=null,
+      fiasCode=null,
+      addressComment=1-2 этаж
+  )
+  attributes: []
+  contextAttributes: []
+  # Локальный часовой пояс — UTC+3
+  timeZoneOffset: 03:00:00
+  # Время работы филиала: воскресенье-четверг с 7:00 до 23:00, пятница с 7:00 до 24:00, суббота — круглосуточно
+  openingHours: OpeningHours(
+      weekOpeningHours=[
+          [WeekTimeInterval(
+              startTime=WeekTime(weekDay=MONDAY, time=DayTime(hours=7, minutes=0)),
+              finishTime=WeekTime(weekDay=MONDAY, time=DayTime(hours=23, minutes=0))
+          )],
+          [WeekTimeInterval(
+              startTime=WeekTime(weekDay=TUESDAY, time=DayTime(hours=7, minutes=0)),
+              finishTime=WeekTime(weekDay=TUESDAY, time=DayTime(hours=23, minutes=0))
+          )],
+          [WeekTimeInterval(
+              startTime=WeekTime(weekDay=WEDNESDAY, time=DayTime(hours=7, minutes=0)),
+              finishTime=WeekTime(weekDay=WEDNESDAY, time=DayTime(hours=23, minutes=0))
+          )],
+          [WeekTimeInterval(
+              startTime=WeekTime(weekDay=THURSDAY, time=DayTime(hours=7, minutes=0)),
+              finishTime=WeekTime(weekDay=THURSDAY, time=DayTime(hours=23, minutes=0))
+          )],
+          [WeekTimeInterval(
+              startTime=WeekTime(weekDay=FRIDAY, time=DayTime(hours=7, minutes=0)),
+              finishTime=WeekTime(weekDay=FRIDAY, time=DayTime(hours=24, minutes=0))
+          )],
+          [WeekTimeInterval(
+              startTime=WeekTime(weekDay=SATURDAY, time=DayTime(hours=0, minutes=0)),
+              finishTime=WeekTime(weekDay=SATURDAY, time=DayTime(hours=24, minutes=0))
+          )],
+          [WeekTimeInterval(
+              startTime=WeekTime(weekDay=SUNDAY, time=DayTime(hours=0, minutes=0)),
+              finishTime=WeekTime(weekDay=SUNDAY, time=DayTime(hours=23, minutes=0))
+          )]
+      ],
+      isOpen24x7=false
+  )
+  contactInfos: []
+  # Рейтинг 3.4 на основе 85 отзывов
+  reviews: Reviews(rating=3.4, count=85)
+  parkingInfo: null
+  # В данный момент филиал открыт и работает до 23:00
+  workStatus: WorkStatus(isOpen=true, description=Открыто до 23:00)
+  levelId: null
+  buildingLevels: null
+  # У организации один вход
+  entrances: [
+      EntranceInfo(
+          id=DgisObjectId(objectId=4504128908451067, entranceId=70030076156031010),
+          buildingNumber=null,
+          porchName=null,
+          porchNumber=null,
+          apartmentRanges=[],
+          geometry=EntranceGeometry(
+              entrancePoints=[
+                  GeoPoint(
+                      latitude=Latitude(value=55.76590646318491),
+                      longitude=Longitude(value=37.60283837242394)
+                  )
+              ],
+              entrancePolylines=[
+                  [
+                      GeoPoint(
+                          latitude=Latitude(value=55.765971),
+                          longitude=Longitude(value=37.602949)
+                      ),
+                      GeoPoint(
+                          latitude=Latitude(value=55.765906),
+                          longitude=Longitude(value=37.602838)
+                      )
+                  ]
+              ]
+          )
+      )
+  ]
+  chargingStation: null
+  # Объект относится к трём категориям
+  rubricIds: [
+      RubricId(value=162),
+      RubricId(value=1203),
+      RubricId(value=161)
+  ]
+  # Информация о головной организации и общем количестве филиалов
+  orgInfo: OrgInfo(
+      branchCount=225,
+      id=OrgId(value=4504136498310300),
+      name=Шоколадница, кофейня
+  )
+  group: []
+  ```
+
+  </details>
+
+* Жилое здание:
+
+    <details>
+    <summary><code>DirectoryObject</code></summary>
+
+  ```yaml
+  # Тип объекта — здание
+  types: [BUILDING]
+  # Название объекта — адрес здания
+  title: 2-я Черногрязская улица, 1
+  titleAddition:
+  # Подтип объекта — жилой дом
+  subtitle: Жилой дом
+  # ID объекта
+  id: DgisObjectId(objectId=4504235282792806, entranceId=0)
+  # Координаты маркера для размещения на карте
+  markerPosition: GeoPointWithElevation(
+      latitude=Latitude(value=55.760651),
+      longitude=Longitude(value=37.545995),
+      elevation=Elevation(value=3.0)
+  )
+  # Адрес объекта — Москва, 2-я Черногрязская улица 1
+  address:
+      Address(
+          drillDown=[
+              AddressAdmDiv(type=country, name=Россия),
+              AddressAdmDiv(type=region, name=Москва),
+              AddressAdmDiv(type=city, name=Москва),
+              AddressAdmDiv(type=district, name=Пресненский)
+          ],
+          components=[
+              AddressComponent(AddressStreet(street=2-я Черногрязская улица, number=1, fiasCode=91e0431b-5721-40b9-8bf0-5eb5377063a8))
+          ],
+          buildingName=null,
+          buildingId=BuildingId(value=4504235282792806),
+          postCode=123100,
+          buildingCode=null,
+          fiasCode=null,
+          addressComment=null
+      )
+  attributes: []
+  contextAttributes: []
+  timeZoneOffset: null
+  openingHours: null
+  contactInfos: []
+  # Нет отзывов об объекте для подсчёта рейтинга
+  reviews: Reviews(rating=0.0, count=0)
+  parkingInfo: null
+  workStatus: WorkStatus(isOpen=false, description=)
+  levelId: null
+  buildingLevels: null
+  # У жилого здания два входа
+  entrances: [
+      EntranceInfo(
+          id=DgisObjectId(objectId=4504235282792806, entranceId=4504643304435799),
+          buildingNumber=null,
+          porchName=null,
+          porchNumber=null,
+          apartmentRanges=[],
+          geometry=EntranceGeometry(
+              entrancePoints=[
+                  GeoPoint(
+                      latitude=Latitude(value=55.76073452440514),
+                      longitude=Longitude(value=37.54591428882596)
+                  )
+              ],
+              entrancePolylines=[
+                  [
+                      GeoPoint(
+                          latitude=Latitude(value=55.760822),
+                          longitude=Longitude(value=37.545949)
+                      ),
+                      GeoPoint(
+                          latitude=Latitude(value=55.760735),
+                          longitude=Longitude(value=37.545914)
+                      )
+                  ]
+              ]
+          )
+      ),
+      EntranceInfo(
+          id=DgisObjectId(objectId=4504235282792806, entranceId=70030076156588095),
+          buildingNumber=null,
+          porchName="1 подъезд",
+          porchNumber=1,
+          apartmentRanges=[
+              ApartmentRange(start=1, end=80)
+          ],
+          geometry=EntranceGeometry(
+              entrancePoints=[
+                  GeoPoint(
+                      latitude=Latitude(value=55.7605167221199),
+                      longitude=Longitude(value=37.54581996572112)
+                  )
+              ],
+              entrancePolylines=[
+                  [
+                      GeoPoint(
+                          latitude=Latitude(value=55.760497),
+                          longitude=Longitude(value=37.545975)
+                      ),
+                      GeoPoint(
+                          latitude=Latitude(value=55.760517),
+                          longitude=Longitude(value=37.54582)
+                      )
+                  ]
+              ]
+          )
+      )
+  ]
+  chargingStation: null
+  rubricIds: []
+  orgInfo: null
+  group: []
+  ```
+
+    </details>
+
+* Улица:
+
+    <details>
+    <summary><code>DirectoryObject</code></summary>
+
+  ```yaml
+  # Тип объекта — улица
+  types: [STREET]
+  # Название объекта
+  title: Улица Петрова
+  titleAddition:
+  # Подтип объекта — улица
+  subtitle: Street
+  # ID объекта
+  id: DgisObjectId(objectId=4504338361766218, entranceId=0)
+  # Координаты маркера для размещения на карте
+  markerPosition: GeoPointWithElevation(
+      latitude=Latitude(value=55.643536),
+      longitude=Longitude(value=38.053038),
+      elevation=Elevation(value=0.0)
+  )
+  # Адрес объекта — Московская область, пгт Удельная
+  address: Address(
+      drillDown=[
+          AddressAdmDiv(type=country, name=Россия),
+          AddressAdmDiv(type=region, name=Московская область),
+          AddressAdmDiv(type=district_area, name=Раменский муниципальный округ),
+          AddressAdmDiv(type=settlement, name=пгт Удельная)
+      ],
+      components=[],
+      buildingName=null,
+      buildingId=null,
+      postCode=null,
+      buildingCode=null,
+      fiasCode=0d8e2b4c-eef7-4176-bbec-be9ac0ace587,
+      addressComment=null
+  )
+  attributes: []
+  contextAttributes: []
+  timeZoneOffset: null
+  openingHours: null
+  contactInfos: []
+  reviews: null
+  parkingInfo: null
+  workStatus: WorkStatus(isOpen=false, description=)
+  levelId: null
+  buildingLevels: null
+  entrances: []
+  chargingStation: null
+  rubricIds: []
+  orgInfo: null
+  group: []
+  ```
+
+    </details>
+
+* Площадной объект (парк):
+
+  <details>
+  <summary><code>DirectoryObject</code></summary>
+
+  ```yaml
+  # Основной тип объекта — площадной объект, дополнительный — достопримечательность
+  types: [ADM_DIV_PLACE, ATTRACTION],
+  # Название объекта
+  title: Парк "Красногвардейские пруды",
+  titleAddition: ,
+  # Подтип объекта — место
+  subtitle: Место,
+  # ID объекта
+  id: DgisObjectId(objectId=4504286822138295, entranceId=0),
+  # Координаты маркера для размещения на карте
+  markerPosition: GeoPointWithElevation(
+      latitude=Latitude(value=55.756656),
+      longitude=Longitude(value=37.545756),
+      elevation=Elevation(value=0.0)
+  ),
+  # Адрес объекта — Москва
+  address: Address(
+      drillDown=[
+          AddressAdmDiv(type=country, name=Россия),
+          AddressAdmDiv(type=region, name=Москва),
+          AddressAdmDiv(type=city, name=Москва)
+      ],
+      components=[],
+      buildingName=null,
+      buildingId=null,
+      postCode=null,
+      buildingCode=null,
+      fiasCode=null,
+      addressComment=null
+  ),
+  attributes: [],
+  contextAttributes: [],
+  timeZoneOffset: null,
+  openingHours: null,
+  contactInfos: [],
+  # Рейтинг 4.8 на основе 62 отзывов
+  reviews: Reviews(rating=4.8, count=62),
+  parkingInfo: null,
+  workStatus: WorkStatus(isOpen=false, description=),
+  levelId: null,
+  buildingLevels: null,
+  entrances: [],
+  chargingStation: null,
+  # Объект относится к одной категории
+  rubricIds: [RubricId(value=168)],
+  orgInfo: null,
+  # Объект одновременно является и площадным объектом, и достопримечательностью
+  group: [
+      GroupItem(
+          id=DgisObjectId(objectId=70030076538159915, entranceId=0),
+          type=ATTRACTION
+      )
+  ]
+  ```
+
+  </details>
+
+## Поисковые подсказки {#search-suggestions}
+
+Вы можете формировать подсказки для пользователей при текстовом поиске объектов. Для этого создайте объект [SuggestQuery](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.suggest-query) с помощью [SuggestQueryBuilder](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.suggest-query-builder) и передайте его в метод [suggest()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/create-offline-manager):
+
+```kotlin
+val query = SuggestQueryBuilder.fromQueryText("пицц").setLimit(10).build()
+
+searchManager.suggest(query).onResult { suggestResult ->
+    // Получаем первую подсказку из списка
+    val firstSuggest = suggestResult.suggests?.getOrNull(0) ?: return
+    Log.d("APP", "Заголовок подсказки: ${firstSuggest.title}")
+}
+```
+
+Вызов вернёт отложенный результат [SuggestResult](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.suggest-result), содержащий список подсказок ([Suggest](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.suggest)). Подробнее о формировании подсказок см. в документации [Suggest API](/api/search/suggest/overview).
+
+Когда пользователь выбирает одну из предложенных подсказок, вы можете настроить реакцию на это событие с помощью обработчика [SuggestHandler](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.suggest-handler) одного из следующих типов:
+
+* [SuggestObjectHandler](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.suggest-object-handler) — возвращает объект справочника [DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object).
+* [PerformSearchHandler](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.perform-search-handler) — возвращает объект поискового запроса [SearchQuery](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query). Вы можете использовать этот объект для дальнейшего поиска: передайте его сразу в метод [SearchManager.search()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/create-offline-manager) или создайте на его основе новый [SearchQuery](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query) с дополнительными параметрами с помощью метода [fromQuery()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids) (подробнее см. в разделе [Изменение параметров поиска](#modify-search-params)).
+* [IncompleteTextHandler](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.incomplete-text-handler) — возвращает автоматически дополненный текст подсказки, который можно использовать для дальнейшего формирования поискового запроса с помощью метода [fromQueryText()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/from-query-text-and-rubric-ids).
+
+Пример функции для применения всех типов обработчика:
+
+```kotlin
+fun handleSuggestHandler(handler: SuggestHandler) {
+    handler.match(
+        objectHandler = { objectHandler ->
+            println("Выбран объект справочника: {objectHandler.item}")
+        },
+        performSearchHandler = { performSearchHandler ->
+            println("Вернуть объект поискового запроса: {performSearchHandler.searchQuery}")
+        },
+        incompleteTextHandler = { incompleteTextHandler ->
+            println("Вернуть дополненный текст подсказки: ${incompleteTextHandler?.queryText}")
+        }
+    )
+}
+```
+
+## История поиска {#search-history}
+
+Вы можете работать с историей поиска с помощью [SearchHistory](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history).
+
+В истории поиска могут храниться элементы двух типов: объекты справочника ([DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object)) и поисковые запросы ([SearchQueryWithInfo](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-with-info)).
+
+### Добавление элементов в историю поиска {#add-elements-to-history}
+
+Вы можете добавить элементы в историю поиска в виде объектов [SearchHistoryItem](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history-item) по одному или списком. Порядок элементов в списке сохранится при добавлении в историю.
+
+1. Создайте объект [SearchHistoryItem](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history-item) и передайте ему один из следующих объектов в зависимости от типа добавляемого элемента:
+
+   * Для поискового запроса: [SearchQueryWithInfo](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-with-info) с указанием нужного поискового запроса в параметре `searchQuery`. Дополнительно `SearchQueryWithInfo` может содержать заголовок и подзаголовок, которые отобразятся в выдаче истории поиска.
+
+     ```kotlin
+     // Создаём объект SearchQueryWithInfo
+     val searchQueryWithInfo = SearchQueryWithInfo(
+         searchQuery = searchQuery,   // готовый поисковый запрос
+         title = "Кафе рядом",
+         subtitle = "Рестораны и кафе поблизости"
+     )
+
+     val searchHistoryItem = SearchHistoryItem(searchQueryWithInfo)
+     ```
+
+   * Для объекта справочника: [DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object).
+
+     ```kotlin
+     val searchHistoryItem = SearchHistoryItem(directoryObject)
+     ```
+
+2. Создайте объект [SearchHistory](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history):
+
+    <Tabs>
+    <TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+    ```kotlin
+    val searchHistory = SearchHistory.instance(sdkContext)
+    ```
+
+    </TabItem>
+    <TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+    ```kotlin
+    val searchHistory = SearchHistory(sdkContext)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+3. Добавьте элементы в историю поиска по одному или списком с помощью методов `addItem()` или `addItems()` объекта [SearchHistory](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history) соответственно:
+
+   * Добавить один элемент:
+
+     ```kotlin
+     searchHistory.addItem(searchHistoryItem)
+     ```
+
+   * Добавить список элементов:
+
+     ```kotlin
+     searchHistory.addItems(searchHistoryItemsList)
+     ```
+
+Если в истории поиска уже существует добавленный элемент, более старый дубликат будет удалён.
+
+### Отображение истории поиска {#show-history-page}
+
+Чтобы показать страницу поиска со списком элементов, создайте объект [SearchHistoryPage](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history-page) и передайте его в метод [items()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history). Дополнительно вы можете настроить следующие параметры:
+
+* Ограничить количество элементов на странице (параметр `limit`). Значение по умолчанию — 100.
+* Задать смещение относительно начала списка (параметр `offset`): сколько элементов с начала списка пропустить. Значение по умолчанию — 0 (смещение отсутствует, список отображается с самого начала).
+* Отфильтровать список по типу элементов (параметр `filter`). Доступные фильтры перечислены в [SearchHistoryFilter](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.directory.search-history-filter). Например, чтобы показывать в истории только поисковые запросы, используйте значение `SEARCH_QUERY`. По умолчанию фильтрация отсутствует.
+
+    <Tabs>
+    <TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+    ```kotlin
+    // Создаём объект SearchHistory
+    val searchHistory = SearchHistory.instance(sdkContext)
+
+    // Создаём страницу истории с лимитом 10 элементов и смещением 0
+    val page = SearchHistoryPage(
+        limit = 10,        // Максимум 10 элементов на странице
+        offset = 0,        // Смещение 0 (начало списка)
+        filter = EnumSet.noneOf(SearchHistoryFilter::class.java)    // Без фильтров
+    )
+
+    // Получаем элементы страницы истории
+    searchHistory.items(page).onResult { result ->
+        result.items.forEach { item ->
+            // Логируем каждый элемент истории
+            Log.d("APP", "Элемент истории: $item")
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+    ```kotlin
+    // Создаём объект SearchHistory
+    val searchHistory = SearchHistory(sdkContext)
+    
+    // Создаём страницу истории с лимитом 10 элементов и смещением 0
+    val page = SearchHistoryPage(
+        limit = 10,        // Максимум 10 элементов на странице
+        offset = 0,        // Смещение 0 (начало списка)
+        filter = EnumSet.noneOf(SearchHistoryFilter::class.java)    // Без фильтров
+    )
+
+    // Получаем элементы страницы истории
+    searchHistory.items(page).onResult { result ->
+        result.items.forEach { item ->
+            // Логируем каждый элемент истории
+            Log.d("APP", "Элемент истории: $item")
+        }
+    }        
+    ```
+
+    </TabItem>
+    </Tabs>
+
+Элементы на странице упорядочены по времени добавления в историю (от новых к старым).
+
+### Очистка истории поиска {#clean-history}
+
+Чтобы убрать отдельные элементы из истории поиска:
+
+* Чтобы убрать один элемент, используйте метод `removeItem()` объекта [SearchHistory](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history) и передайте ему нужный объект [SearchHistoryItem](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history-item). Подробнее о наполнении `SearchHistoryItem` см. в инструкции [Добавить элементы в историю поиска](#add-elements-to-history).
+
+  ```kotlin
+  searchHistory.removeItem(searchHistoryItem)
+  ```
+
+* Чтобы убрать несколько элементов, используйте метод `removeItems()` объекта [SearchHistory](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history) и передайте ему список нужных объектов [SearchHistoryItem](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history-item). Подробнее о наполнении `SearchHistoryItem` см. в инструкции [Добавить элементы в историю](#add-elements-to-history).
+
+  ```kotlin
+  searchHistory.removeItems(searchHistoryItemsList)
+  ```
+
+Чтобы очистить историю поиска полностью, используйте метод `clear()` объекта [SearchHistory](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history):
+
+```kotlin
+searchHistory.clear()
+```
+
+### Подписка на изменения истории {#subscribe-to-history-changes}
+
+Чтобы отслеживать изменения истории поиска (добавление и удаление элементов), вы можете подписаться на канал [onHistoryChanged](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history/val-on-history-changed):
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+```kotlin
+val searchHistory = SearchHistory.instance(sdkContext)
+
+searchHistory.onHistoryChanged.connect { changeType ->
+    when (changeType) {
+        ChangeType.ADDED -> Log.d("APP", "Элемент добавлен в историю")
+        ChangeType.REMOVED -> Log.d("APP", "Элемент удалён из истории")
+    }
+}
+```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+```kotlin
+val searchHistory = SearchHistory(sdkContext)
+
+searchHistory.onHistoryChanged.connect { changeType ->
+    when (changeType) {
+        ChangeType.ADDED -> Log.d("APP", "Элемент добавлен в историю")
+        ChangeType.REMOVED -> Log.d("APP", "Элемент удалён из истории")
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Информация о подъездах в справочнике
+
+Вы можете искать адреса в справочнике с точностью до квартиры или подъезда.
+
+Например, по запросу `"Томск Кирова 17 кв 5"` вы получите объект, который содержит информацию с точностью до подъезда.
+
+[DgisObjectId](/android/sdk/reference/stable/class#ru.dgis.sdk.dgis-object-id) содержит два идентификатора:
+
+* [objectId](/android/sdk/reference/stable/class#ru.dgis.sdk.dgis-object-id/val-object-id) — стабильный числовой идентификатор объекта;
+* [entranceId](/android/sdk/reference/stable/class#ru.dgis.sdk.dgis-object-id/val-entrance-id) — стабильный числовой идентификатор входа/подъезда для объекта.
+
+Если [entranceId](/android/sdk/reference/stable/class#ru.dgis.sdk.dgis-object-id/val-entrance-id) отличен от нуля, то результатом поиска является не просто дом, а конкретный подъезд в доме.
+
+Если необходимо нарисовать маркер на конкретном подъезде или взять его координаты для построения маршрута, не используйте [markerPosition](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object/val-marker-position). В этом свойстве будет располагаться позиция, относящаяся к маркеру дома. Для получения позиции подъезда используйте информацию из [entrances](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object/val-entrances):
+
+```kotlin
+fun getMarkerPosition(directoryObject: DirectoryObject?) : GeoPoint?
+{
+    val entranceId = directoryObject?.id?.entranceId ?: 0L
+    if (entranceId != 0L) {
+        directoryObject?.buildingEntrances?.find { info -> info.id.entranceId == entranceId }?.let {
+            return it.geometry?.entrancePoints?.firstOrNull() ?: directoryObject.markerPosition?.point
+        }
+    }
+    return directoryObject?.markerPosition?.point
+}
+```
+
+

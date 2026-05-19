@@ -1,0 +1,50 @@
+# Dependencies
+/node_modules
+
+# Production
+/build
+
+# Generated files
+.docusaurus
+.cache-loader
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+/docs/android/sdk/reference/*
+/docs/ios/sdk/reference/*
+/i18n/en/docusaurus-plugin-content-docs/current/android/sdk/reference/*
+/i18n/en/docusaurus-plugin-content-docs/current/ios/sdk/reference/*
+/docs/mapgl/reference/*
+/docs/mapgl/plugins/clusterer/reference/*
+/docs/mapgl/plugins/deck2gisLayer/reference/*
+/docs/mapgl/plugins/directions/reference/*
+/docs/mapgl/plugins/gltf/reference/*
+/docs/mapgl/plugins/gltf2/reference/*
+/docs/mapgl/plugins/ruler/reference/*
+/i18n/en/docusaurus-plugin-content-docs/current/mapgl/reference/*
+/i18n/en/docusaurus-plugin-content-docs/current/mapgl/plugins/clusterer/reference/*
+/i18n/en/docusaurus-plugin-content-docs/current/mapgl/plugins/deck2gisLayer/reference/*
+/i18n/en/docusaurus-plugin-content-docs/current/mapgl/plugins/directions/reference/*
+/i18n/en/docusaurus-plugin-content-docs/current/mapgl/plugins/gltf/reference/*
+/i18n/en/docusaurus-plugin-content-docs/current/mapgl/plugins/gltf2/reference/*
+/i18n/en/docusaurus-plugin-content-docs/current/mapgl/plugins/ruler/reference/*
+
+/.vscode
+tsconfig.tsbuildinfo
+.eslintcache
+.idea
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

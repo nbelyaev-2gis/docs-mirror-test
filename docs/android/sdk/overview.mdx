@@ -1,0 +1,115 @@
+---
+sidebar: androidsdk
+---
+# Android SDK
+
+Android SDK позволяет добавить [карту <Brand />](https://2gis.ru/) в ваше Android-приложение. С помощью SDK можно отобразить карту на экране, получать информацию об объектах карты, строить маршруты, использовать навигатор и т. д.
+
+Примеры использования SDK см. в разделе [Примеры](/android/sdk/examples). Описание всех классов и методов см. в разделе [Справочник API](/android/sdk/reference/stable/class).
+
+Картографические данные поддерживают [стандарты OGC](https://ru.wikipedia.org/wiki/Open_Geospatial_Consortium).
+
+## Версии SDK {#versions}
+
+Пакеты Android SDK доступны в двух версиях:
+
+* **Full** — полная версия, которая позволяет:
+  * Добавлять [карту](/android/sdk/examples/map) в приложение и управлять ей: добавлять маркеры и геометрические фигуры, управлять движением камеры, отображать слои (например, пробки), работать со стилями карты и т. д.
+  * Искать объекты в [справочнике](/android/sdk/examples/directory): организации, здания, места и другие.
+  * Работать с [навигатором](/android/sdk/examples/navigation) в приложении в трёх режимах: свободная навигация, ведение по маршруту и симуляция ведения.
+  * Строить оптимальные [маршруты](/android/sdk/examples/routing) на карте, в том числе внутри зданий.
+  * Использовать [офлайн-данные](/android/sdk/start#offline-mode).
+* **Map** — облегчённая версия, которая позволяет:
+  * Добавлять [карту](/android/sdk/examples/map) в приложение и управлять ей: добавлять маркеры и геометрические фигуры, управлять движением камеры, отображать слои (например, пробки), работать со стилями карты и т. д.
+  * Искать объекты в [справочнике](/android/sdk/examples/directory): организации, здания, места и другие.
+
+:::warning
+
+Не используйте версии **Full** и **Map** вместе: это приведёт к ошибке сборки.
+
+:::
+
+## API для работы SDK {#api-list}
+
+В зависимости от нужных функциональностей, для работы SDK требуются ключи доступа к API карт, поиска и навигации. Доступные возможности зависят от [версии SDK](#versions): **Full** или **Map**.
+
+При использовании ключа оплачивается только доступ к используемым API, в зависимости от количества отправленных запросов (и в некоторых случаях — полученных ответов). Вы можете работать с ключами в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=sdk_android).
+
+### Карта (для Full и Map)
+
+Подробнее о доступных возможностях см. в инструкции [Карта](/android/sdk/examples/map).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API |
+| ----------------------------------------------------- | ---------------- |
+| [Создание карты в приложении](/android/sdk/examples/map#creating-map)<br />(класс [MapView](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-view)) | <ul><li>[Map Tiles API](/maps/others/maptiles/overview)</li><li>[Regions API](/api/search/regions/overview)</li></ul> |
+| [Отображение растровой карты в приложении](/android/sdk/examples/map#add-raster-map)<br />(класс [RasterTileSource](/android/sdk/reference/stable/class#ru.dgis.sdk.map.raster-tile-source)) | [Raster Tiles API](/maps/others/rastertiles/overview) |
+| [Отображение пробок на карте](/android/sdk/examples/map#traffic)<br />(класс [TrafficSource](/android/sdk/reference/stable/class#ru.dgis.sdk.map.traffic-source)) | [Regions API](/api/search/regions/overview) |
+
+### Справочник (для Full и Map)
+
+Подробнее о доступных возможностях см. в инструкции [Справочник](/android/sdk/examples/directory).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API |
+| ----------------------------------------------------- | ---------------- |
+| [Создание поискового движка](/android/sdk/examples/directory#creating-a-search-engine)<br />(класс [SearchManager](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager)) | [Regions API](/api/search/regions/overview) |
+| [Получение результатов поиска](/android/sdk/examples/directory#get-search-results)<br />(метод [SearchManager.search()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/search)) | <ul><li>[Places API](/api/search/places/overview)</li><li>[Markers API](/api/search/markers/overview)</li></ul>Получение некоторой информации об объектах в доступно только при дополнительной настройке ключа за отдельную плату: см. раздел [Структура данных объекта](/android/sdk/examples/directory#object-data-structure). |
+| [Поиск объектов в справочнике по идентификатору](/android/sdk/examples/directory#create-search-query)<br />(метод [SearchManager.searchById()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/search-by-id)) | <ul><li>[Places API](/api/search/places/overview)</li><li>[Markers API](/api/search/markers/overview)</li></ul> |
+| [Формирование поисковых подсказок](/android/sdk/examples/directory#search-suggestions)<br />(метод [SearchManager.suggest()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-manager/suggest)) | [Suggest API](/api/search/suggest/overview) |
+
+### Маршруты (только для Full)
+
+Подробнее о доступных возможностях см. в инструкции [Маршруты](/android/sdk/examples/routing).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API |
+| ----------------------------------------------------- | ---------------- |
+| [Поиск оптимального маршрута с учётом пробок](/android/sdk/examples/routing#building-route)<br />(класс [TrafficRouter](/android/sdk/reference/stable/class#ru.dgis.sdk.routing.traffic-router)) | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+| [Отображение маршрутов на карте](/android/sdk/examples/routing#building-route)<br />(класс [RouteEditorSource](/android/sdk/reference/stable/class#ru.dgis.sdk.map.route-editor-source)) | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+
+### Навигация (только для Full)
+
+Подробнее о доступных возможностях см. в инструкции [Навигация](/android/sdk/examples/navigation).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API |
+| ----------------------------------------------------- | ---------------- |
+| Запуск навигатора (метод [NavigationManager.start()](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.navigation-manager/start)):<ul><li>[в режиме свободной навигации](/android/sdk/examples/navigation#free-drive-mode),</li><li>[в режиме ведения по маршруту](/android/sdk/examples/navigation#turn-by-turn-mode).</li></ul> | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+| [Поиск альтернативных маршрутов](/android/sdk/examples/navigation#alternative-routes)<br />(класс [AlternativeRouteSelector](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.alternative-route-selector)) | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+| [Отображение дорожных событий](/android/sdk/examples/navigation#dynamic-route-data)<br />(класс [RoadEventSource](/android/sdk/reference/stable/class#ru.dgis.sdk.map.road-event-source)) | [Regions API](/api/search/regions/overview) |
+| [Вычисление местоположения устройства по сотовым вышкам и точкам доступа Wi-Fi](/android/sdk/examples/navigation#radar-api)<br />(использование [RadarApiSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.positioning.radar.radar-api-settings) в [DefaultLocationSource](/android/sdk/reference/stable/class#ru.dgis.sdk.positioning.default-location-source)) | [Radar API](/api/navigation/radar/overview) |
+
+## Требования к устройствам {#system-requirements}
+
+* Android 6.0 (Marshmallow) и выше.
+* Поддерживаемые архитектуры: x86\_64, x86, armeabi-v7a, arm64-v8a.
+* OpenGL ES 3.1.
+
+## Демонстрационный проект {#demo-project}
+
+Демонстрационное приложение с исходным кодом см. в [GitHub-репозитории](https://github.com/2gis/mobile-sdk-android-demo/).
+
+## Размер приложения {#application-size}
+
+Размер вашего приложения может заметно увеличиться после добавления SDK в проект. См. ниже описание причины и возможные стратегии для борьбы с этим увеличением.
+
+### Процессорные архитектуры {#processor-architectures}
+
+Современные устройства Android могут иметь различные типы процессоров: x86-64, x86, ARMv7 и ARMv8. Для кода, написанного на Java или Kotlin, это не является проблемой, так как он исполняется в виртуальной машине и абстрагируется от конкретного железа. Однако, для нативного кода тип процессора играет важную роль.
+
+Наша библиотека содержит четыре версии для всех типов ABI (Application Binary Interface), чтобы обеспечить поддержку всех этих типов процессоров.
+
+### Оптимизация размера {#size-optimization}
+
+Чтобы сократить размер приложения, вы можете использовать разделение APK по типам ABI. Это позволит собирать и загружать только необходимые библиотеки для конкретного устройства пользователя. См. инструкции по сборке и загрузке в [документации Android](https://developer.android.com/build/configure-apk-splits#configure-abi-split). Если вы используете Android App Bundle, Google Play может автоматически пересобирать приложение под нужные типы процессоров для конкретных устройств пользователей.
+
+### Проверка размера {#size-check}
+
+Чтобы увидеть фактический размер APK, который будет загружаться пользователем, рекомендуется использовать инструмент [bundletool](https://developer.android.com/tools/bundletool). Это поможет получить APK, содержащий только необходимые библиотеки для конкретного устройства:
+
+1. Соберите app bundle, выбрав этот вариант сборки в Gradle.
+2. Получите APK по необходимым критериям (например, только для arm64-v8a) из app bundle с помощью bundletool.
+
+Полученный APK будет отражать реальный размер, который получит пользователь при загрузке приложения из Google Play.
+
+## Варианты размещения {#distribution}
+
+- **Облако**: Android SDK доступен для работы в облачной инфраструктуре <Brand />.
+- **On-Premise**: Android SDK до версии 12.10 включительно доступен при установке API-платформы <Brand /> в закрытом контуре. Подробнее см. в разделе [API-платформа для сервера](/on-premise-api-platform/overview/summary).

@@ -1,0 +1,92 @@
+.previewWrap {
+  position: relative;
+  display: flex;
+  height: 200px;
+  padding: 22px 8px 8px 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  align-self: stretch;
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px var(--shape-level-3);
+  background: var(--shape-base);
+  margin: var(--gap-8m) 0 var(--gap-12m) 0;
+
+  @media screen and (--media-m) {
+    margin: var(--gap-8m) 0 var(--gap-10m) 0;
+  }
+
+  @media screen and (--media-s) {
+    margin: var(--gap-6m) 0 var(--gap-10m) 0;
+  }
+
+  @media screen and (--media-xs) {
+    margin: var(--gap-4m) 0 var(--gap-8m) 0;
+  }
+}
+
+.previewDots {
+  position: absolute;
+  top: 8px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.previewDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--shape-level-3);
+}
+
+.previewPicture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.overlayPicture {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  display: flex;
+  justify-content: center;
+}
+
+.images {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  position: relative;
+}
+
+.previewImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
+  border-radius: 12px;
+
+  @media screen and (--media-s) {
+    object-position: center;
+  }
+}
+
+.overlayImage {
+  object-fit: none;
+  display: flex;
+  align-self: flex-end;
+
+  @media screen and (--media-s) {
+    object-fit: scale-down;
+  }
+}
+
+.blurredImage {
+  filter: blur(3px);
+}

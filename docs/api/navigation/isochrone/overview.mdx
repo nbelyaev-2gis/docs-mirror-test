@@ -1,0 +1,306 @@
+﻿---
+sidebar: isochroneapi
+---
+# Обзор
+
+Isochrone API позволяет строить на карте изохроны (зоны доступности):
+
+* Области, до границ которых можно добраться от заданной точки за указанное время. Например, определить зону доставки ресторана для курьеров на автомобиле.
+* Области, от границ которых можно добраться до заданной точки за указанное время. Например, построить область, в рамках которой можно добраться пешком до станции метро за 10 минут.
+
+## Основные возможности {#main-features}
+
+Вы можете указать следующие параметры при построении зон доступности:
+
+* Время в пути.
+* Координаты точки.
+* Направление движения: от заданной точки к границам области или от границ к точке.
+* Способ передвижения:
+  * Пешком.
+  * На автомобиле.
+  * На велосипеде.
+  * На общественном транспорте: метро, трамвае, автобусе, троллейбусе, речном транспорте и т. д.
+* Время начала движения (время отправления). Укажите, чтобы для расчёта использовалась информация о статистических пробках, а не текущих.
+* Уровень детализации полигонов на карте.
+* Детализацию статусов построения.
+
+Для каждой зоны доступности рассчитывается полная геометрия в текстовом формате WKT (Well-Known Text).
+
+По умолчанию можно задать в массиве `durations` до пяти промежутков времени, каждый из которых не превышает 3600 секунд.
+
+Больше информации о параметрах см. в [Справочнике API](/api/navigation/isochrone/reference/isochrone_200).
+
+## Пример работы {#example-usage}
+
+Чтобы построить зоны доступности на карте с помощью Isochrone API, воспользуйтесь интерактивным примером. Выберите направление движения, способ передвижения и время в пути.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Isochrone API</title>
+    <meta name="description" content="Построение зон доступности с помощью Isochrone API" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        select {
+            border: 0;
+            padding: 4px 10px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div id="tooltip"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const reqUrl = \`https://routing.api.2gis.com/isochrone/2.0.0?key=Your directions API access key\`;
+        const start = {
+            lat: 55.762590,
+            lon: 37.668598,
+        };
+
+        const map = new mapgl.Map('container', {
+            center: [start.lon, start.lat],
+            zoom: 12,
+            key: 'Your API access key',
+        });
+
+        const controlsHtml = \`<div class="controls">
+                    <select name="reverse">
+                        <option value="to">К точке</option>
+                        <option value="from" selected>От точки</option>
+                    </select>
+                    <select name="transport">
+                        <option value="walking">Пешком</option>
+                        <option value="driving" selected>На автомобиле</option>
+                    </select>
+                    <select name="duration">
+                        <option value="600" selected>10 минут</option>
+                        <option value="1200">20 минут</option>
+                    </select>
+                </div>\`;
+
+        new mapgl.Control(map, controlsHtml, {
+            position: "topLeft"
+        });
+
+        const reverseSelectEl = document.querySelector('select[name="reverse"]');
+        const transportSelectEl = document.querySelector('select[name="transport"]');
+        const durationSelectEl = document.querySelector('select[name="duration"]');
+
+        const startMarker = new mapgl.Marker(map, {
+            coordinates: [start.lon, start.lat]
+        });
+
+        let polygon;
+        function renderGeometries(geometry) {
+            if (polygon) {
+                polygon.destroy();
+            }
+            const coordinates = geometry
+                .replace("MULTIPOLYGON(((", "")
+                .replace(")))", "")
+                .split(",")
+                .map((point) => point.trim().split(" ").map(Number));
+            polygon = new mapgl.Polygon(map, {
+                coordinates: [coordinates],
+                strokeWidth: 3,
+                strokeColor: "#bb0000",
+                fillColor: "rgba(187, 0, 0, 0.3)"
+            });
+        }
+
+        window.addEventListener("change", (evt) => {
+            if (
+                evt.target.name === "reverse" ||
+                evt.target.name === "transport" ||
+                evt.target.name === "duration"
+            ) {
+                updateGeometries();
+            }
+        });
+        updateGeometries();
+
+        function updateGeometries() {
+            const reverse = reverseSelectEl.value === "to";
+            const transport = transportSelectEl.value;
+            const duration = Number(durationSelectEl.value);
+
+            fetch(reqUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    start,
+                    durations: [duration],
+                    transport,
+                    reverse,
+                    format: "wkt",
+                    start_time: new Date().toISOString()
+                })
+            })
+                .then((res) => res.json())
+                .then((parsed) => {
+                    if (parsed.isochrones && parsed.isochrones.length > 0) {
+                        renderGeometries(parsed.isochrones[0].geometry);
+                    } else {
+                        console.error("Изохроны не найдены в ответе");
+                    }
+                })
+                .catch((err) => console.error("Ошибка при получении данных изохронов:", err));
+        }
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+Чтобы отредактировать код примера, нажмите **Source code** и далее **Edit on Codepen**.
+
+## Начало работы {#getting-started}
+
+### 1. Получите ключ доступа {#get-access-key}
+
+Чтобы работать с API сервиса, получите ключ доступа:
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=api_isochrone).
+2. Создайте [демо-ключ](/platform-manager/subscription/keys#demo) или купите [подписку](/platform-manager/subscription/purchase) для доступа к API. Подробнее о стоимости сервиса см. в разделе [Тарифы](#tariffs).
+
+Работать с ключами можно в Менеджере Платформы: подробнее см. в документации [личного кабинета](/platform-manager/overview).
+
+### 2. Отправьте запрос {#send-request}
+
+Чтобы получить данные о зоне доступности, отправьте POST-запрос на endpoint `/isochrone/2.0.0`. Для этого:
+
+1. В строке запроса укажите значение API-ключа в параметре `key`:
+
+   ```bash
+   https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY
+   ```
+
+2. В теле запроса передайте JSON с необходимыми параметрами. Например, чтобы получить области карты, до границ которых можно добраться от заданной точки пешком за 10 и 20 минут, отправьте следующий запрос:
+
+   ```bash
+   {
+       "start": {
+           "lat": 55.76259,
+           "lon": 37.668598
+       },
+       "durations": [600, 1200],
+       "reverse": false,
+       "transport": "walking"
+   }
+   ```
+
+Более подробную информацию о параметрах см. в [Справочнике API](/api/navigation/isochrone/reference/isochrone_200).
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    },
+    "durations": [600, 1200],
+    "reverse": false,
+    "transport": "walking"
+}'
+```
+
+Где:
+
+* `start` — координаты точки (широта и долгота), от которой будут построены зоны доступности.
+* `durations` — массив промежутков времени в пути в секундах: 600 секунд (10 минут) и 1200 секунд (20 минут). Для каждого значения времени строится отдельная зона доступности.
+* `reverse: false` — направление движения: от заданной точки.
+* `transport` — способ передвижения: пешком.
+
+Дополнительно вы можете изменить направление движения (движение *к* заданной точке, а не *от*), указать время начала движения и другие параметры: подробнее см. в [примерах](/api/navigation/isochrone/examples).
+
+**Пример ответа:**
+
+Запрос вернёт массив `isochrones`, который описывает две области карты, достижимые за заданные промежутки времени.
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 1200,
+            "geometry": "MULTIPOLYGON(((37.665254 55.751835, 37.666065 55.753546, 37.666963 55.752636, 37.670556 55.752863, 37.673251 55.752033, 37.672033 55.755423, 37.672955 55.7566, 37.674796 55.754775, 37.678641 55.754603, 37.683143 55.755922, 37.682855 55.757794, 37.681302 55.758455, 37.684031 55.75974, 37.686726 55.758849, 37.688167 55.759466, 37.687468 55.760565, 37.688937 55.760477, 37.689421 55.759274, 37.692501 55.759755, 37.691586 55.762201, 37.690023 55.762499, 37.691487 55.762853, 37.691112 55.764461, 37.688523 55.764471, 37.687624 55.76287, 37.686426 55.765026, 37.688138 55.766542, 37.686414 55.768058, 37.688616 55.768058, 37.687938 55.769751, 37.677743 55.774936, 37.67215 55.775246, 37.667861 55.772505, 37.668164 55.774797, 37.666065 55.775124, 37.664268 55.773989, 37.66337 55.774871, 37.656939 55.772181, 37.654349 55.772627, 37.653646 55.771002, 37.649783 55.770648, 37.647275 55.768564, 37.650169 55.767047, 37.64705 55.765531, 37.647739 55.75977, 37.649895 55.759178, 37.653354 55.753831, 37.656183 55.752292, 37.65798 55.752842, 37.661573 55.751622, 37.665254 55.751835)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        },
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.661787 55.758335, 37.66769 55.760068, 37.668369 55.759247, 37.674587 55.759466, 37.674045 55.762558, 37.677784 55.76197, 37.680503 55.763004, 37.675793 55.764434, 37.677106 55.765026, 37.677114 55.767199, 37.66876 55.769283, 37.659777 55.76685, 37.657015 55.762499, 37.658878 55.76182, 37.660094 55.762499, 37.661787 55.758335)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        }
+    ],
+    "format": "wkt",
+    "transport": "walking",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+Где:
+
+* `isochrones` — массив с данными о зонах доступности:
+  * `duration` — промежуток времени в пути в секундах, для которого рассчитана зона доступности.
+  * `geometry` — геометрия зоны доступности (мультиполигон) в формате `WKT`.
+  * `start_point` — координаты точки (широта и долгота), заданной в запросе.
+  * `attract_points` — координаты точки притяжки, использованной для построения зоны. Могут незначительно отличаться от координат заданной точки (`start_point`).
+* `format` — формат геометрии в ответе: WKT (Well-Known Text).
+* `transport` – способ передвижения, для которого построены зоны доступности.
+* `status` — статус обработки запроса.
+* `generation_time` — время генерации ответа в секундах.
+
+Подробнее о каждом параметре см. в [Справочнике API](/api/navigation/isochrone/reference/isochrone_200).
+
+## Тарифы {#tariffs}
+
+* Стоимость сервиса рассчитывается исходя из количества запросов в месяц. 
+* Актуальные тарифы можно посмотреть в [Менеджере Платформы](https://platform.2gis.ru/ru/tariffs?utm_source=docs&utm_medium=referral&utm_campaign=api_isochrone).
+
+## Варианты размещения {#distribution}
+
+- **Облако**: все актуальные методы Isochrone API доступны через публичные endpoint-ы <Brand />.
+- **On-Premise**: все актуальные методы Isochrone API доступны при установке API-платформы <Brand /> в закрытом контуре. Подробнее см. в разделе [API-платформа для сервера](/on-premise-api-platform/overview/summary).
+
+Методы, отмеченные как `deprecated`, устарели и не поддерживаются в обоих вариантах размещения.

@@ -1,0 +1,106 @@
+﻿---
+sidebar: rastertilesapi
+---
+# Raster Tiles API
+
+Сервис Raster Tiles API предоставляет растровые тайлы для двумерных карт.
+
+Для работы с растровыми тайлами в зависимости от ваших задач вы можете использовать:
+
+* [публичный endpoint](#using-public-endpoint) — для интеграции со сторонними библиотеками или собственной реализации;
+* [библиотеку RasterJS API](#using-rasterjs-api) — для отображения карты с минимальной настройкой.
+
+## Начало работы {#getting-started}
+
+### Получение ключа доступа {#getting-access-key}
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=api_raster).
+2. Создайте [демо-ключ](/platform-manager/subscription/keys#demo) или купите [подписку](/platform-manager/subscription/purchase) для доступа к API. Подробнее о стоимости сервиса см. в разделе [Тарифы](#tariffs).
+
+:::tip
+
+Если у вас уже есть действующий API-ключ, полученный для RasterJS API, вы можете использовать его с Raster Tiles API до истечения срока действия подписки. Срок действия можно посмотреть в личном кабинете, на вкладке **Главная**.
+
+:::
+
+Работать с ключами можно в Менеджере Платформы: подробнее см. в [документации личного кабинета](/platform-manager/overview).
+
+### Использование endpoint-а {#using-public-endpoint}
+
+При использовании сторонних библиотек укажите endpoint, по которому будут загружаться изображения тайлов:
+
+```http
+https://tile{n}.maps.2gis.com/v2/tiles/{tileset}/{z}/{x}/{y}.png?key={key}
+```
+
+Здесь:
+
+* `n` — номер хоста. Может иметь значение от `0` до `4`. Вы можете использовать один хост, если у вас небольшой объём трафика, или распределять запросы между несколькими хостами самостоятельно.
+* `tileset` — набор тайлов. Например, `online_hd` для тайлов в высоком разрешении или `online_sd` для тайлов в стандартном разрешении.
+* `z` — масштаб карты. Чем больше число, тем подробнее карта.
+* `x`, `y` — координаты тайла.
+* `key` — ваш API-ключ.
+
+**Пример запроса:**
+
+```http
+https://tile0.maps.2gis.com/v2/tiles/online_hd/16/47851/20734.png?key=YOUR_KEY
+```
+
+### Интеграция библиотеки RasterJS API {#using-rasterjs-api}
+
+RasterJS API — это бесплатная JavaScript-библиотека для работы с двумерными картами <Brand />. Содержит готовый набор инструментов для взаимодействия с картой, автоматически запрашивает растровые тайлы и отображает их на странице.
+
+Чтобы использовать с библиотекой RasterJS API тайлы, предоставленные сервисом Raster Tiles API, сначала получите ключ доступа, затем подключите библиотеку к вашему проекту. Подробнее см. в инструкции [Начало работы](/maps/others/rasterjs/start).
+
+### Пример использования
+
+<HtmlExampleWithSrcCode>
+{`
+<html>
+
+<head>
+    <title>Raster Tiles API</title>
+    <meta name="description" content="Карта Raster Tiles API" />
+    <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+    <style>
+        html,
+        body,
+        #map {
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script>
+        DG.then(function () {
+            DG.map('map', {
+                center: [55.768005, 37.615655],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+        });
+    </script>
+</body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Статистика {#statistics}
+
+При исчерпании лимитов сервис станет недоступен. Вы можете отслеживать расходование лимитов в подписке и статистику распределения запросов к сервису в личном кабинете. Подробнее об инструментах статистики см. в разделе [Статистика](/platform-manager/subscription/statistics#view-the-statistics).
+
+## Тарифы {#tariffs}
+
+* Тариф для сервиса включает фиксированное количество тарифицируемых событий за период. Безлимитный доступ к библиотеке RasterJS API предоставляется бесплатно.
+* Тарифицируемое событие для Raster Tiles API — успешный запрос, который возвращает растровый тайл в формате PNG.
+* Актуальные тарифы можно посмотреть в [Менеджере Платформы](https://platform.2gis.ru/ru/tariffs?utm_source=docs&utm_medium=referral&utm_campaign=api_raster).
+
+## Варианты размещения {#distribution}
+
+* **Облако**: Raster Tiles API доступен через публичные endpoint-ы <Brand />.
+* **On-Premise**: для получения растровых тайлов установите Tiles API в составе API-платформы <Brand /> в закрытом контуре. Подробнее см. в разделе [API-платформа для сервера](/on-premise-api-platform/overview/summary).

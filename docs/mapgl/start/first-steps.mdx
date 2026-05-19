@@ -1,0 +1,197 @@
+﻿---
+sidebar: mapgljsapi
+---
+# Начало работы
+
+Чтобы начать работу с MapGL JS API, [ознакомьтесь с основными сценариями использования карты](/mapgl/overview/usage) и выполните следующие шаги:
+
+1. [Получите ключ доступа](#get-access-key).
+2. [Подключите библиотеку MapGL JS API к своему проекту](#install-library).
+3. [Инициализируйте карту](#initialize-map).
+4. (Опционально) [Добавьте маркер на карту](#add-marker).
+
+## 1. Получите ключ доступа {#get-access-key}
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=api_vector).
+2. Создайте [демо-ключ](/platform-manager/subscription/keys#demo) или купите [подписку](/platform-manager/subscription/purchase) для доступа к сервису [Map Tiles API](/maps/others/maptiles/overview), который предоставляет доступ к векторным тайлам карты. Подробнее о стоимости сервиса см. в разделе [Тарифы](/mapgl/overview/tariffs).
+
+:::tip
+
+Если у вас уже есть действующий API-ключ, полученный для MapGL JS API, вы можете использовать его для доступа к Map Tiles API до истечения срока действия подписки. Срок действия можно посмотреть в личном кабинете, на вкладке **Главная**.
+
+:::
+
+Работать с ключами можно в Менеджере Платформы: подробнее см. в [документации личного кабинета](/platform-manager/overview).
+
+## 2. Подключите библиотеку {#install-library}
+
+### При помощи тега script
+
+Добавьте следующую строку в код HTML-страницы:
+
+```html
+<script src="__MAPGL_API_URL__"></script>
+```
+
+Библиотека добавит глобальную переменную `mapgl`. Полный список доступных методов переменной см. в [Справочнике API](/mapgl/reference/class#map).
+
+### При помощи npm
+
+Если вы используете npm, подключите библиотеку с помощью пакета [@2gis/mapgl](https://www.npmjs.com/package/@2gis/mapgl):
+
+```js
+import { load } from '@2gis/mapgl';
+// or const { load } = require('@2gis/mapgl');
+
+load().then((mapgl) => {
+    const map = new mapgl.Map('container', {
+        center: [37.615655, 55.768005],
+        zoom: 13,
+        key: 'Your API access key',
+    });
+});
+```
+
+Чтобы использовать MapGL JS API, который установлен в [On-Premise окружении](/on-premise-api-platform/architecture/api-platform/maps), дополнительно укажите адрес сервиса:
+
+```js
+load('http://mapgl-js-api.example.com/api/js').then((mapgl) => {
+    const map = new mapgl.Map('container', {
+        center: [37.615655, 55.768005],
+        zoom: 13,
+        key: 'Your API access key',
+    });
+});
+```
+
+### Асинхронная загрузка
+
+Чтобы загрузить карту асинхронно, укажите атрибуты [async](https://developer.mozilla.org/ru/docs/Web/HTML/Element/script#attr-async) и [defer](https://developer.mozilla.org/ru/docs/Web/HTML/Element/script#attr-defer) при загрузке библиотеки. Укажите в параметре `callback` в строке запроса имя функции, которая будет вызвана после загрузки библиотеки:
+
+```html
+<script src="__MAPGL_API_URL__?callback=initMap" async defer></script>
+<script>
+    function initMap() {
+        const map = new mapgl.Map('container', {
+            center: [37.615655, 55.768005],
+            zoom: 13,
+            key: 'Your API access key',
+        });
+    }
+</script>
+```
+
+### При помощи system.js
+
+При использовании карты совместно с [system.js](https://github.com/systemjs/systemjs) используйте `System.import`:
+
+```js
+System.import('https://mapgl.2gis.com/api/js/v1').then((mapgl) => {
+    const map = new mapgl.Map('container', {
+        center: [37.615655, 55.768005],
+        zoom: 13,
+        key: 'Your API access key',
+    });
+});
+```
+
+:::tip
+
+Вы также можете [использовать MapGL JS API в проектах на React](/mapgl/start/react).
+
+:::
+
+## 3. Инициализируйте карту {#initialize-map}
+
+Чтобы отобразить карту на странице, создайте HTML-элемент, который будет использоваться в роли контейнера:
+
+```html
+<div id="container"></div>
+```
+
+Укажите размеры контейнера для карты:
+
+```html
+<style>
+    #container {
+        width: 500px;
+        height: 300px;
+    }
+</style>
+```
+
+Чтобы инициализировать карту, вызовите метод [Map()](/mapgl/reference/class#map), укажите идентификатор контейнера и ваш ключ доступа. Вы также можете указать начальные координаты карты и нужный масштаб:
+
+```js
+const map = new mapgl.Map('container', {
+    key: 'Your API access key',
+    center: [37.615655, 55.768005],
+    zoom: 13,
+});
+```
+
+Полный список параметров карты см. в [Справочнике API](/mapgl/reference/interface#map-options).
+
+## 4. Добавьте маркер {#add-marker}
+
+Чтобы добавить маркер на карту, вызовите метод [Marker()](/mapgl/reference/class#marker), укажите инстанс карты и координаты маркера:
+
+```js
+const marker = new mapgl.Marker(map, {
+    coordinates: [37.615655, 55.768005],
+});
+```
+
+Полный список параметров маркера см. в [Справочнике API](/mapgl/reference/interface#marker-options).
+
+## Пример использования
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Пример использования MapGL JS API" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+                style: 'c080bb6a-8134-4993-93a1-5b4d8c36a59b'
+            });
+            const marker = new mapgl.Marker(map, {
+                coordinates: [37.61565, 55.76801],
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+:::tip[Песочница]
+
+Вы также можете поработать с готовой картой в [песочнице](https://platform.2gis.ru/ru/playground/mapgl/?utm_source=docs&utm_medium=referral&utm_campaign=api_vector) (авторизация не требуется).
+
+:::
+
+## Что дальше? {#whats-next}
+
+* Примените [дополнительные настройки](/mapgl/map/configuration/overview) для удобного взаимодействия с картой.
+* Настройте внешний вид карты и правила отрисовки объектов при помощи [стилей](/mapgl/map-style/create).
+* Добавьте объекты на карту [поштучно](/mapgl/objects) или подключите [источник данных](/mapgl/geodata/formats) с множеством объектов.

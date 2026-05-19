@@ -1,0 +1,364 @@
+---
+sidebar: iossdk
+---
+# Маршруты
+
+В этом разделе описывается построение маршрутов для разных видов транспорта и отображение их на карте. Для построения любого маршрута вам понадобятся следующие компоненты:
+
+* Точки маршрута: начальная, конечная и, если необходимо, промежуточные. Способы получения координат точек описаны [ниже](#getting-route-points).
+* [Параметры поиска маршрута](#route-parameters). Набор параметров зависит от типа транспорта, для которого строится маршрут.
+
+## Построение маршрута {#building-route}
+
+Чтобы проложить маршрут на карте, создайте два объекта:
+
+* [TrafficRouter](/ios/sdk/reference/stable/class#traffic-router) для поиска оптимального маршрута;
+* источник данных [RouteMapObjectSource](/ios/sdk/reference/stable/class#route-map-object-source) для отображения маршрута на карте.
+
+Чтобы найти маршрут между двумя точками, вызовите метод [findRoute()](/ios/sdk/reference/stable/class#traffic-router/find-route), передав координаты точек в виде объектов [RouteSearchPoint](/ios/sdk/reference/stable/struct#route-search-point) и параметры маршрута ([RouteSearchOptions](/ios/sdk/reference/stable/enumeration#route-search-options)). Дополнительно можно указать также список промежуточных точек маршрута (`RouteSearchPoint`).
+
+Пример построения маршрута для автомобиля:
+
+```swift
+let startPoint = RouteSearchPoint(coordinates: GeoPoint(latitude: 55.759909, longitude: 37.618806))
+let finishPoint = RouteSearchPoint(coordinates: GeoPoint(latitude: 55.752425, longitude: 37.613983))
+let routeSearchOptions = RouteSearchOptions.car(CarRouteSearchOptions())
+
+let trafficRouter = TrafficRouter(context: sdk.context)
+let routesFuture = trafficRouter.findRoute(
+	startPoint: startPoint,
+	finishPoint: finishPoint,
+	routeSearchOptions: routeSearchOptions
+)
+```
+
+Вызов `findRoute()` вернёт отложенный результат со списком объектов [TrafficRoute](/ios/sdk/reference/stable/class#traffic-route). Чтобы отобразить найденный маршрут на карте, на основе этих объектов создайте объекты [RouteMapObject](/ios/sdk/reference/stable/class#route-map-object) и добавьте их в источник данных [RouteMapObjectSource](/ios/sdk/reference/stable/class#route-map-object-source).
+
+```swift
+// Создаём источник данных
+let routeMapObjectSource = RouteMapObjectSource(context: sdk.context, routeVisualizationType: .normal)
+map.addSource(source: routeMapObjectSource)
+
+// Ищем маршруты
+self.routeSearchCancellable = routesFuture.sinkOnMainThread { routes in
+	// Добавляем их на карту
+	for (index, route) in routes.enumerated() {
+		let routeMapObject = RouteMapObject(
+			route: route,
+			isActive: index == 0,
+			index: RouteIndex(value: UInt64(index)),
+			displayFlags: nil
+		)
+		routeMapObjectSource.addObject(item: routeMapObject)
+	}
+} failure: { error in
+	print("Не удалось найти маршрут: \(error)")
+}
+```
+
+## Точки маршрута {#getting-route-points}
+
+Для построения маршрута необходимо получить точки типа [GeoPoint](/ios/sdk/reference/stable/struct#geo-point), которые далее используются для создания [RouteSearchPoint](/ios/sdk/reference/stable/struct#route-search-point). Существует множество способов это сделать, ниже описаны некоторые из них.
+
+### Получение точек по нажатию на карту
+
+Чтобы получить географические координаты места нажатия, нужно получить [ScreenPoint](/ios/sdk/reference/stable/struct#screen-point), как в примере [Получение объектов по экранным координатам](/ios/sdk/examples/map#get-rendered-objects):
+
+```swift
+func tap(location: CGPoint) {
+	let scale = UIScreen.main.nativeScale
+	let point = ScreenPoint(x: Float(location.x * scale), y: Float(location.y * scale))
+	...
+```
+
+[ScreenPoint](/ios/sdk/reference/stable/struct#screen-point) можно преобразовать в географические координаты с помощью метода [screenToMap()](/ios/sdk/reference/stable/class#projection/screen-to-map):
+
+```swift
+func tap(location: CGPoint) {
+	let scale = UIScreen.main.nativeScale
+	let point = ScreenPoint(x: Float(location.x * scale), y: Float(location.y * scale))
+	let geoPoint = map.camera.projection.screenToMap(point: point)
+	...
+```
+
+Таким образом, мы получим координаты в точке нажатия на карту.
+
+### Получение координат объекта в месте нажатия на карту
+
+Можно получить координаты объекта (здания, дороги), который находится в месте клика. Для этого понадобится метод [getRenderedObjects()](/ios/sdk/reference/stable/class#map/get-rendered-objects). В нем нужно получить объект класса [DgisMapObject](/ios/sdk/reference/stable/class#dgis-map-object), который имеет поле `id`. Этот идентификатор является стабильным числовым идентификатором объекта справочника, с помощью которого можно выполнить поисковый запрос и получить информацию об объекте, в том числе географические координаты его центра.
+
+```swift
+private func tap(point: ScreenPoint, tapRadius: ScreenDistance) {
+	let scale = UIScreen.main.nativeScale
+	let point = ScreenPoint(x: Float(location.x * scale), y: Float(location.y * scale))
+	self.getRenderedObjectsCancellable?.cancel()
+	let cancel = self.map.getRenderedObjects(centerPoint: point).sinkOnMainThread(
+		receiveValue: {
+			infos in
+			// Получим ближайший к месту нажатия объект класса DgisMapObject
+				guard let info = infos.first(
+					where: {
+						$0.item.item is DgisMapObject
+					}
+				) else { return }
+				let mapObject = info.item.item as! DgisMapObject
+
+				// Создадим поисковый запрос по идентификатору этого объекта
+				self.searchCancellable?.cancel()
+				self.searchCancellable = self.searchManager.searchByDirectoryObjectId(
+					objectId: mapObject.id
+				)
+				// Получим объект из поискового запроса
+				.sinkOnMainThread(receiveValue: { [weak self] object in
+					self?.directoryObject = object
+					// Получим координаты объекта в виде GeoPoint
+					let geoPoint = self?.directoryObject?.markerPosition?.point
+				},
+					failure: { .. }
+				)
+
+		},
+		failure: { ... }
+	)
+	...
+}
+```
+
+:::note[Координаты больших объектов]
+
+Координаты центра для больших объектов (например, МКАД) могут находиться далеко за пределами области видимости камеры, так как полученный объект не учитывает расположение камеры или места нажатия на карту. С такими объектами лучше использовать другие способы получения координат.
+
+:::
+
+### Проезд промежуточных точек
+
+Для маршрута с промежуточными точками предполагается, что пользователь посетит каждую из этих точек на маршруте по очереди. Если промежуточная точка пропущена, маршрут может перестроиться:
+
+* Если по данным GPS видно, что пользователь движется не в сторону нужной промежуточной точки, маршрут перестраивается относительно текущего положения пользователя так, чтобы он посетил пропущенную точку. Когда посещение точки будет зафиксировано, маршрут продолжится.
+* Если момент посещения промежуточной точки не зафиксирован из-за слабого сигнала GPS, но позже положение пользователя зафиксировано на маршруте по направлению к следующей точке или около него, точка считается пройденной и маршрут продолжается.
+
+## Параметры поиска маршрута {#route-parameters}
+
+### Для автомобилей {#car-routing}
+
+Чтобы построить маршрут для легкового автомобиля, укажите свойство `car` в [RouteSearchOptions](/ios/sdk/reference/stable/enumeration#route-search-options). Дополнительно вы можете настроить параметры построения маршрута [CarRouteSearchOptions](/ios/sdk/reference/stable/struct#car-route-search-options):
+
+* `avoidTollRoads`: избегать ли платных дорог (по умолчанию `false`).
+* `avoidUnpavedRoads`: избегать ли грунтовых дорог (по умолчанию `false`).
+* `avoidFerries`: избегать ли паромных переправ (по умолчанию `false`).
+* `avoidLockedRoads`: избегать ли закрытых для проезда дорог (по умолчанию `true`).
+* `routeSearchType`: способ учёта данных о пробках при построении маршрута. Вы можете строить маршрут с учётом реальных (`jam`) или статистических (`statistic`) данных о пробках или построить кратчайший по расстоянию маршрут, даже если он не является оптимальным по времени (`shortest`).
+* `excludedAreas`: список областей (не более 25), которые следует избегать при построении маршрута. Подробнее см. в разделе [Исключение областей](#excluded-areas) ниже.
+
+```swift
+let carOptions = CarRouteSearchOptions(
+    avoidTollRoads: true,
+    avoidUnpavedRoads: true,
+    avoidFerries: true,
+    avoidLockedRoads: true,
+    routeSearchType: RouteSearchType.jam,
+    excludedAreas: []
+)
+
+let routeSearchOptions = RouteSearchOptions.car(carOptions)
+```
+
+Передайте готовые параметры `routeSearchOptions` в вызов функции `findRoute()` при [построении маршрута](#building-route).
+
+### Для такси
+
+Чтобы построить маршрут для такси, укажите свойство `taxi` в [RouteSearchOptions](/ios/sdk/reference/stable/enumeration#route-search-options).
+
+Дополнительно вы можете настроить параметры построения маршрута [TaxiRouteSearchOptions](/ios/sdk/reference/stable/struct#taxi-route-search-options). Для поиска маршрута для такси нужно сначала задать [параметры поиска обычных автомобильных маршрутов](#car-routing), а затем переиспользовать их в параметре `car`:
+
+```swift
+let taxiOptions = TaxiRouteSearchOptions(
+    car: carOptions,
+)
+
+let routeSearchOptions = RouteSearchOptions.taxi(taxiOptions)
+```
+
+Передайте готовые параметры `routeSearchOptions` в вызов функции `findRoute()` при [построении маршрута](#building-route).
+
+### Для грузового транспорта
+
+Чтобы построить маршрут для грузового транспорта, укажите свойство `truck` в [RouteSearchOptions](/ios/sdk/reference/stable/enumeration#route-search-options). Дополнительно вы можете настроить параметры построения маршрута [TruckRouteSearchOptions](/ios/sdk/reference/stable/struct#truck-route-search-options):
+
+* `car`: базовые параметры поиска любых автомобильных маршрутов: см. [параметры поиска маршрута для автомобилей](#car-routing).
+* `truckLength`: длина грузовика в миллиметрах.
+* `truckHeight`: высота грузовика в миллиметрах.
+* `truckWidth`: ширина грузовика в миллиметрах.
+* `actualMass`: фактическая масса грузовика в килограммах.
+* `maxPermittedMass`: разрешённая максимальная масса грузовика в килограммах.
+* `axleLoad`: нагрузка на ось в килограммах.
+* `dangerousCargo`: перевозится ли опасный груз (по умолчанию `false`).
+* `explosiveCargo`: перевозятся ли взрывчатые вещества в грузе (по умолчанию `false`).
+* `passIds`: список идентификаторов пропусков, которые разрешают движение грузового транспорта в пропускных зонах ([TruckPassZonePassId](/ios/sdk/reference/stable/struct#truck-pass-zone-pass-id)).
+* `fallbackOnCar`: переключаться ли на поиск маршрута для легкового автомобиля, если по заданным параметрам невозможно найти грузовой маршрут (по умолчанию `false`).
+
+```swift
+let truckOptions = TruckRouteSearchOptions(
+    car: carOptions,
+    truckLength: 12000,                 // 12 метров
+    truckHeight: 4200,                  // 4,2 метра
+    truckWidth: 2500,                   // 2,5 метра
+    actualMass: 18000,                  // 18 тонн
+    maxPermittedMass: 20000,            // 20 тонн
+    axleLoad: 8000,                     // 8 тонн
+    dangerousCargo: true,
+    explosiveCargo: false,
+    passIds: Set<TruckPassZonePassId>(),
+    fallbackOnCar: true
+)
+
+let routeSearchOptions = RouteSearchOptions.truck(truckOptions)
+```
+
+Передайте готовые параметры `routeSearchOptions` в вызов функции `findRoute()` при [построении маршрута](#building-route).
+
+:::note[Построение на онлайн-данных]
+
+Для построения маршрутов для грузового транспорта используются только онлайн-данные. В офлайн-режиме маршруты не строятся. 
+
+:::
+
+### Для общественного транспорта
+
+Чтобы построить маршрут для проезда на общественном транспорте, укажите свойство `publicTransport` в [RouteSearchOptions](/ios/sdk/reference/stable/enumeration#route-search-options). Дополнительно вы можете настроить параметры построения маршрута [PublicTransportRouteSearchOptions](/ios/sdk/reference/stable/struct#public-transport-route-search-options):
+
+* `startTime`: время старта маршрута в UTC. Если не указано, используется текущее время.
+* `useSchedule`: учитывать ли расписание движения общественного транспорта.
+* `transportTypes`: список типов общественного транспорта, которые могут быть использованы для проезда по маршруту. Если список пустой, маршрут будет строиться для всех поддерживаемых типов транспорта. Полный список типов см. в [PublicTransportTypeOptionSet](/ios/sdk/reference/stable/struct#public-transport-type-option-set).
+
+```swift
+let publicTransportOptions = PublicTransportRouteSearchOptions(
+    startTime: Date(),
+    useSchedule: true,
+    transportTypes: [
+        .bus,                // Автобус
+        .trolleybus,         // Троллейбус
+        .tram,               // Трамвай
+        .metro,              // Метро
+        .suburbanTrain       // Пригородные поезда
+    ]
+)
+
+let routeSearchOptions = RouteSearchOptions.publicTransport(publicTransportOptions)
+```
+
+Передайте готовые параметры `routeSearchOptions` в вызов функции `findRoute()` при [построении маршрута](#building-route).
+
+### Для велосипедов
+
+Чтобы построить маршрут для велосипеда, укажите свойство `bicycle` в [RouteSearchOptions](/ios/sdk/reference/stable/enumeration#route-search-options). Дополнительно вы можете настроить параметры построения маршрута [BicycleRouteSearchOptions](/ios/sdk/reference/stable/struct#bicycle-route-search-options):
+
+* `avoidCarRoads`: избегать ли автомобильных дорог (по умолчанию `false`).
+* `avoidStairways`: избегать ли лестниц (по умолчанию `false`).
+* `avoidUnderpassesAndOverpasses`: избегать ли подземных и надземных переходов (по умолчанию `false`).
+* `excludedAreas`: список областей (не более 25), которые следует избегать при построении маршрута. Подробнее см. в разделе [Исключение областей](#excluded-areas) ниже.
+
+```swift
+let bicycleOptions = BicycleRouteSearchOptions(
+    avoidCarRoads: false,
+    avoidStairways: true,
+    avoidUnderpassesAndOverpasses: true,
+    excludedAreas: []
+)
+
+let routeSearchOptions = RouteSearchOptions.bicycle(bicycleOptions)
+```
+
+Передайте готовые параметры `routeSearchOptions` в вызов функции `findRoute()` при [построении маршрута](#building-route).
+
+### Для самокатов
+
+Чтобы построить маршрут для самоката, укажите свойство `scooter` в [RouteSearchOptions](/ios/sdk/reference/stable/enumeration#route-search-options). Дополнительно вы можете настроить параметры построения маршрута [ScooterRouteSearchOptions](/ios/sdk/reference/stable/struct#scooter-route-search-options):
+
+* `avoidCarRoads`: избегать ли автомобильных дорог (по умолчанию `true`).
+* `avoidStairways`: избегать ли лестниц (по умолчанию `true`).
+* `avoidUnderpassesAndOverpasses`: избегать ли подземных и надземных переходов (по умолчанию `true`).
+* `excludedAreas`: список областей (не более 25), которые следует избегать при построении маршрута. Подробнее см. в разделе [Исключение областей](#excluded-areas) ниже.
+
+```swift
+let scooterOptions = ScooterRouteSearchOptions(
+    avoidCarRoads: true,
+    avoidStairways: true,
+    avoidUnderpassesAndOverpasses: true,
+    excludedAreas: []
+)
+
+let routeSearchOptions = RouteSearchOptions.scooter(scooterOptions)
+```
+
+Передайте готовые параметры `routeSearchOptions` в вызов функции `findRoute()` при [построении маршрута](#building-route).
+
+### Для пешеходов
+
+Пешеходные маршруты могут включать в себя перемещения внутри зданий (например, вы можете построить маршрут до определённого магазина в торговом центре). Если одна из точек маршрута находится внутри здания, для неё необходимо указать дополнительные параметры `objectId` (идентификатор объекта, к которому нужно проложить маршрут) и `levelId` (идентификатор этажа здания, на котором находится объект).
+
+```swift
+let indoorPoint = RouteSearchPoint(
+    coordinates: GeoPoint(latitude: 55.752425, longitude: 37.613983),
+    objectId: DgisObjectId(objectId: 67890, entranceId: 2),
+    levelId: LevelId(value: 3)
+)
+```
+
+Подробнее о ведении по маршруту внутри зданий см. в разделе [Навигация](/ios/sdk/examples/navigation#indoor-navigation).
+
+Чтобы построить пешеходный маршрут, укажите свойство `pedestrian` в [RouteSearchOptions](/ios/sdk/reference/stable/enumeration#route-search-options). Дополнительно вы можете настроить параметры построения маршрута [PedestrianRouteSearchOptions](/ios/sdk/reference/stable/struct#pedestrian-route-search-options):
+
+* `avoidStairways`: избегать ли лестниц (по умолчанию `false`).
+* `avoidUnderpassesAndOverpasses`: избегать ли подземных и надземных переходов (по умолчанию `false`).
+* `useIndoor`: строить ли маршруты внутри зданий (по умолчанию `true`).
+* `excludedAreas`: список областей (не более 25), которые следует избегать при построении маршрута. Подробнее см. в разделе [Исключение областей](#excluded-areas) ниже.
+
+```swift
+let pedestrianOptions = PedestrianRouteSearchOptions(
+    avoidStairways: false,
+    avoidUnderpassesAndOverpasses: false,
+	useIndoor: false,
+    excludedAreas: []
+)
+
+let routeSearchOptions = RouteSearchOptions.pedestrian(pedestrianOptions)
+```
+
+Передайте готовые параметры `routeSearchOptions` в вызов функции `findRoute()` при [построении маршрута](#building-route).
+
+### Исключение областей {#excluded-areas}
+
+Чтобы исключить определённую область при построении маршрута, создайте объект [ExcludedArea](/ios/sdk/reference/stable/struct#excluded-area) со следующими параметрами:
+
+* `type`: геометрическая форма исключаемой области. Список возможных значений см. в [ExcludedAreaType](/ios/sdk/reference/stable/enumeration#excluded-area-type).
+* `severity`: приоритет исключения области (насколько важно её избегать). Список возможных значений см. в [ExcludedAreaSeverity](/ios/sdk/reference/stable/enumeration#excluded-area-severity).
+* `extent`: размер исключаемой области (не более 25 км).
+* `points`: координаты точек исключаемой области типа [GeoPoint](/ios/sdk/reference/stable/struct#geo-point) (не более 500).
+
+Пример исключаемой области в форме многоугольника:
+
+```swift
+// Вершины многоугольника
+let points = [
+    GeoPoint(latitude: 55.759909, longitude: 37.618806),
+    GeoPoint(latitude: 55.752425, longitude: 37.613983),
+    GeoPoint(latitude: 55.753567, longitude: 37.622995),
+    GeoPoint(latitude: 55.760523, longitude: 37.625613)
+]
+
+let polygonExcludedArea = ExcludedArea(
+    type: ExcludedAreaType.polygon,
+    severity: ExcludedAreaSeverity.hard,
+    extent: RouteDistance(value: 500),
+    points: points
+)
+```
+
+## Офлайн-режим {#offline-mode}
+
+По умолчанию построение маршрута работает в гибридном режиме: в первую очередь используются данные с серверов <Brand />. Если за определённое время не удаётся построить маршрут на онлайн-данных, используются предварительно загруженные данные, если они есть. Маршруты для грузового транспорта строятся только с использованием онлайн-данных.
+
+Чтобы загрузить данные для работы офлайн, необходимо получить соответствующие права в ключе доступа и скачать необходимые территории. См. [подготовительные шаги к работе с офлайн-данными](/ios/sdk/start#offline-mode).
+
+

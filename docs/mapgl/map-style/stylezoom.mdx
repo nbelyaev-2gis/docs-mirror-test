@@ -1,0 +1,139 @@
+---
+sidebar: mapgljsapi
+---
+# Стилевой уровень масштабирования
+
+Стилевой уровень масштабирования задаётся в стилях карты через параметр `styleZoom`.
+
+Параметры `styleZoom` и `zoom` задают уровень масштабирования карты в разных проекциях. В отличие от параметра `zoom`, значение `styleZoom` учитывает искажения проекции Меркатора, благодаря чему объекты карты отображаются в одном и том же масштабе на разных широтах.
+
+## Описание
+
+Пример фрагмента стиля:
+
+```js
+{
+    type: 'polygon',
+    id: 'background',
+    filter: ['match', ['get', 'sublayer'], ['s_region'], true, false],
+    style: {
+        color: [
+            'interpolate', ['linear'], ['zoom'],
+            9, 'hsl(50, 61%, 90%)',
+            12, 'hsl(51, 37%, 90%)',
+            14, 'hsl(49, 48%, 91%)',
+            16, 'hsl(51, 51%, 92%)',
+        ],
+    },
+},
+```
+
+Объект описывает цвет фона для данных с полем `sublayer`, равным `s_region`. Выражение в свойстве `color` задаёт зависимость цвета фона от масштаба через `styleZoom`.
+
+## Рекомендации по использованию
+
+* Используйте параметр `zoom`, чтобы работать с масштабом карты. Значение одинаково на любой широте: как вблизи полярного круга, так и на экваторе.
+* Используйте `styleZoom`, когда нужно работать с границами масштабирования в стилях. Например, при разработке стиля карты в [Редакторе стилей](/maps/styles/connect), когда нужно убедиться, что объекты, ограниченные масштабом, отображаются корректно.
+
+## Приоритет параметров
+
+По умолчанию используется параметр `zoom`. Вы можете указать `styleZoom` в настройках карты, чтобы установить масштаб, соответствующий значениям в стиле.
+
+Если заданы оба параметра `zoom` и `styleZoom`, то `styleZoom` имеет более высокий приоритет.
+
+Для динамического управления используйте методы:
+
+* [setStyleZoom()](/mapgl/reference/class#map/set-style-zoom) — установить значение `styleZoom`;
+* [getStyleZoom()](/mapgl/reference/class#map/get-style-zoom) — получить текущее значение `styleZoom`.
+
+## Примеры
+
+В примере ниже показана разница между `zoom` и `styleZoom` при одинаковом значении `16`.
+
+Карта с параметром `zoom`:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Уровень масштабирования zoom" />
+        <style>
+            html,
+            body {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+            #container {
+                height: 250px;
+                width: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            let key = 'Your API access key';
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 16,
+                pitch: 40,
+                rotation: -90,
+                key,
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Карта с параметром `styleZoom`:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Стилевой уровень масштабирования styleZoom" />
+        <style>
+            html,
+            body {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+            #container {
+                height: 250px;
+                width: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            let key = 'Your API access key';
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                styleZoom: 16,
+                pitch: 40,
+                rotation: -90,
+                key,
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

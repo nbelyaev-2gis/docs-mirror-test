@@ -1,0 +1,506 @@
+---
+sidebar: mapgljsapi
+---
+# Стрелки
+
+Вы можете добавить на карту анимированные стрелки-указатели с помощью объекта [Arrow](/mapgl/reference/class#arrow). Этот объект принимает координаты в виде вектора (набора точек, описывающих путь).
+
+Основное практическое применение стрелок — визуализация входов в здание, информацию о которых можно получить через [Places API](/api/search/places/overview). В ответе API для каждого входа возвращается поле `geometry.vectors`, которое содержит направленные отрезки от дороги к точке входа. Эти векторы представлены в формате WKT `LINESTRING(startLon startLat, endLon endLat)`, что соответствует формату координат для `Arrow`.
+
+Чтобы отобразить входы в здание на карте:
+
+1. [Получите данные о входах](#get-entrance-data) через Places API.
+2. [Создайте объект `Arrow`](#create-arrow) и используйте полученные векторы как координаты для стрелок.
+3. Настройте отображение информации о входе при нажатии на стрелку и другие параметры.
+
+## Получение данных о входах {#get-entrance-data}
+
+Чтобы получить данные о входах из справочника <Brand />:
+
+1. Получите ключ доступа к [Places API](/api/search/places/overview). Дополнительно свяжитесь с [отделом продаж <Brand />](https://dev.2gis.ru/api#form), чтобы получить доступ к полю `items.links.database_entrances` с информацией о входах.
+2. Отправьте GET-запрос к методу [/3.0/items/byid](/api/search/places/reference/3.0/items/byid) и укажите ID нужного объекта (здания или организации) и параметр `fields=items.links.database_entrances` для включения данных о входах в ответ:
+
+    ```http
+    https://catalog.api.2gis.com/3.0/items/byid?id=5348660212691856&fields=items.links.database_entrances&key=YOUR_KEY
+    ```
+
+Ответ будет содержать массив `items.links.database_entrances`. Каждый элемент массива (отдельный вход) описывается полями:
+
+* `id` — идентификатор входа;
+* `entity_name` — отображаемое название входа (например, «2 подъезд»);
+* `entity_number` — номер входа;
+* `is_visible_on_map` — виден ли вход на карте;
+* `has_poi` — есть ли POI для входа;
+* `geometry` — геометрические данные входа:
+
+  * `geometry.points` — массив точек входа в формате WKT (`POINT(долгота широта)`);
+  * `geometry.vectors` — массив направленных отрезков (векторов) от дороги до точки входа в формате WKT (`LINESTRING(startLon startLat, endLon endLat)`);
+  * `geometry.normals` — массив нормалей к зданию в формате WKT.
+
+Полную схему ответа см. в [справочнике API](/api/search/places/reference/3.0/items/).
+
+Пример структуры данных для одного входа:
+
+```json
+{
+    "entity_name": "2 подъезд",
+    "entity_number": "2",
+    "geometry": {
+        "normals": [
+            "LINESTRING(31.339675 59.883814,30.34093 59.93391)"
+        ],
+        "points": [
+            "POINT(30.340930109645146 59.933909825566758)"
+        ],
+        "vectors": [
+            "LINESTRING(30.341108 59.933901,30.34093 59.93391)"
+        ]
+    },
+    "has_poi": true,
+    "id": "5349068278782309",
+    "is_visible_in_ui": true,
+    "is_visible_on_map": true,
+    "name": "2"
+}
+```
+
+Координаты для отрисовки стрелки содержатся в поле `geometry.vectors`.
+
+## Создание стрелки {#create-arrow}
+
+Чтобы создать стрелку, создайте объект [Arrow](/mapgl/reference/class#arrow) и передайте координаты из поля `geometry.vectors` в виде массива точек `[долгота, широта]`. Стрелка отрисовывается по заданным точкам, в последней точке располагается наконечник.
+
+```js
+// Вектор входа из Places API: LINESTRING(30.341108 59.933901, 30.34093 59.93391)
+const arrow = new mapgl.Arrow(map, {
+    coordinates: [
+        [30.341108, 59.933901],  // Начало вектора (у дороги)
+        [30.34093, 59.93391],    // Конец вектора (точка входа), куда указывает наконечник
+    ],
+    color: '#0085a0',
+    width: 4,
+    strokeColor: '#ffffff',
+    strokeWidth: 1,
+    animate: true,
+    interactive: true,
+});
+```
+
+Основные параметры (полный список см. в [ArrowOptions](/mapgl/reference/interface#arrow-options)):
+
+| Параметр | Тип | По умолчанию | Описание |
+|---|---|---|---|
+| `coordinates` | `number[][]` \| `number[][][]` | — | Координаты пути стрелки. Наконечник располагается в конце пути. |
+| `color` | `string` | `'#0085a0'` | Цвет заливки в формате HEX. |
+| `strokeColor` | `string` | `'#ffffff'` | Цвет обводки в формате HEX. |
+| `width` | `number` | `4` | Ширина линии в пикселях. |
+| `animate` | `boolean` | `false` | Включение анимации наконечника. |
+| `iterationCount` | `number` | `Infinity` | Количество повторений анимации. |
+| `tipMovementAmplitude` | `number` | `6` | Амплитуда движения наконечника при анимации в пикселях. |
+| `interactive` | `boolean` | `false` | Поддержка событий указателя: клик, наведение и другие. |
+
+## Несколько стрелок в одном объекте {#multiple-paths}
+
+Если у входа несколько векторов (например, подъезд доступен с разных сторон здания), вы можете передать все пути в один объект `Arrow` в формате `number[][][]` (массив массивов точек):
+
+```js
+// Вход с двумя векторами: доступ с двух сторон
+const arrow = new mapgl.Arrow(map, {
+    coordinates: [
+        [   // Вектор 1: подход с одной стороны
+            [30.340455, 59.933728],
+            [30.340498, 59.933815],
+        ],
+        [   // Вектор 2: подход с другой стороны
+            [30.340606, 59.934033],
+            [30.340563, 59.933946],
+        ],
+    ],
+    color: '#0085a0',
+    animate: true,
+});
+```
+
+## Стрелка по ломаной {#polyline-arrow}
+
+Стрелка может следовать не только по прямой линии, но и по произвольной ломаной, заданной несколькими точками. Это полезно для отображения пути, который повторяет изгибы дороги.
+
+```js
+const arrow = new mapgl.Arrow(map, {
+    coordinates: [
+        [30.339214, 59.934282],
+        [30.339027, 59.933919],
+        [30.339372, 59.933880],
+        [30.339603, 59.933883],
+        [30.339900, 59.933817],
+        [30.340129, 59.933814],
+        [30.340350, 59.933809],
+    ],
+    color: '#d81b60',
+    animate: true,
+});
+```
+
+Стрелка отрисовывается через все указанные точки. Наконечник всегда располагается в конце пути — у последней точки массива.
+
+## Анимация {#animation}
+
+Объект `Arrow` поддерживает встроенную анимацию наконечника. Чтобы включить анимацию, установите параметр `animate: true`:
+
+```js
+const arrow = new mapgl.Arrow(map, {
+    coordinates: [...],
+    animate: true,
+});
+```
+
+Количество повторов анимации задаётся параметром `iterationCount`:
+
+- `Infinity` (по умолчанию) — бесконечный цикл, наконечник непрерывно пульсирует.
+- `1` — один цикл анимации, затем стрелка останавливается.
+- Любое положительное число `N` — анимация повторяется N раз.
+
+Амплитуда движения наконечника настраивается параметром `tipMovementAmplitude` в пикселях (значение по умолчанию — `6`). Чем больше значение, тем заметнее движение:
+
+```js
+const arrow = new mapgl.Arrow(map, {
+    coordinates: [...],
+    animate: true,
+    iterationCount: 3,         // Три цикла анимации
+    tipMovementAmplitude: 10,  // Увеличенная амплитуда
+});
+```
+
+В [готовом примере](#entrances-demo) стрелки входов анимируются бесконечно (`iterationCount: Infinity`), а ломаная стрелка (путь от соседнего здания) — 3 раза (`iterationCount: 3`).
+
+## Интерактивность {#interactivity}
+
+По умолчанию объект `Arrow` не реагирует на события указателя (`interactive: false`). Чтобы включить интерактивность, установите параметр `interactive: true`:
+
+```js
+const arrow = new mapgl.Arrow(map, {
+    coordinates: [...],
+    interactive: true,
+});
+```
+
+Объект `Arrow` поддерживает все стандартные [события для динамических объектов](/mapgl/reference/interface#dynamic-object-event-table).
+
+## Настройка внешнего вида {#appearance}
+
+### Цвет и обводка {#color-and-stroke}
+
+Основной цвет стрелки задаётся параметром `color`, цвет обводки — `strokeColor`. Оба значения указываются в формате HEX (RGB или RGBA):
+
+```js
+const arrow = new mapgl.Arrow(map, {
+    coordinates: [...],
+    color: '#e65100',       // Цвет заливки
+    strokeColor: '#ffffff', // Цвет обводки
+    width: 5,               // Ширина линии (пиксели)
+    strokeWidth: 2,         // Ширина обводки (пиксели)
+});
+```
+
+Параметр `roundingRadius` задаёт скругление углов в местах изгиба ломаной в пикселях (значение по умолчанию — `2`). Рекомендуется подбирать значение пропорционально `width`.
+
+### Размер наконечника {#tip-size}
+
+Размеры наконечника стрелки управляются множителями относительно ширины линии (`width`):
+
+- `tipWidthMultiplier` (по умолчанию `1.5`) — множитель ширины наконечника;
+- `tipHeightMultiplier` (по умолчанию `2.8`) — множитель высоты наконечника.
+
+```js
+const arrow = new mapgl.Arrow(map, {
+    coordinates: [...],
+    width: 6,
+    tipWidthMultiplier: 2.0,   // Ширина наконечника — 2× от ширины линии
+    tipHeightMultiplier: 3.5,  // Высота наконечника — 3.5× от ширины линии
+});
+```
+
+## Удаление стрелки {#remove-arrow}
+
+Чтобы удалить стрелку с карты, вызовите метод `destroy()`:
+
+```js
+arrow.destroy();
+```
+
+## Пример {#entrances-demo}
+
+В примере ниже для каждого входа здания создаётся анимированный объект `Arrow`. Координаты стрелок берутся из поля `geometry.vectors` — направленных отрезков от дороги к входу. При нажатии на стрелку отображается попап с названием входа.
+
+:::note[Демонстрация с готовыми данными]
+
+В примере блок запроса к Places API закомментирован, для иллюстрации используются заранее подготовленные данные о входах.
+
+:::
+
+<HtmlExampleWithSrcCode>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Map API — Arrow: входы здания</title>
+        <meta name="description" content="Отображение входов здания с помощью объекта Arrow" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [30.340100, 59.934000],
+                zoom: 18,
+                key: 'Your API access key',
+            });
+
+            // Данные входов, полученные из Places API (items.links.database_entrances).
+            // В реальном приложении используйте fetch() для получения данных:
+            // const url = 'https://catalog.api.2gis.com/3.0/items/byid'
+            //     + '?id=5348660212691856'
+            //     + '&fields=items.links.database_entrances'
+            //     + '&key=YOUR_KEY';
+            // const response = await fetch(url);
+            // const data = await response.json();
+            // const entrances = data.result.items[0].links.database_entrances;
+            const entrances = [
+                {
+                    entity_name: 'Подъезд: квартиры 43-47, 40,41, 5,6, 8',
+                    entity_number: '5349068234566605',
+                    geometry: {
+                        normals: [
+                            'LINESTRING(29.896269 59.037902,30.340498 59.933815)',
+                            'LINESTRING(30.785535 60.82949,30.340563 59.933946)',
+                        ],
+                        points: [
+                            'POINT(30.340498 59.933815)',
+                            'POINT(30.340563 59.933946)',
+                        ],
+                        vectors: [
+                            'LINESTRING(30.340455 59.933728,30.340498 59.933815)',
+                            'LINESTRING(30.340606 59.934033,30.340563 59.933946)',
+                        ],
+                    },
+                    has_poi: true,
+                    id: '5349068234566605',
+                    is_visible_on_map: true,
+                    name: 'кв. 43-47...',
+                },
+                {
+                    entity_name: '2 подъезд',
+                    entity_number: '2',
+                    geometry: {
+                        normals: [
+                            'LINESTRING(31.339675 59.883814,30.34093 59.93391)',
+                        ],
+                        points: [
+                            'POINT(30.340930109645146 59.933909825566758)',
+                        ],
+                        vectors: [
+                            'LINESTRING(30.341108 59.933901,30.34093 59.93391)',
+                        ],
+                    },
+                    has_poi: true,
+                    id: '5349068278782309',
+                    is_visible_on_map: true,
+                    name: '2',
+                },
+                {
+                    entity_name: '3 подъезд',
+                    entity_number: '3',
+                    geometry: {
+                        normals: [
+                            'LINESTRING(31.339725 59.884067,30.340981 59.934163)',
+                        ],
+                        points: [
+                            'POINT(30.340980505132585 59.93416291271997)',
+                        ],
+                        vectors: [
+                            'LINESTRING(30.341158 59.934154,30.340981 59.934163)',
+                        ],
+                    },
+                    has_poi: true,
+                    id: '70030077117607993',
+                    is_visible_on_map: true,
+                    name: '3',
+                },
+                {
+                    entity_name: '6 подъезд',
+                    entity_number: '6',
+                    geometry: {
+                        normals: [
+                            'LINESTRING(31.332519 59.810388,30.340194 59.934048)',
+                        ],
+                        points: [
+                            'POINT(30.340194119932868 59.934048406125449)',
+                        ],
+                        vectors: [
+                            'LINESTRING(30.340368 59.934027,30.340194 59.934048)',
+                        ],
+                    },
+                    has_poi: true,
+                    id: '5349068251283486',
+                    is_visible_on_map: true,
+                    name: '6',
+                },
+                {
+                    entity_name: '7 подъезд',
+                    entity_number: '7',
+                    geometry: {
+                        normals: [
+                            'LINESTRING(30.784657 60.830211,30.340422 59.9343)',
+                            'LINESTRING(29.895026 59.038836,30.34037 59.934196)',
+                        ],
+                        points: [
+                            'POINT(30.340422 59.9343)',
+                            'POINT(30.34037 59.934196)',
+                        ],
+                        vectors: [
+                            'LINESTRING(30.340465 59.934388,30.340422 59.9343)',
+                            'LINESTRING(30.340327 59.934109,30.34037 59.934196)',
+                        ],
+                    },
+                    has_poi: true,
+                    id: '70030076500707821',
+                    is_visible_on_map: true,
+                    name: '7',
+                },
+            ];
+
+            // Парсинг координат из формата WKT LINESTRING(lon1 lat1, lon2 lat2)
+            function parseWktLinestring(wkt) {
+                const match = wkt.match(
+                    /LINESTRING\\(([\\d.]+)\\s+([\\d.]+)\\s*,\\s*([\\d.]+)\\s+([\\d.]+)\\)/
+                );
+                if (!match) return null;
+                return [
+                    [parseFloat(match[1]), parseFloat(match[2])],
+                    [parseFloat(match[3]), parseFloat(match[4])],
+                ];
+            }
+
+            const arrows = [];
+            const colors = ['#0085a0', '#e65100', '#2e7d32', '#6a1b9a', '#c62828'];
+
+            entrances.forEach(function(entrance, index) {
+                var color = colors[index % colors.length];
+
+                // Каждый вектор входа превращается в отдельную стрелку Arrow
+                entrance.geometry.vectors.forEach(function(vector) {
+                    var path = parseWktLinestring(vector);
+                    if (!path) return;
+
+                    var arrow = new mapgl.Arrow(map, {
+                        coordinates: path,
+                        color: color,
+                        strokeColor: '#ffffff',
+                        width: 5,
+                        strokeWidth: 1,
+                        animate: true,
+                        iterationCount: Infinity,
+                        tipMovementAmplitude: 6,
+                        interactive: true,
+                        zIndex: 10,
+                        userData: {
+                            entranceId: entrance.id,
+                            name: entrance.entity_name,
+                        },
+                    });
+
+                    arrow.on('click', function() {
+                        // Удаление предыдущего попапа
+                        if (window._currentPopup) {
+                            window._currentPopup.destroy();
+                        }
+
+                        // Конечная точка вектора — точка входа
+                        var target = path[path.length - 1];
+
+                        window._currentPopup = new mapgl.HtmlMarker(map, {
+                            coordinates: target,
+                            html: '<div style="'
+                                + 'background: white;'
+                                + 'border-radius: 8px;'
+                                + 'padding: 8px 12px;'
+                                + 'box-shadow: 0 2px 6px rgba(0,0,0,0.3);'
+                                + 'font-family: sans-serif;'
+                                + 'font-size: 13px;'
+                                + 'white-space: nowrap;'
+                                + '">'
+                                + entrance.entity_name
+                                + '</div>',
+                            anchor: [0.5, 1.3],
+                        });
+                    });
+
+                    arrows.push(arrow);
+                });
+            });
+
+            // Стрелка по ломаной — путь от соседнего здания
+            var polylineArrow = new mapgl.Arrow(map, {
+                coordinates: [
+                    [30.339214, 59.934282],
+                    [30.339027, 59.933919],
+                    [30.339372, 59.933880],
+                    [30.339393, 59.933909],
+                    [30.339603, 59.933883],
+                    [30.339590, 59.933851],
+                    [30.339900, 59.933817],
+                    [30.339922, 59.933842],
+                    [30.340129, 59.933814],
+                    [30.340121, 59.933783],
+                    [30.340336, 59.933770],
+                    [30.340365, 59.933827],
+                ],
+                color: '#d81b60',
+                strokeColor: '#ffffff',
+                width: 4,
+                strokeWidth: 1,
+                animate: true,
+                iterationCount: 3,
+                tipMovementAmplitude: 8,
+                interactive: true,
+                zIndex: 10,
+                userData: { name: 'Путь от соседнего здания' },
+            });
+
+            polylineArrow.on('click', function() {
+                if (window._currentPopup) {
+                    window._currentPopup.destroy();
+                }
+
+                window._currentPopup = new mapgl.HtmlMarker(map, {
+                    coordinates: [30.340350, 59.933809],
+                    html: '<div style="'
+                        + 'background: white;'
+                        + 'border-radius: 8px;'
+                        + 'padding: 8px 12px;'
+                        + 'box-shadow: 0 2px 6px rgba(0,0,0,0.3);'
+                        + 'font-family: sans-serif;'
+                        + 'font-size: 13px;'
+                        + 'white-space: nowrap;'
+                        + '">'
+                        + 'Путь от соседнего здания'
+                        + '</div>',
+                    anchor: [0.5, 1.3],
+                });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

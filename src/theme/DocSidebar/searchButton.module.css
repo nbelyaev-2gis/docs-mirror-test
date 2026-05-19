@@ -1,0 +1,15 @@
+.wrapper {
+  height: 100%;
+  width: var(--doc-sidebar-width);
+  padding: var(--ifm-navbar-height) var(--gap-2m) 0;
+  overflow: scroll;
+
+  [class^='sidebar'] {
+    width: 100%;
+    padding-top: 0;
+
+    > [class^='menu'] {
+      padding: var(--gap-5m) 0 0;
+    }
+  }
+}

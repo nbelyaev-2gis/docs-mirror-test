@@ -1,0 +1,25 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-1m);
+
+  padding: var(--gap-3m) var(--gap-4m);
+  border-radius: var(--border-radius-md);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-m);
+  line-height: var(--lh-sm);
+  color: var(--text-main);
+  width: 100%;
+
+  text-decoration: none;
+  color: var(--text-blue-1);
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  svg {
+    transform: rotate(270deg);
+  }
+}

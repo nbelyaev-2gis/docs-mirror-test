@@ -1,0 +1,847 @@
+---
+sidebar: mapgljsapi
+---
+# Работа с несколькими слоями deck.gl
+
+Вы можете отрисовывать на карте MapGL JS API несколько слоёв deck.gl одновременно и управлять ими:
+
+* Добавлять слои на карту и удалять их.
+* Изменять порядок отрисовки слоёв и отображать слои так, чтобы они не перекрывали друг друга. Чтобы изменить порядок слоёв, укажите индекс слоя в массиве.
+* Скрывать и показывать слои.
+
+<br />
+
+Чтобы работать с несколькими слоями в проекте на React:
+
+1. [Настройте провайдер карты](#map-provider).
+2. [Создайте провайдер Deck](#deck-provider).
+3. [Инициализируйте провайдеры](#init-providers).
+4. [Создайте контекст для управления слоями](#layer-context).
+
+## 1. Настройте провайдер карты {#map-provider}
+
+1. Инициализируйте карту MapGL JS API по инструкции [Работа с React](/mapgl/start/react).
+2. Перед добавлением слоя на карту стиль карты должен быть загружен, иначе он перезапишет предыдущий стиль и удалит добавленные слои. Используйте обработчик события `styleload`, который срабатывает каждый раз после установки нового стиля: подробнее см. в инструкции [Дополнение текущего стиля карты «на лету»](/mapgl/map-style/modify). Добавьте в провайдер карты `MapProvider` флаг готовности стиля карты:
+
+   ```jsx
+   const MapContext = React.createContext({
+     mapInstance: undefined,
+     setMapInstance: () => {},
+     styleLoaded: false
+   });
+
+   const MapProvider = (props) => {
+   const [mapInstance, setMapInstance] = React.useState(undefined);
+   // Добавление флага готовности стиля карты
+   const [styleLoaded, setStyleLoaded] = React.useState(false);
+
+   // Подписка на событие готовности стиля при загрузке карты
+   React.useEffect(() => {
+      if (!mapInstance) {
+         return;
+      }
+
+      // Callback для обработки события готовности стиля
+      const onStyleHasLoaded = () => {
+         setStyleLoaded(true);
+      };
+
+      mapInstance.on('styleload', onStyleHasLoaded);
+
+      return () => {
+         mapInstance.off('styleload', onStyleHasLoaded);
+      };
+   }, [mapInstance]);
+
+   // Добавление флага styleLoaded в контекст
+   return (
+      <MapContext.Provider value={{ mapInstance, setMapInstance, styleLoaded }}>
+         {props.children}
+      </MapContext.Provider>
+   );
+   };
+   ```
+
+Для повышения производительности вы можете вынести флаг загрузки стиля в отдельный контекст.
+
+## 2. Создайте провайдер Deck {#deck-provider}
+
+Создайте отдельный провайдер для экземпляра Deck, чтобы иметь к нему доступ и управлять слоями из любой точки приложения:
+
+```jsx
+const DeckContext = React.createContext({ deckInstance: undefined });
+
+let deckGLInstance = undefined;
+
+const DeckProvider: FC<PropsWithChildren> = ({ children }) => {
+  const [deckInstance, setDeckInstance] = React.useState(undefined);
+
+  useMapEffect(({ mapInstance }) => {
+    if (deckGLInstance) {
+      return;
+    }
+
+    // Инициализация Deck при загрузке карты
+    const deckGLInstance = Deck2gisLayer.initDeck(mapInstance, DeckGL, { antialiasing: 'msaa' });
+    deckGLInstance = deckGLInstance;
+
+    setDeckInstance(deckGLInstance);
+  }, []);
+
+  return <DeckContext.Provider value={{ deckInstance }}>{children}</DeckContext.Provider>;
+};
+```
+
+## 3. Инициализируйте провайдеры {#init-providers}
+
+Инициализируйте провайдеры в корневом компоненте приложения:
+
+```jsx
+const App = () => {
+  return (
+    <MapProvider>
+      <DeckProvider>
+        {/* Остальная часть приложения */}
+      </DeckProvider>
+    </MapProvider>
+  );
+};
+```
+
+Провайдер `DeckProvider` вложен в `MapProvider`, чтобы экземпляр Deck имел доступ к карте.
+
+## 4. Создайте контекст для управления слоями {#layer-context}
+
+Для управления слоями deck.gl создайте контекст, который хранит список слоёв и предоставляет функции для управления слоями.
+
+Алгоритм работы со слоями состоит из следующих шагов:
+
+1. Добавление слоёв в контекст с указанием порядка отрисовки.
+2. Добавление слоёв на карту после загрузки стиля.
+3. Изменение набора слоёв с помощью функций `addLayer()` и `removeLayer()`.
+4. Удаление предыдущего набора слоёв с карты (очистка в `useMapEffect`) и отрисовка нового. Экземпляр слоя не удаляется, и вы можете использовать его повторно.
+5. Повторение цикла при каждом изменении набора слоёв или их порядка.
+
+Пример контекста:
+
+```jsx
+const deck2GisLayerContext = React.createContext({
+  addLayer: () => {},
+  removeLayer: () => {},
+});
+
+const Deck2gisLayerContextProvider = ({ children }) => {
+  // Массив хранит слой и его индекс, который определяет порядок отрисовки слоя на карте
+  // Слой с большим индексом отрисовывается выше слоя с меньшим
+  const [deck2gisLayers, setDeck2gisLayers] = React.useState([]);
+
+  const addLayer = React.useCallback((deck2gisLayer, layerIndex) => {
+    // Массив слоёв сортируется по их индексам
+    setDeck2gisLayers((layers) =>
+      [...layers, { layerIndex, layer: deck2gisLayer }].sort(
+        (a, b) => b.layerIndex - a.layerIndex,
+      ),
+    );
+  }, []);
+
+  const removeLayer = React.useCallback((layer) => {
+    setDeck2gisLayers((layers) => layers.filter((l) => l.layer !== layer));
+  }, []);
+
+  const { styleLoaded } = useMapContext();
+
+  useMapEffect(
+    ({ mapInstance }) => {
+      if (!styleLoaded) {
+        return;
+      }
+
+      deck2gisLayers.forEach(({ layer }) => {
+        if (!mapInstance.hasLayer(layer.id)) {
+          mapInstance.addLayer(layer);
+        }
+      });
+
+      return () => {
+        deck2gisLayers.forEach(({ layer }) => {
+          mapInstance.removeLayer(layer.id);
+        });
+      };
+    },
+    [deck2gisLayers, styleLoaded],
+  );
+
+  const value = React.useMemo(() => ({ addLayer, removeLayer }), [addLayer, removeLayer]);
+
+  return <deck2GisLayerContext.Provider value={value}>{children}</deck2GisLayerContext.Provider>;
+};
+```
+
+## Пример использования {#usage-example}
+
+Пример содержит дополнительный код, который имитирует работу с серверной частью приложения. Способ получения данных для слоёв зависит от вашей реализации.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '550px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Плагин deck2gisLayer с примером использования React" />
+    <!-- Не используйте в проекте: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="__MAPGL_API_URL__"></script>
+    <script src="__MAPGL_PLUGIN_DECK2GIS-LAYER_URL__"></script>
+    <script src="__DECKGL_URL__"></script>
+
+    <style>
+        html,
+        body,
+        #root {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .controls {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          width: 340px;
+          border-color: #D7D7D7;
+          background: #FFFFFF;
+          border-radius: 6px;
+          padding: 8px;
+          z-index: 10;
+          box-sizing: border-box;
+        }
+
+        .controls-title {
+          font-family: 'Arial';
+          font-size: 14px;
+          color: #626262;
+          margin: 0 0 8px 0;
+          padding: 0;
+          font-weight: normal;
+        }
+
+        .layer-list {
+          list-style: none;
+          padding: 0;
+          margin: 0 0 12px 0;
+          max-height: 400px;
+          overflow-y: auto;
+        }
+
+        .layer-item {
+          margin-bottom: 8px;
+          padding: 8px;
+          background: #F2F2F2;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+
+        .layer-name {
+          font-family: 'Arial';
+          font-size: 16px;
+          color: #262626;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .layer-actions {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          flex-shrink: 0;
+        }
+
+        .layer-button {
+          border: none;
+          background: #FFFFFF;
+          border-radius: 4px;
+          padding: 4px 8px;
+          font-family: 'Arial';
+          font-size: 14px;
+          color: #262626;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 28px;
+          height: 28px;
+          box-sizing: border-box;
+        }
+
+        .layer-button:hover:not(:disabled) {
+          background: #E5E5E5;
+          color: #0041C3;
+        }
+
+        .layer-button:active:not(:disabled) {
+          background: #D7D7D7;
+        }
+
+        .layer-button:disabled {
+          background: #E5E5E5;
+          color: #929292;
+          cursor: not-allowed;
+        }
+
+        .layer-button img {
+          width: 16px;
+          height: 16px;
+          display: block;
+        }
+
+        .controls-button-add {
+          border: none;
+          border-radius: 6px;
+          padding: 8px;
+          font-family: 'Arial';
+          font-size: 16px;
+          display: block;
+          width: 100%;
+          box-sizing: border-box;
+          background-color: #0041C3;
+          color: #E5E5E5;
+          cursor: pointer;
+        }
+
+        .controls-button-add:hover {
+          background-color: #0028A6;
+          color: #F2F2F2;
+        }
+
+        .controls-button-add:active {
+          background-color: #001A73;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const MapContext = React.createContext({
+        mapInstance: undefined,
+        setMapInstance: () => {},
+        styleLoaded: false
+      });
+
+      const MapProvider = (props) => {
+        const [mapInstance, setMapInstance] = React.useState(undefined);
+        const [styleLoaded, setStyleLoaded] = React.useState(false);
+
+        React.useEffect(() => {
+          if (!mapInstance) {
+            return;
+          }
+
+          const onStyleHasLoaded = () => {
+            setStyleLoaded(true);
+          };
+
+          mapInstance.on('styleload', onStyleHasLoaded);
+
+          return () => {
+            mapInstance.off('styleload', onStyleHasLoaded);
+          };
+        }, [mapInstance]);
+
+        return (
+            <MapContext.Provider value={{ mapInstance, setMapInstance, styleLoaded }}>
+                {props.children}
+            </MapContext.Provider>
+        );
+      };
+
+      const useMapEffect = (effect, deps) => {
+        const { mapInstance } = React.useContext(MapContext);
+
+        return React.useEffect(() => {
+          if (!mapInstance) {
+            return;
+          }
+
+          return effect({ mapInstance });
+        }, [mapInstance, ...deps]);
+      };
+
+      const DeckContext = React.createContext({ deckInstance: undefined });
+
+      let deckGLInstance = undefined;
+
+      const DeckProvider = ({ children }) => {
+        const [deckInstance, setDeckInstance] = React.useState(undefined);
+
+        useMapEffect(({ mapInstance }) => {
+          if (deckGLInstance) {
+            return;
+          }
+
+          deckGLInstance = mapgl.Deck2gisLayer.initDeck(mapInstance, deck.Deck, {
+            antialiasing: 'msaa'
+          });
+
+          setDeckInstance(deckGLInstance);
+        }, []);
+
+        return <DeckContext.Provider value={{ deckInstance }}>{children}</DeckContext.Provider>;
+      };
+
+      const MapWrapper = React.memo(
+        () => {
+            return <div id="map-container" style={{ width: '100%', height: '100%' }}></div>;
+        },
+        () => true,
+      );
+      const MapGL = () => {
+        const { setMapInstance } = React.useContext(MapContext);
+
+        React.useEffect(() => {
+            const map = new mapgl.Map('map-container', {
+                center: [37.615655, 55.768005],
+                zoom: 12,
+                key: 'Your API access key',
+                zoomControl: false,
+            });
+
+            setMapInstance(map);
+
+            return () => {
+              setMapInstance(undefined);
+              map.destroy()
+            };
+        }, []);
+
+        return (
+          <div style={{ width: '100%', height: '100%' }}>
+              <MapWrapper />
+          </div>
+        );
+      };
+
+      const deck2GisLayerContext = React.createContext({
+        addLayer: () => {},
+        removeLayer: () => {},
+      });
+
+      const Deck2gisLayerContextProvider = ({ children }) => {
+        const [deck2gisLayers, setDeck2gisLayers] = React.useState([]);
+
+        const addLayer = React.useCallback(({deck2gisLayer, layerIndex}) => {
+          setDeck2gisLayers((layers) =>
+            [...layers, { layerIndex, layer: deck2gisLayer }].sort(
+              (a, b) => b.layerIndex - a.layerIndex,
+            ),
+          );
+        }, []);
+
+        const removeLayer = React.useCallback((layer) => {
+          setDeck2gisLayers((layers) => layers.filter((l) => l.layer !== layer));
+        }, []);
+
+        const { styleLoaded } = React.useContext(MapContext);
+
+        useMapEffect(
+          ({ mapInstance }) => {
+            if (!styleLoaded) {
+              return;
+            }
+
+            deck2gisLayers.forEach(({ layer }) => {
+              if (!mapInstance.hasLayer(layer.id)) {
+                mapInstance.addLayer(layer);
+              }
+            });
+
+            return () => {
+              deck2gisLayers.forEach(({ layer }) => {
+                mapInstance.removeLayer(layer.id);
+              });
+            };
+          },
+          [deck2gisLayers, styleLoaded],
+        );
+
+        const value = React.useMemo(() => ({ addLayer, removeLayer }), [addLayer, removeLayer]);
+
+        return <deck2GisLayerContext.Provider value={value}>{children}</deck2GisLayerContext.Provider>;
+      };
+
+      const dataLayerContext = React.createContext({
+        dataLayers: [],
+        addDataLayer: () => {},
+        removeDataLayer: () => {},
+        changeOrder: () => {},
+        toggleDataLayerVisibility: () => {},
+      });
+
+      const DataLayerContextProvider = React.memo(({ children }) => {
+        const [dataLayers, setDataLayers] = React.useState([
+          {
+            id: 'default-layer-hex',
+            isHidden: false,
+            payload: [
+                {
+                  point: {
+                    lon: 37.615655,
+                    lat: 55.768005,
+                  },
+                  data: 50,
+                },
+                {
+                  point: {
+                    lon: 37.615427,
+                    lat: 55.768484,
+                  },
+                  data: 80,
+                },
+                {
+                  point: {
+                    lon: 37.617814,
+                    lat: 55.760535,
+                  },
+                  data: 60,
+                },
+                {
+                  point: {
+                    lon: 37.617814,
+                    lat: 55.760535,
+                  },
+                  data: 10,
+                },
+            ],
+          },
+        ]);
+
+        const addDataLayer = React.useCallback((dataLayer) => {
+          setDataLayers((prev) => [dataLayer, ...prev]);
+        }, []);
+        const removeDataLayer = React.useCallback((id) => {
+          setDataLayers((prev) => prev.filter((layer) => layer.id !== id));
+        }, []);
+        const toggleDataLayerVisibility = React.useCallback((id) => {
+          setDataLayers((prev) =>
+            prev.map((layer) => (layer.id === id ? { ...layer, isHidden: !layer.isHidden } : layer)),
+          );
+        }, []);
+        const changeOrder = React.useCallback((params) => {
+          setDataLayers((prev) => {
+            const layerIndex = prev.findIndex((layer) => layer.id === params.dataLayerId);
+            if (layerIndex === -1) {
+              return prev;
+            }
+            const newLayers = [...prev];
+            const [movedLayer] = newLayers.splice(layerIndex, 1);
+            newLayers.splice(params.newIndex, 0, movedLayer);
+            return newLayers;
+          });
+        }, []);
+
+        const value = React.useMemo(
+          () => ({
+            dataLayers,
+            addDataLayer,
+            removeDataLayer,
+            changeOrder,
+            toggleDataLayerVisibility,
+          }),
+          [dataLayers, addDataLayer, removeDataLayer, changeOrder, toggleDataLayerVisibility],
+        );
+
+        return <dataLayerContext.Provider value={value}>{children}</dataLayerContext.Provider>;
+      });
+
+      function generateRandomCoordinatesArray() {
+        const minLength = 1;
+        const maxLength = 20;
+        const arrayLength = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
+
+        const minLon = 37.57;
+        const maxLon = 37.6;
+        const minLat = 55.76;
+        const maxLat = 55.8;
+        const step = 0.0005;
+
+        const lonValues = [];
+        const latValues = [];
+
+        for (let lon = minLon; lon <= maxLon; lon += step) {
+          lonValues.push(parseFloat(lon.toFixed(4)));
+        }
+
+        for (let lat = minLat; lat <= maxLat; lat += step) {
+          latValues.push(parseFloat(lat.toFixed(4)));
+        }
+
+        const result = [];
+
+        for (let i = 0; i < arrayLength; i++) {
+          const randomLon = lonValues[Math.floor(Math.random() * lonValues.length)];
+          const randomLat = latValues[Math.floor(Math.random() * latValues.length)];
+
+          result.push({
+            point: {
+              lon: randomLon,
+              lat: randomLat,
+            },
+            data: Math.random() * 100,
+          });
+        }
+
+        return result;
+      }
+
+      const AddLayer = React.memo(() => {
+        const { addDataLayer } = React.useContext(dataLayerContext);
+
+        const handleAddLayer = React.useCallback(() => {
+          const newPoints = generateRandomCoordinatesArray();
+          const newLayerId = 'layer-' + (newPoints.length % 2 === 0 ? 'hex' : 'grid') + '-' + Date.now();
+          const newLayer = {
+            id: newLayerId,
+            isHidden: false,
+            payload: newPoints,
+          };
+          addDataLayer(newLayer);
+        }, [addDataLayer]);
+
+        return (
+          <button onClick={handleAddLayer} className="controls-button-add">
+            Добавить слой
+          </button>
+        );
+      });
+
+      const LayerList = React.memo(() => {
+        const { dataLayers } = React.useContext(dataLayerContext);
+
+        return (
+          <div className="controls">
+            <h3 className="controls-title">Слои</h3>
+
+            <ul className="layer-list">
+              {dataLayers.map((layer, index) => (
+                <li key={layer.id}>
+                  <Layer
+                    dataLayer={layer}
+                    index={index}
+                    isFirst={index === 0}
+                    isLast={index === dataLayers.length - 1}
+                  />
+                </li>
+              ))}
+            </ul>
+
+            <AddLayer />
+          </div>
+        );
+      });
+
+      const Layers = React.memo(() => {
+        return (
+          <DataLayerContextProvider>
+            <Deck2gisLayerContextProvider>
+              <LayerList />
+            </Deck2gisLayerContextProvider>
+          </DataLayerContextProvider>
+        );
+      });
+
+      const EyeIcon = ({ isVisible }) => {
+        if (isVisible) {
+          return (
+            <svg width="16" height="16" viewBox="2 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" clipRule="evenodd" d="M5.89443 12.4472c.35855-.7171 1.07867-1.3306 2.15847-1.7714.06553-.0267.13212-.0527.19974-.0779-.16333.4363-.25263.9088-.25263 1.4021 0 2.2091 1.79086 4 3.99999 4 2.2091 0 4-1.7909 4-4 0-.4933-.0893-.9658-.2526-1.4021.0676.0252.1342.0512.1997.0779 1.0798.4408 1.7999 1.0543 2.1585 1.7714.247.494.8476.6942 1.3416.4472.494-.247.6942-.8476.4472-1.3416-.6414-1.2829-1.8213-2.16938-3.1915-2.72865C15.3299 8.26373 13.6954 8 12 8c-1.6954 0-3.32986.26373-4.70289.82415-1.3702.55927-2.55008 1.44575-3.19153 2.72865-.24699.494-.04677 1.0946.44721 1.3416.49398.247 1.09465.0468 1.34164-.4472ZM12 10c-1.1046 0-2 .8954-2 2s.8954 2 2 2 2-.8954 2-2-.8954-2-2-2Z" fill="currentColor"></path>
+            </svg>
+          );
+        } else {
+          return (
+            <svg width="16" height="16" viewBox="2 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5.89449 11.553c.35855.7171 1.07867 1.3306 2.15847 1.7714 1.07697.4395 2.44244.6758 3.94714.6758 1.5046 0 2.8701-.2363 3.9471-.6758 1.0798-.4408 1.7999-1.0543 2.1584-1.7714.247-.494.8477-.6942 1.3417-.4472.494.247.6942.8477.4472 1.3416-.5946 1.1892-1.6519 2.0378-2.8945 2.6009v.9519c0 .5523-.4477 1-1 1s-1-.4477-1-1v-.3042c-.6399.1388-1.3113.229-2 .2728v1.0314c0 .5523-.4477 1-1 1s-1-.4477-1-1v-1.0314c-.6887-.0438-1.36007-.134-1.99999-.2728v.3042c0 .5523-.44772 1-1 1-.55229 0-1-.4477-1-1v-.952c-1.24259-.5631-2.29979-1.4116-2.89437-2.6008-.24699-.4939-.04677-1.0946.44721-1.3416.49398-.247 1.09465-.0468 1.34164.4472Z" fill="currentColor"></path>
+            </svg>
+          );
+        }
+      };
+
+      const Layer = React.memo(
+        ({ dataLayer, index, isFirst, isLast }) => {
+          const { deleteDataLayer, toggleLayerVisibility, onChangeOrderClick } = useDataLayer({ dataLayer, index });
+          useDeck2GisLayer({ dataLayer, layerIndex: index });
+
+          return (
+            <div className="layer-item">
+              <div className="layer-name" title={dataLayer.id}>
+                {dataLayer.id}
+              </div>
+              <div className="layer-actions">
+                <button
+                  className="layer-button"
+                  onClick={() => onChangeOrderClick('up')}
+                  disabled={isFirst}
+                  title="Переместить вверх"
+                >
+                  ↑
+                </button>
+                <button
+                  className="layer-button"
+                  onClick={() => onChangeOrderClick('down')}
+                  disabled={isLast}
+                  title="Переместить вниз"
+                >
+                  ↓
+                </button>
+                <button
+                  className="layer-button"
+                  onClick={toggleLayerVisibility}
+                  title={dataLayer.isHidden ? 'Показать' : 'Скрыть'}
+                >
+                  <EyeIcon isVisible={!dataLayer.isHidden} />
+                </button>
+                <button
+                  className="layer-button"
+                  onClick={deleteDataLayer}
+                  title="Удалить"
+                >
+                  <svg width="18" height="18" viewBox="2 1 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M11 6c-.5523 0-1 .44772-1 1H7c-.55228 0-1 .44772-1 1s.44772 1 1 1l.00003 8c0 1.1046.89543 2 2 2H15c1.1046 0 2-.8954 2-2V9c.5523 0 1-.44772 1-1s-.4477-1-1-1h-3c0-.55228-.4477-1-1-1h-2ZM9.00003 9H15v8H9.00003V9Z" fill="currentColor"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          );
+        },
+      );
+
+      const useDeck2GisLayer = ({ dataLayer, layerIndex }) => {
+        const { deckInstance } = React.useContext(DeckContext);
+        const { addLayer, removeLayer } = React.useContext(deck2GisLayerContext);
+
+        const deck2gisLayerInstance = React.useMemo(() => {
+
+          if (!deckInstance) {
+            return null;
+          }
+
+          const palette = dataLayer.payload.length % 2 === 0 ? [
+              [255, 115, 148],
+              [255, 91, 81],
+              [255, 163, 78],
+              [183, 223, 24],
+              [98, 197, 114],
+              [61, 211, 211],
+              [94, 158, 255],
+              [126, 132, 255],
+              [188, 121, 255],
+              [207, 98, 224]
+            ] : [
+              [235, 192, 63],
+              [241, 239, 224],
+              [224, 64, 63],
+              [241, 136, 37],
+              [250, 198, 149],
+              [0, 107, 68],
+              [129, 173, 150],
+              [0, 56, 101],
+              [0, 123, 181],
+              [19, 16, 13],
+            ];
+
+          if (dataLayer.payload.length % 2 === 0) {
+            return new Deck2gisLayer({
+              id: dataLayer.id,
+              data: dataLayer.payload,
+              deck: deckInstance,
+              type: deck.HexagonLayer,
+              getColorWeight: d => d.data,
+              colorRange: palette,
+              radius: Math.floor(Math.random() * 300 * dataLayer.payload.length + 200),
+              getPosition: (d) => [d.point.lon, d.point.lat],
+            });
+          } else {
+            return new Deck2gisLayer({
+              id: dataLayer.id,
+              data: dataLayer.payload,
+              deck: deckInstance,
+              type: deck.GridLayer,
+              getColorWeight: d => d.data,
+              colorRange: palette,
+              cellSize: Math.floor(Math.random() * 400 * dataLayer.payload.length + 200),
+              getPosition: (d) => [d.point.lon, d.point.lat],
+            });
+          }
+        }, [dataLayer.id, dataLayer.payload, deckInstance]);
+
+        React.useEffect(() => {
+          if (!deck2gisLayerInstance) {
+            return;
+          }
+
+          if (dataLayer.isHidden) {
+            removeLayer(deck2gisLayerInstance);
+            return;
+          }
+
+          addLayer({ deck2gisLayer: deck2gisLayerInstance, layerIndex });
+
+          return () => {
+            removeLayer(deck2gisLayerInstance);
+          };
+        }, [dataLayer.isHidden, layerIndex, deck2gisLayerInstance, addLayer, removeLayer]);
+      };
+
+      const useDataLayer = ({ dataLayer, index }) => {
+        const { removeDataLayer, toggleDataLayerVisibility, changeOrder } = React.useContext(dataLayerContext);
+
+        const deleteDataLayer = () => {
+          removeDataLayer(dataLayer.id);
+        };
+
+        const toggleLayerVisibility = () => {
+          toggleDataLayerVisibility(dataLayer.id);
+        };
+
+        const onChangeOrderClick = (dir) => {
+          changeOrder({
+            dataLayerId: dataLayer.id,
+            newIndex: dir === 'up' ? index - 1 : index + 1,
+          });
+        };
+
+        return { deleteDataLayer, toggleLayerVisibility, onChangeOrderClick };
+      };
+
+      const App = () => {
+        return (
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <MapGL />
+            <Layers />
+          </div>
+        );
+      };
+
+      ReactDOM.createRoot(document.getElementById('root')).render(
+        <React.StrictMode>
+          <MapProvider>
+            <DeckProvider>
+              <App />
+            </DeckProvider>
+          </MapProvider>
+        </React.StrictMode>
+      );
+    </script>
+  </body>
+</html>`}
+</HtmlExampleWithSrcCode>

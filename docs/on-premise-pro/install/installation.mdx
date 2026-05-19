@@ -1,0 +1,726 @@
+---
+sidebar: on-premise-pro
+---
+# Установка <Brand /> Про
+
+:::note[Пароли и ключи приведены для примера]
+
+При реальной установке используйте более сложные и надёжные пароли.
+
+:::
+
+## 1. Перед установкой {#before-installing}
+
+1. Ознакомьтесь с основной информацией:
+
+   * [Архитектура сервисов <Brand /> Про](/on-premise-pro/architecture/pro-architecture)
+   * [Архитектура программного комплекса <Brand />](/on-premise-pro/architecture/solution-architecture)
+   * [Системные требования](/on-premise-pro/install/requirements)
+
+2. Выполните предварительные шаги:
+
+   1. [Подготовка к установке](/on-premise-pro/preparation)
+   2. [Установка сервиса лицензий](/on-premise-api-platform/core/install/license)
+   3. [Установка сервиса API-ключей](/on-premise-api-platform/core/install/keys)
+   4. [Установка API для работы с картами](/on-premise-api-platform/api-platform/install/maps)
+   5. [Установка API для работы с поиском](/on-premise-api-platform/api-platform/install/search)
+   6. [Установка API для работы с навигацией](/on-premise-api-platform/api-platform/install/navigation)
+
+3. Соберите необходимые данные, заданные или полученные на предыдущих шагах:
+
+   | Объект                                                  | Пример значения                                | Как получить значение                                                             |
+   | ------------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------- |
+   | Endpoint реестра Docker для хранения образов сервисов             | `docker.registry.example.com`            | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts) |
+   | Endpoint S3-совместимого хранилища артефактов установки | `artifacts.example.com`                      | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts)         |
+   | Имя бакета для хранения артефактов                      | `onpremise-artifacts`                          | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts)         |
+   | Идентификатор ключа для доступа к артефактам установки  | `AKIAIOSFODNN7EXAMPLE`                         | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts)         |
+   | Секрет ключа для доступа к артефактам установки         | `wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY`       | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts)         |
+   | Endpoint сервиса лицензий                               | `https://license`                              | См. [Установка сервиса лицензий](/on-premise-api-platform/core/install/license)               |
+   | Endpoint MapGL JS API                                   | `http://mapgl-js-api`                          | См. [Установка API для работы с картами](/on-premise-api-platform/api-platform/install/maps)          |
+   | Endpoint Catalog APIs                                   | `http://catalog-api`                           | См. [Установка API для работы с поиском](/on-premise-api-platform/api-platform/install/search)        |
+   | Endpoint API навигации                                  | `http://navi-front`                            | См. [Установка API для работы с навигацией](/on-premise-api-platform/api-platform/install/navigation) |
+   | API-ключи                                               | `MAPGL_KEY` <br /> `CATALOG_KEY` <br /> `NAVI_KEY` | См. [Установка сервиса API-ключей](/on-premise-api-platform/core/install/keys)                |
+
+4. Убедитесь, что удовлетворены требования к ресурсам, приведённые в Helm-чартах:
+
+   * [Pro API](https://github.com/2gis/on-premise-helm-charts/blob/master/charts/pro-api/values.yaml),
+   * [Pro UI](https://github.com/2gis/on-premise-helm-charts/blob/master/charts/pro-ui/values.yaml).
+
+   Подробнее о том, как это сделать, см. в документе [Системные требования](/on-premise-pro/install/requirements).
+
+   :::note[Используйте чарты, соответствующие версии <Brand /> Про]
+
+   Содержание Helm-чартов, описанное в данном разделе, актуально для последней версии <Brand /> Про (см. [Релизы <Brand /> Про](/on-premise-pro/releases)). Чтобы изучить параметры для предыдущих версий, откройте нужный [values.yaml в GitHub](https://github.com/2gis/on-premise-helm-charts/blob/master/charts) и в списке тегов слева выберите тег `Pro-<версия>`.
+
+   :::
+
+5. Определите доменные имена для сервиса <Brand /> Про. Например:
+
+   * Доменное имя для API-бэкенда: `pro-api.example.com`
+   * Доменное имя для Permissions UI: `pro-api-permissions.example.com`
+   * Доменное имя для фронтенда: `pro-ui.example.com`
+
+## 2. Подготовьте инфраструктуру {#prepare-infrastructure}
+
+:::note[Настройка аналогов из реестра Минцифры]
+
+Если вместо PostgreSQL и Apache Kafka вы используете аналоги из реестра Минцифры, для инструкций по их настройке обратитесь к официальной документации этих сервисов.
+
+:::
+
+### Настройте PostgreSQL {#configure-postgresql}
+
+1. Разместите кластер PostgreSQL с доменным именем `pro-postgresql.storage.example.local` в приватной сети. Предполагается, что кластер работает на стандартном порту `5432`.
+
+2. Подключитесь к кластеру от имени суперпользователя (обычно это `postgres`).
+
+3. Создайте пользователя баз данных и установите пароль для него:
+
+   ```sql
+   create user dbuser_pro password '';
+   ```
+
+4. Создайте базы данных, принадлежащие этому пользователю:
+
+   ```sql
+   create database onpremise_pro owner dbuser_pro;
+   create database onpremise_pro_tasks owner dbuser_pro;
+   ```
+
+### Настройте S3-хранилище {#configure-s3}
+
+1. Разместите S3-совместимое хранилище с доменным именем `pro-s3.storage.example.local` в приватной сети. Предполагается, что хранилище работает на стандартном порту `80`.
+
+2. Создайте ключи для подключения к сервису. Запомните реквизиты.
+
+   **Пример:**
+
+   * Ключ доступа: `AKIAIOSFODNN7EXAMPLE`.
+   * Секретный ключ: `wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY`.
+
+3. Определите названия бакетов, которые будут использоваться для сервиса.
+
+   **Пример:**
+
+   * Бакет с наборами данных, агрегатами и фильтрами (`assetsDataBucket`): `assets`.
+   * Бакет с наборами данных, агрегатами и фильтрами, созданными пользователем (`userAssetsDataBucket`): `user_assets`.
+   * Бакет с подготовленными данными слоя (`layerDataBucket`): `layer_data`.
+   * Бакет для хранения снапшотов (`snapshotBucket`): `snapshots`.
+   * Бакет для хранения статичных ресурсов (`resourcesBucket`): `resources`.
+
+### Настройте Elasticsearch {#configure-elasticsearch}
+
+1. Разместите кластер Elasticsearch с доменным именем `pro-elastic.storage.example.local` в приватной сети. Предполагается, что кластер работает на порту `9200`.
+
+2. Создайте пользователя для подключения к сервису. Запомните его реквизиты.
+
+   **Пример:**
+
+   * Имя пользователя: `elasticsearch`.
+   * Пароль: `elasticsearch_password`.
+
+### Настройте Apache Kafka {#configure-kafka}
+
+1. Разместите кластер Apache Kafka с доменным именем `pro-kafka.storage.example.local` в приватной сети. Предполагается, что кластер работает на стандартном порту `9092`.
+
+2. Создайте пользователя для подключения к сервису. Запомните его реквизиты.
+
+   **Пример:**
+
+   * Имя пользователя: `kafka`.
+   * Пароль: `kafka_password`.
+
+3. (Рекомендуется) Настройте топики Apache Kafka следующим образом:
+
+   | Имя топика                    | Передаваемые данные                              | Рекомендуемые настройки                                                                                                                                                                                                                                                                                            |
+   | ----------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+   | `kafka.importTasksTopic.name` | Задачи на импорт пользовательских наборов данных | <ul><li>Максимальный размер сообщения — 5 Мб (`max.message.bytes: 5242880`).</li><li>Период хранения файла лога — 3 дня (`retention.ms: 259200000`). См. подробные рекомендации по выбору значения ниже.</li><li>Формат сжатия — Gzip (`compression.type: gzip`).</li></ul>                                                                                            |
+   | `kafka.assetDataTopic.name`   | Объекты пользовательских наборов данных          | <ul><li>Максимальный размер сообщения — 5 Мб (`max.message.bytes: 5242880`).</li><li>Период хранения файла лога — 5 дней (`retention.ms: 432000000`). См. подробные рекомендации по выбору значения ниже.</li><li>Формат сжатия — Gzip (`compression.type: gzip`).</li></ul>                                                                                           |
+   | `kafka.permissionsTopic.name` | Сообщения об изменении прав доступа              | <ul><li>Максимальный размер сообщения — 5 Мб (`max.message.bytes: 5242880`).</li><li>Период хранения файла лога — 1 день (`retention.ms: 86400000`). См. подробные рекомендации по выбору значения ниже.</li><li>Формат сжатия — Gzip (`compression.type: gzip`).</li></ul>                                                                                            |
+   | `kafka.eventsTopic.name`      | Различные события                                | <ul><li>Максимальный размер сообщения — 20 Мб (`max.message.bytes: 20000000`).</li><li>Период хранения файла лога — 1 день (`retention.ms: 86400000`). См. подробные рекомендации по выбору значения ниже.</li><li>Максимальный размер данных для хранения — 500 Мб (`retention.bytes: 524288000`).</li><li>Формат сжатия — Gzip (`compression.type: gzip`).</li></ul> |
+
+   Параметр `retention.ms` определяет гарантированное время хранения сообщений в Apache Kafka и используется как буфер на случай деградации или недоступности потребителей (consumers) и соответствующих сервисов. Значение параметра следует выбирать исходя из скорости обработки очереди и допустимого времени восстановления системы. Более высокое значение снижает риск потери данных при инцидентах, но избыточное увеличение не даёт дополнительной надёжности, при этом увеличивает расход дискового пространства и время восстановления кластера.
+
+   Указанные значения параметра `retention.ms` — рекомендуемые, так как помогают сохранить баланс между надёжностью хранения данных и эксплуатационными затратами. Вы можете изменять значения, если это обосновано нагрузкой, архитектурными особенностями или требованиями к времени восстановления.
+   
+   Полное описание настроек см. в [документации Apache Kafka](https://kafka.apache.org/documentation/).
+
+## 3. Установите <Brand /> Про {#install-services}
+
+### Установите Pro API {#install-pro-api}
+
+1. Создайте конфигурационный файл для Helm. Подробное описание доступных параметров см. [здесь](https://github.com/2gis/on-premise-helm-charts/blob/master/charts/pro-api/README.md).
+
+   Пример файла уже заполнен всеми необходимыми данными, собранными на предыдущих этапах.
+
+   <details>
+   <summary><code>values-pro-api.yaml</code></summary>
+
+   ```yaml
+   dgctlDockerRegistry: docker.registry.example.com
+
+   dgctlStorage:
+     host: artifacts.example.com
+     secure: true
+     bucket: onpremise-artifacts
+     accessKey: AKIAIOSFODNN7EXAMPLE
+     secretKey: wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+     manifest: manifests/pro/1640661259.json
+     region: ''
+     disablePayloadSigning: false
+
+   api:
+     ingress:
+       enabled: true
+       className: nginx
+       annotations:
+         nginx.ingress.kubernetes.io/proxy-body-size: 100m
+         nginx.ingress.kubernetes.io/proxy-connect-timeout: '120'
+         nginx.ingress.kubernetes.io/proxy-read-timeout: '120'
+         nginx.ingress.kubernetes.io/proxy-send-timeout: '120'
+         nginx.ingress.kubernetes.io/enable-cors: 'true'
+         nginx.ingress.kubernetes.io/cors-allow-credentials: 'true'
+         nginx.ingress.kubernetes.io/cors-allow-methods: 'GET, PUT, POST, DELETE, PATCH, OPTIONS'
+         nginx.ingress.kubernetes.io/cors-allow-headers: 'DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,x-share-token,x-auth-token,x-brand,pragma'
+         nginx.ingress.kubernetes.io/proxy-buffer-size: 256k
+         nginx.ingress.kubernetes.io/proxy-buffering: 'on'
+         nginx.ingress.kubernetes.io/proxy-buffers-number: '4'
+       hosts:
+         - host: pro-api.example.com
+           paths:
+             - path: /
+               pathType: Prefix
+       tls: []
+       # - hosts:
+       #   - pro-api.example.com
+       #   secretName: secret.tls
+
+     pod:
+       imagePullSecrets: [onpremise-registry-creds]
+       resources:
+         requests:
+           cpu: 400m
+           memory: 256M
+         limits:
+           cpu: 1
+           memory: 1024M
+     settings:
+       licenseKey: ''
+       corsOrigins: ''
+       auth:
+         url: https://keycloak.example.com
+         apiKey: ''
+         type: openid10
+         userInfoEndpoint: realms/Pro/protocol/openid-connect/userinfo
+         autoRegisterUsers: true
+         shareKeys:
+           - ''
+
+   permissions:
+     ingress:
+       className: nginx
+       enabled: true
+       hosts:
+       - host: pro-api-permissions.example.com
+         paths:
+         - path: /
+           pathType: Prefix
+       tls:
+       # - hosts:
+       #   - pro-api-permissions.example.com
+       #   secretName: secret.tls
+     settings:
+       auth:
+         apiKey: ''
+         uiRequiredRoles:
+         - permAdmin
+       # Только для новых пользователей
+       default_permissions:
+         open_pro_ui: true
+         assets: ['*']
+         territories: ['*']
+         add_user_assets:
+           allow: true
+           quantity: 1000
+           file_size: 100
+         isochrones: 1000
+
+   authProvider:
+     schema: Basic
+     host: https://pro-api-permissions.example.com
+     allowedHosts:
+     - ['*']
+     # Если в параметре authProvider.schema указано значение Basic
+     basic:
+       users:
+       - username: 'admin'
+         password: 'password'
+         roles:
+         - 'permAdmin'
+     # Если в параметре authProvider.schema указано значение Oidc
+     oidc:
+       authority: ''
+       clientId: ''
+       clientSecret: ''
+       nameClaim: ''
+       roleClaim: ''
+
+   license:
+     url: 'https://license.svc'
+
+   s3:
+     assetsDataBucket: 'pro-assets'
+     userAssetsDataBucket: 'pro-userassets'
+     layerDataBucket: 'pro-layers'
+     snapshotBucket: 'pro-snapshot'
+     resourcesBucket: 'pro-resources'
+
+   postgres:
+     api:
+       rw:
+         host: 'pro-postgresql.storage.example.local'
+         port: 5432
+         name: 'onpremise_pro'
+         username: 'dbuser_pro'
+         password: ''
+       ro: {}
+     tasks:
+       rw:
+         host: 'pro-postgresql.storage.example.local'
+         port: 5432
+         name: 'onpremise_pro_tasks'
+         username: 'dbuser_pro'
+         password: ''
+       ro: {}
+     permissions:
+       rw:
+         host: 'pro-postgresql.storage.example.local'
+         port: 5432
+         name: 'onpremise_pro'
+         username: 'dbuser_pro'
+         password: ''
+       ro: {}
+
+   kafka:
+     bootstrapServers: 'kafka:9092'
+     securityProtocol: SaslPlaintext
+     createTopics: true
+     sasl:
+       mechanism: Plain
+       username: kafka-user
+       password: kafka-password
+     assetTopicsReaderGroupId: pro.asset.gr
+     importTasksTopic:
+       name: pro.tasks
+       readerGroupId: pro.import.gr
+     assetDataTopic:
+       name: pro.assetdata
+     permissionsTopic:
+       name: pro.permissions
+       readerGroupId: pro.permissions.gr
+     eventsTopic:
+       name: pro.events
+       readerGroupId: pro.events.gr
+     refreshAssetsIntervalMinutes: 60
+
+   elastic:
+     username: ''
+     password: ''
+     secure: false
+     nodes:
+       - port: 9200
+         host: pro-elastic.storage.example.local
+
+   redis:
+     host: 'redis.svc'
+     port: '6379'
+
+   catalog:
+     url: 'http://catalog-api.svc'
+     key: ''
+
+   navi:
+     url: 'http://navi-front.svc'
+     key: ''
+
+   search:
+     url: 'http://search-api.svc'
+
+   assetImporter:
+     appName: asset-importer
+     repository: 2gis-on-premise/pro-importer
+     schedule: 0 18 * * *
+     backoffLimit: 2
+     successfulJobsHistoryLimit: 3
+     failedJobsHistoryLimit: 3
+     nodeSelector: {}
+     settings:
+       maxParallelJobs: 4
+     startOnDeploy: true
+   ```
+
+   </details>
+
+   Где:
+
+   * `dgctlDockerRegistry`: endpoint вашего реестра Docker, в котором находятся образы сервисов программного комплекса <Brand /> в формате `HOST:PORT`.
+
+   * `dgctlStorage`: настройки доступа к хранилищу артефактов установки.
+
+      * `host`: endpoint S3-совместимого хранилища артефактов установки в формате `HOST:PORT`.
+      * `secure`: использовать ли HTTPS для работы с S3-совместимым хранилищем. Значение по умолчанию: `false`.
+      * `bucket`: имя бакета S3.
+      * `accessKey`: идентификатор ключа для доступа к бакету S3.
+      * `secretKey`: секретный ключ для доступа к бакету S3.
+      * `manifest`: путь до файла с манифестом в формате `manifests/pro/1640661259.json`. Этот файл содержит в себе описания фрагментов данных, которые требуются сервисам для работы. См. [Жизненный цикл артефактов установки](/on-premise-pro/overview/lifecycle).
+      * `region`: регион S3-совместимого хранилища.
+      * `disablePayloadSigning`: отключить ли проверку целостности данных. Если S3-совместимое хранилище не поддерживает AWS Signature Version 4 streaming, значение должно быть `true`. Значение по умолчанию: `false`.
+
+   * `api`: переменные окружения.
+
+      * `ingress`: конфигурация ресурса [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). Адаптируйте приведённую конфигурацию для используемого вами Ingress. **URL, указанный в параметре `api.ingress.hosts.host`, должен быть доступен извне вашего кластера Kubernetes, чтобы пользователи из приватного сегмента сети могли получить доступ к ресурсам по этому URL.**
+         * `annotations`: [аннотации Kubernetes](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md), предназначенные для настройки поведения nginx Ingress-контроллера.
+      * `pod.imagePullSecrets`: [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/#using-imagepullsecrets) для доступа к реестру Docker, в котором находятся образы сервисов программного комплекса <Brand />.
+      * `pod.resources`: настройки вычислительных ресурсов для сервиса. Чтобы узнать рекомендуемые значения ресурсов, см. [Вычислительные ресурсы](/on-premise-pro/install/requirements#resources).
+      * `settings.licenseKey`: ключ лицензии On-Premise.
+      * `settings.corsOrigins`: политика CORS. Если значение пустое, любому источнику разрешается выполнять запросы к сервису Pro API.
+      * `settings.auth`: настройки сервиса аутентификации.
+         * `url`: URL сервиса аутентификации.
+         * `apiKey`: API-ключ для доступа к сервису аутентификации.
+         * `type`: тип аутентификации. Возможные значения: `openid10` для протокола [OpenId 1.0/OAuth 2.0](https://openid.net/specs/openid-connect-core-1_0.html); `urbi` для внутреннего протокола Urbi.
+         * `userInfoEndpoint`: путь к endpoint-у [Userinfo](https://openid.net/specs/openid-connect-core-1_0.html#UserInfo).
+         * `autoRegisterUsers`: регистрировать ли новых пользователей автоматически при первом входе.
+         * `shareKeys`: один или несколько секретных ключей для генерации защищённых ссылок или валидации уже существующих. Для генерации используется последний указанный в параметре ключ. Длина ключа должна быть не меньше 32 символов.
+
+   * `permissions`: настройки Permissions API.
+
+      * `ingress`: конфигурация ресурса [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) для Permissions API. Адаптируйте приведённую конфигурацию для используемого вами Ingress. **URL, указанный в параметре `permissions.ingress.hosts.host`, должен быть доступен извне вашего кластера Kubernetes.**
+
+         * `enabled`: включить ли Ingress для сервиса.
+         * `className`: имя класса Ingress-контроллера.
+         * `hosts[0].host`: доменное имя для Ingress.
+         * `hosts[0].paths[0].path`: путь для Ingress.
+         * `hosts[0].paths[0].pathType`: тип пути для Ingress.
+         * `tls`: конфигурация TLS.
+
+      * `settings.auth.apiKey`: ключ доступа к Permissions API для выполнения авторизованных действий.
+      * `settings.auth.uiRequiredRoles`: роли пользователей, необходимые для доступа к Permissions UI. Значения должны совпадать с ролями, определёнными в конфигурации `authProvider`.
+      * `settings.default_permissions`: настройки доступа по умолчанию для новых пользователей.
+
+         * `open_pro_ui`: доступ к Pro UI. Значение по умолчанию: `true`.
+         * `assets`: список идентификаторов системных наборов данных, к которым предоставляется доступ. Значение `['*']` предоставляет доступ ко всем наборам данных.
+         * `territories`: список идентификаторов территорий, к которым предоставляется доступ. Значение `['*']` предоставляет доступ ко всем территориям.
+         * `add_user_assets`: блок настроек, который управляет возможностью добавления пользовательских наборов данных новыми пользователями.
+         * `isochrones`: максимальное количество зон доступности, которые может создать пользователь.
+
+   * `authProvider`: настройки поставщика аутентификации для Permissions UI.
+
+      * `host`: адрес хоста поставщика аутентификации. Должен указывать на URL Permissions Ingress.
+      * `schema`: схема аутентификации. Поддерживаемые значения: `Basic`, `Oidc`. Подробнее о настройке OIDC-поставщика см. в разделе [Настройка внешнего поставщика аутентификации](/on-premise-pro/install/authentication).
+      * `allowedHosts`: список разрешённых хостов. Значение `['*']` предоставляет доступ со всех хостов.
+      * `basic`: настройки базовой аутентификации. Используется, если в параметре `authProvider.schema` указано `Basic`.
+
+         * `users[0].username`: имя пользователя.
+         * `users[0].password`: пароль пользователя.
+         * `users[0].roles`: роли, назначаемые пользователю. Могут быть любыми. Параметры `permissions.settings.auth.uiRequiredRoles` и `tasks.settings.auth.adminRequiredRoles` должны ссылаться на роли, определённые здесь.
+
+      * `oidc`: настройки аутентификации по протоколу OIDC. Используется, если в параметре `authProvider.schema` указано `Oidc`.
+
+         * `authority`: URL OIDC-поставщика.
+         * `clientId`: идентификатор клиента, зарегистрированного у OIDC-поставщика.
+         * `clientSecret`: секрет клиента OIDC-поставщика.
+         * `nameClaim`: название утверждения (claim), содержащего имя пользователя. Точное название зависит от конфигурации OIDC-поставщика.
+         * `roleClaim`: название утверждения (claim), содержащего роли пользователя. Точное название зависит от конфигурации OIDC-поставщика.
+
+   * `license.url`: URL сервиса лицензий.
+
+   * `s3`: настройки доступа к S3-совместимому хранилищу.
+
+      * `assetsDataBucket`: имя бакета S3 с подготовленными наборами данных, агрегатами и фильтрами.
+      * `userAssetsDataBucket`: имя бакета S3 с наборами данных, агрегатами и фильтрами, созданными пользователем.
+      * `layerDataBucket`: имя бакета S3 с подготовленными данными слоя.
+      * `snapshotBucket`: имя бакета S3 для хранения снапшотов пошагового обновления данных.
+      * `resourcesBucket`: имя бакета S3 для хранения статичных ресурсов.
+
+   * `postgres`: настройки PostgreSQL.
+
+      * `api`: настройки доступа к базе данных `onpremise_pro` для чтения и записи (`postgres.api.rw`) или только для чтения (`postgres.api.ro`).
+
+         * `host`: имя или IP-адрес хоста.
+         * `port`: номер порта.
+         * `name`: имя базы данных.
+         * `username`: имя пользователя базы данных.
+         * `password`: пароль пользователя базы данных.
+
+      * `tasks`: настройки доступа к базе данных `onpremise_pro_tasks` микросервиса для управления фоновыми задачами для чтения и записи (`postgres.tasks.rw`) или только для чтения (`postgres.tasks.ro`). Набор параметров аналогичен группе `postgres.api`, но используется отдельная база данных.
+
+      * `permissions`: настройки доступа к базе данных `onpremise_pro` микросервиса для управления правами доступа (Permissions API) для чтения и записи (`postgres.permissions.rw`) или только для чтения (`postgres.permissions.ro`). Набор параметров аналогичен группе `postgres.api`, и используется та же база данных.
+
+   * `kafka`: настройки Apache Kafka.
+
+      * `bootstrapServers`: endpoints брокера Kafka. Пример: `HOST1:PORT1,HOST2:PORT2`.
+
+      * `securityProtocol`: протокол безопасности Kafka. Доступные значения: `Plaintext`, `SaslPlaintext`.
+
+      * `createTopics`: включить автоматическое создание топиков или нет.
+
+      * `sasl`: настройки [SASL](https://kafka.apache.org/documentation/#security_sasl_config).
+
+         * `mechanism`: механизм SASL. Доступные значения: `Plain`, `ScramSha256`, `ScramSha512`.
+         * `username`: имя пользователя SASL.
+         * `password`: пароль пользователя SASL.
+
+      * `assetTopicsReaderGroupId`: ID потребительской группы Kafka для чтения данных из стриминговых наборов данных.
+
+      * `importTasksTopic`: настройки топика Kafka для задач импорта пользовательских наборов данных.
+
+         * `name`: название топика.
+         * `readerGroupId`: ID потребительской группы Kafka для чтения задач импорта.
+
+      * `assetDataTopic`: настройки топика Kafka для объектов в пользовательских наборах данных.
+
+         * `name`: название топика.
+
+      * `permissionsTopic`: настройки топика Kafka для чтения событий, связанных с изменениями прав доступа.
+
+         * `name`: название топика.
+         * `readerGroupId`: ID потребительской группы Kafka для чтения данных о правах доступа.
+
+     * `eventsTopic`: настройки топика Kafka для событий.
+
+         * `name`: название топика.
+         * `readerGroupId`: ID потребительской группы Kafka для чтения событий.
+
+     * `refreshAssetsIntervalMinutes`: интервал обновления настроек для стриминговых наборов данных в минутах.
+
+   * `elastic`: настройки Elasticsearch.
+
+      * `username`: имя пользователя Elasticsearch.
+      * `password`: пароль пользователя Elasticsearch.
+      * `secure`: использовать ли HTTPS для работы с Elasticsearch. Значение по умолчанию: `false`.
+      * `nodes[0].host`: адрес хоста Elasticsearch.
+      * `nodes[0].port`: номер порта Elasticsearch.
+
+   * `redis`: настройки Redis.
+
+      * `host`: адрес хоста Redis. Пример: `HTTP(S)://HOST`.
+      * `port`: номер порта.
+
+   * `catalog`: настройки доступа к [Catalog APIs](/on-premise-api-platform/architecture/api-platform/search).
+
+      * `url`: URL-адрес [Catalog APIs](/on-premise-api-platform/architecture/api-platform/search). Пример: `HTTP(S)://HOST`.
+      * `key`: ключ доступа к [Catalog APIs](/on-premise-api-platform/architecture/api-platform/search).
+
+   * `navi`: настройки доступа к [Isochrone API](/api/navigation/isochrone/overview).
+
+      * `url`: URL-адрес [Isochrone API](/api/navigation/isochrone/overview). Пример: `HTTP(S)://HOST`.
+      * `key`: ключ доступа к [Isochrone API](/api/navigation/isochrone/overview).
+
+   * `search`: настройки доступа к [Search API](/on-premise-api-platform/architecture/api-platform/search).
+
+      * `url`: URL-адрес [Search API](/on-premise-api-platform/architecture/api-platform/search). Пример: `HTTP(S)://HOST`.
+
+   * `assetImporter`: настройки cron-задания для импорта данных.
+
+      * `appName`: имя cron-задания для импорта данных.
+      * `repository`: адрес репозитория с Docker-образом.
+      * `schedule`: расписание выполнения задания в [cron-формате](https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#schedule). Например: `*/10 * * * *`.
+      * `backoffLimit`: количество [повторных попыток](https://kubernetes.io/docs/concepts/workloads/controllers/job/#pod-backoff-failure-policy), после которых задание будет считаться неуспешным.
+      * `successfulJobsHistoryLimit`: ограничение на размер истории выполненных заданий.
+      * `failedJobsHistoryLimit`: ограничение на размер истории невыполненных заданий.
+      * `nodeSelector`: [селектор узлов](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) Kubernetes.
+      * `settings.maxParallelJobs`: количество заданий импорта, которые могут быть запущены одновременно.
+      * `startOnDeploy`: импорт данных должен начинаться при установке или обновлении сервиса.
+
+2. Установите сервис с помощью Helm, используя подготовленный конфигурационный файл `values-pro-api.yaml`:
+
+   ```bash
+   helm upgrade --install --version=VERSION --atomic --wait --timeout 3600s --values ./values-pro-api.yaml pro-api 2gis-on-premise/pro-api
+   ```
+
+   В параметре `--version` укажите нужную версию <Brand /> Про. Список версий см. в разделе [Релизы <Brand /> Про](/on-premise-pro/releases).
+
+   :::warning
+
+   Версии сервисов внутри компонента должны быть одинаковыми и совпадать с версией компонента.
+
+   :::
+
+### Установите Pro UI {#install-pro-ui}
+
+1. Создайте конфигурационный файл для Helm. Подробное описание доступных параметров см. [здесь](https://github.com/2gis/on-premise-helm-charts/blob/master/charts/pro-ui/README.md).
+
+   Пример файла уже заполнен всеми необходимыми данными, собранными на предыдущих этапах.
+
+   <details>
+   <summary><code>values-pro-ui.yaml</code></summary>
+
+   ```yaml
+   dgctlDockerRegistry: docker.registry.example.com
+
+   imagePullSecrets: [onpremise-registry-creds]
+
+   dgctlStorage:
+     host: artifacts.example.com
+     secure: true
+     bucket: onpremise-artifacts
+     accessKey: AKIAIOSFODNN7EXAMPLE
+     secretKey: wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+     manifest: manifests/pro/1640661259.json
+     region: ''
+     disablePayloadSigning: false
+
+   ui:
+     auth:
+       sso: true
+       secure: true
+     appTheme: 2gis
+     appLocale: ru_RU
+     whiteLabel:
+       configUrl: "/static/theme/pro.json"
+     appInitialMapCenter: '[37.64, 55.74]'
+     publicS3Url: https://artifacts.example.com/
+     styles:
+       s3Bucket: 'pro-ui-styles'
+       configUrl: 'https://artifacts.example.com/pro-ui-styles/config/production/styleConfig.json'
+     api:
+       url: 'https://pro-api.example.com/'
+     mapgl:
+       host: 'mapgl-js-api.example.com'
+       key: ''
+       styleUrl: 'https://artifacts.example.com/pro-ui-styles/styles/default/'
+       stylePreview: ''
+
+   resources:
+     requests:
+       cpu: 300m
+       memory: 256Mi
+     limits:
+       cpu: 1
+       memory: 384Mi
+
+   ingress:
+     enabled: true
+     className: nginx
+     hosts:
+     - host: pro-ui.example.com
+       paths:
+       - path: /
+         pathType: Prefix
+     tls: []
+     # - hosts:
+     #   - pro-ui.example.com
+     #   secretName: secret.tls
+
+   stylesImporter:
+     startOnDeploy: true
+   ```
+
+   </details>
+
+   Где:
+
+   * `dgctlDockerRegistry`: endpoint вашего реестра Docker, в котором находятся образы сервисов программного комплекса <Brand /> в формате `HOST:PORT`.
+
+   * `imagePullSecrets`: [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/#using-imagepullsecrets) для доступа к реестру Docker, в котором находятся образы сервисов программного комплекса <Brand />.
+
+   * `dgctlStorage`: настройки доступа к хранилищу артефактов установки.
+
+      * `host`: endpoint S3-совместимого хранилища артефактов установки в формате `HOST:PORT`.
+      * `secure`: использовать ли HTTPS для работы с S3-совместимым хранилищем. Значение по умолчанию: `false`.
+      * `bucket`: имя бакета S3.
+      * `accessKey`: идентификатор ключа для доступа к бакету S3.
+      * `secretKey`: секретный ключ для доступа к бакету S3.
+      * `manifest`: путь до файла с манифестом в формате `manifests/pro/1640661259.json`. Этот файл содержит в себе описания фрагментов данных, которые требуются сервисам для работы. См. [Жизненный цикл артефактов установки](/on-premise-pro/overview/lifecycle).
+      * `region`: регион S3-совместимого хранилища.
+      * `disablePayloadSigning`: отключить ли проверку целостности данных. Если S3-совместимое хранилище не поддерживает AWS Signature Version 4 streaming, значение должно быть `true`. Значение по умолчанию: `false`.
+
+   * `ui`: настройки приложения.
+
+      * `auth`: настройки аутентификации.
+
+         * `sso`: включить ли аутентификацию по технологии единого входа (SSO). Значение по умолчанию: `true`.
+         * `secure`: использовать ли HTTPS для работы с аутентификацией. Значение по умолчанию: `true`.
+
+      * `appTheme`: брендирование внутри приложения.
+      * `appLocale`: язык приложения по умолчанию.
+      * `whiteLabel.configUrl`: URL конфигурационного файла для настройки пользовательского логотипа, фавиконки и других. Пример: `/static/theme/pro.json`.
+      * `appInitialMapCenter`: координаты карты по умолчанию в формате `[lng, lat]`. Пример: `[37.64, 55.74]` для Москвы.
+      * `publicS3Url`: URL публичного S3-совместимого хранилища, в котором будут размещены стили.
+      * `styles`: настройки стилей карты.
+
+         * `s3Bucket`: имя бакета S3 для стилей. Бакет должен быть публичным и иметь настроенный [CORS](https://developer.mozilla.org/ru/docs/Web/HTTP/CORS).
+         * `configUrl`: URL конфигурационного файла для стилей. Пример: `https://artifacts.example.com/pro-ui-styles/config/production/styleConfig.json`.
+
+      * `api.url`: базовый URL для Pro API со слэшем в конце. Пример: `HTTP(S)://HOST/`.
+      * `mapgl`: настройки сервиса [MapGL JS API](/on-premise-api-platform/architecture/api-platform/maps).
+
+         * `host`: хост сервиса MapGL JS API без протокола и без слэша в конце.
+         * `key`: ключ доступа для сервиса MapGL JS API.
+         * `styleUrl`: путь к директории с конфигурационным файлом (`styles.json`) для управления стилями карты. Пример: `https://artifacts.example.com/pro-ui-styles/styles/default/`.
+         * `stylePreview`: URL для миниатюры изображения, которая будет отображаться в менеджере стилей карты для стиля по умолчанию.
+
+   * `resources`: настройки вычислительных ресурсов для сервиса. Чтобы узнать рекомендуемые значения ресурсов, см. [Вычислительные ресурсы](/on-premise-pro/install/requirements#resources).
+
+   * `ingress`: конфигурация ресурса [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). Адаптируйте приведённую конфигурацию для используемого вами Ingress. **URL, указанный в параметре `ingress.hosts.host`, должен быть доступен извне вашего кластера Kubernetes, чтобы пользователи из приватного сегмента сети могли получить доступ к ресурсам по этому URL.**
+
+   * `stylesImporter.startOnDeploy`: включить ли импорт собственных стилей для Про при установке или обновлении сервиса.
+
+2. Установите сервис с помощью Helm, используя подготовленный конфигурационный файл `values-pro-ui.yaml`:
+
+   ```bash
+   helm upgrade --install --version=VERSION --atomic --values ./values-pro-ui.yaml pro-ui 2gis-on-premise/pro-ui
+   ```
+
+   В параметре `--version` укажите нужную версию <Brand /> Про. Список версий см. в разделе [Релизы <Brand /> Про](/on-premise-pro/releases).
+
+   :::warning
+
+   Версии сервисов внутри компонента должны быть одинаковыми и совпадать с версией компонента.
+
+   :::
+
+## 4. Проверьте работоспособность установленных сервисов {#test}
+
+Выполните запрос с использованием cURL или аналогичного инструмента:
+
+```bash
+curl -X 'GET' \
+  'https://PRO-API/items/1,14,164' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer TOKEN' # Или см. settings.auth.apiKey
+```
+
+Для авторизации используйте Bearer-токен или см. установленное значение параметра `settings.auth.apiKey` в [конфигурационном файле Pro API](#install-pro-api).
+
+Ответ должен иметь код состояния `HTTP 200` и содержать список элементов в формате JSON.
+
+## 5. Настройте аутентификацию пользователей
+
+Настройте [внешнего поставщика OpenID Connect (OIDC)](/on-premise-pro/install/authentication) для аутентификации конечных пользователей в <Brand /> Про.
+
+## 6. После установки
+
+После установки <Brand /> Про в вашем контуре и настройки доступов конечные пользователи могут начать работу с продуктом.
+
+Подробные инструкции см. в [Руководстве пользователя](/pro/overview).
+
+:::note[Доступность наборов данных]
+
+Некоторые системные наборы данных могут быть доступны только в облачной версии <Brand /> Про. Подробнее см. в описании [Системных данных](/pro/data/overview).
+
+:::
+
+## Что дальше? {#whats-next}
+
+* Узнайте, как [обновить <Brand /> Про](/on-premise-pro/update).
+
+* Установите другие продукты программного комплекса <Brand />:
+
+   * [<Brand /> Ситискан](/on-premise-citylens/install/installation),
+   * [мобильный SDK](/on-premise-api-platform/api-platform/install/mobilesdk),
+   * [GIS-платформа](/on-premise-gis-platform/install/installation),
+   * [прокси для API пробок](/on-premise-api-platform/api-platform/install/trafficproxy),
+   * [Менеджер Платформы](/on-premise-api-platform/api-platform/install/platform).
+
+* Изучите рекомендации по [обслуживанию системы](/on-premise-pro/administering).

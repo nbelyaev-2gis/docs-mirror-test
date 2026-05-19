@@ -1,0 +1,12 @@
+.link {
+  font-weight: var(--fw-m);
+  font-size: var(--fs-md);
+  line-height: var(--lh-md);
+  color: var(--text-main);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--text-link-hover);
+    text-decoration: none;
+  }
+}

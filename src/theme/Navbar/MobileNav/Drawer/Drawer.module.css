@@ -1,0 +1,160 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  top: var(--navbar-height);
+  z-index: calc(var(--ifm-z-index-fixed) - 2);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.drawer {
+  position: fixed;
+  top: var(--navbar-height);
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: calc(var(--ifm-z-index-fixed) - 1);
+  background-color: var(--shape-base);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.08);
+  padding: var(--gap-2m) 0;
+}
+
+.drawerControls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-1m);
+  padding: var(--gap-2m) var(--gap-4m);
+}
+
+.drawerControlButton {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2m);
+  padding: var(--gap-2m);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: var(--fs-md);
+  line-height: var(--lh-md);
+  color: var(--text-main);
+  border-radius: var(--border-radius-md);
+  text-decoration: none;
+
+  &:hover {
+    background-color: var(--shape-level-1);
+    text-decoration: none;
+    color: var(--text-main);
+  }
+}
+
+.backIcon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-main);
+  flex-shrink: 0;
+}
+
+.serviceGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.serviceGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gap-3m) var(--gap-4m);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-m);
+  line-height: var(--lh-md);
+  color: var(--text-main);
+  text-align: left;
+  width: 100%;
+
+  &:hover {
+    background-color: var(--shape-level-1);
+  }
+}
+
+.serviceGroupChevron {
+  width: 24px;
+  height: 24px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.serviceGroupChevronOpen {
+  transform: rotate(180deg);
+}
+
+.serviceGroupContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionLabel {
+  padding: var(--gap-1m) var(--gap-4m) var(--gap-1m) var(--gap-6m);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-secondary);
+}
+
+.nestedLink {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--gap-2m) var(--gap-4m) var(--gap-2m) var(--gap-6m);
+  text-decoration: none;
+  color: var(--text-main);
+
+  &:hover {
+    background-color: var(--shape-level-1);
+    text-decoration: none;
+    color: var(--text-main);
+  }
+}
+
+.allServicesLinkNested {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-1m);
+  padding: var(--gap-3m) var(--gap-4m);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-m);
+  line-height: var(--lh-md);
+  color: var(--text-blue-1);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: none;
+    color: var(--text-blue-1);
+    background-color: var(--shape-level-1);
+  }
+}
+
+.allServicesChevron {
+  width: 24px;
+  height: 24px;
+  color: var(--text-blue-1);
+  flex-shrink: 0;
+}
+
+.managementSection {
+  display: flex;
+  flex-direction: column;
+  padding: var(--gap-2m) 0;
+}
+
+.managementSectionLabel {
+  padding: var(--gap-1m) var(--gap-4m);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-secondary);
+}

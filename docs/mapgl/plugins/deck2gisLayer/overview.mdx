@@ -1,0 +1,183 @@
+---
+sidebar: mapgljsapi
+---
+# Начало работы
+
+Плагин [deck2gisLayer](https://github.com/2gis/deck2gisLayer) позволяет отрисовывать слои deck.gl на карте MapGL JS API.
+
+Чтобы добавить слой deck.gl:
+
+1. [Подключите плагин `deck2gisLayer` и фреймворк `deck.gl` к своему проекту](#install-plugin).
+2. [Инициализируйте deck.gl](#initialize-deckgl).
+3. [Создайте слой](#create-layer).
+4. [Добавьте слой на карту](#add-layer).
+
+Чтобы работать с несколькими слоями на карте одновременно, см. инструкцию [Работа с несколькими слоями](/mapgl/plugins/deck2gisLayer/deck-layers).
+
+## 1. Подключите плагин {#install-plugin}
+
+### При помощи тега script
+
+После подключения карты добавьте следующие строки в код HTML-страницы:
+
+```html
+<script src="__MAPGL_PLUGIN_DECK2GIS-LAYER_URL__"></script>
+<script src="__DECKGL_URL__"></script>
+```
+
+### При помощи npm
+
+Если вы используете npm, подключите библиотеку с помощью пакета [@2gis/deck2gis-layer](https://www.npmjs.com/package/@2gis/deck2gis-layer):
+
+```bash
+npm install @2gis/deck2gis-layer @deck.gl/core @deck.gl/layers
+```
+
+:::note[Совместимость версий]
+
+Текущая версия плагина `deck2gisLayer` совместима только с версией `deck.gl@^8`.
+
+:::
+
+## 2. Инициализируйте deck.gl {#initialize-deckgl}
+
+Чтобы создать экземпляр deck.gl, инициализируйте его с помощью функции `initDeck()`, которая связывает его с картой:
+
+```js
+import { Deck } from '@deck.gl/core';
+import { Deck2gisLayer, initDeck } from '@2gis/deck2gis-layer';
+
+const deck = initDeck(map, Deck, { antialiasing: 'msaa' });
+```
+
+## 3. Создайте слой {#create-layer}
+
+Чтобы создать слой deck.gl, используйте [Deck2gisLayer](/mapgl/plugins/deck2gisLayer/reference/class#deck2gis-layer).
+
+Например, вы можете создать слой [HexagonLayer](https://deck.gl/docs/api-reference/aggregation-layers/hexagon-layer), который визуализирует данные в виде тепловой карты, состоящей из гексагонов. Цвет и высота гексагона зависят от объектов, которые он содержит.
+
+Пример создания слоя `HexagonLayer`:
+
+```js
+import { HexagonLayer } from '@deck.gl/aggregation-layers/typed';
+
+const data = [
+    {
+        point: {
+            lon: 37.615655,
+            lat: 55.768005,
+        },
+    },
+];
+
+const deckHexagonLayer = new Deck2gisLayer({
+    id: 'deckgl-HexagonLayer',
+    deck,
+    type: HexagonLayer,
+    data,
+    radius: 250,
+    getPosition: (d) => [d.point.lon, d.point.lat],
+});
+```
+
+Где:
+
+* `point` — координаты точек с данными.
+* `id` — идентификатор слоя. Должен быть уникальным в рамках всех слоёв стиля карты.
+* `deck` — экземпляр [Deck](https://deck.gl/docs/api-reference/core/deck), который управляет визуализацией слоя.
+* `type` — тип слоя ([Layer](https://deck.gl/docs/api-reference/layers)) из deck.gl.
+* `radius` — радиус гексагона в метрах.
+* `getPosition` — метод для вычисления координат объектов.
+
+Более подробную информацию о параметрах см. в [документации deck.gl](https://deck.gl/docs/api-reference/layers) к каждому слою.
+
+## 4. Добавьте слой {#add-layer}
+
+Перед добавлением слоя на карту стиль карты должен быть загружен, иначе он перезапишет предыдущий стиль и удалит добавленные слои. Используйте обработчик события `styleload`, который срабатывает каждый раз после установки нового стиля:
+
+```js
+map.on('styleload', () => {
+    map.addLayer(deckHexagonLayer);
+});
+```
+
+Подробнее см. в инструкции [Дополнение текущего стиля карты «на лету»](/mapgl/map-style/modify).
+
+## Пример использования {#usage-example}
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Плагин deck2gisLayer" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 900px;
+            height: 550px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="__MAPGL_API_URL__"></script>
+    <script src="__MAPGL_PLUGIN_DECK2GIS-LAYER_URL__"></script>
+    <script src="__DECKGL_URL__"></script>
+
+    <div id="container"></div>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [37.615655, 55.768005],
+            zoom: 13,
+            key: 'Your API access key',
+        });
+        const deckgl = mapgl.Deck2gisLayer.initDeck(map, deck.Deck, { antialiasing: 'msaa' });
+        const data = [
+            {
+                point: {
+                    lon: 37.615655,
+                    lat: 55.768005,
+                },
+            },
+            {
+                point: {
+                    lon: 37.615427,
+                    lat: 55.768484,
+                },
+            },
+            {
+                point: {
+                    lon: 37.617814,
+                    lat: 55.760535,
+                },
+            },
+            {
+                point: {
+                    lon: 37.617814,
+                    lat: 55.760535,
+                },
+            },
+        ];
+        const deckHexagonLayer = new mapgl.Deck2gisLayer({
+            id: 'deckgl-HexagonLayer',
+            deck: deckgl,
+            type: deck.HexagonLayer,
+            data,
+            radius: 480,
+            getPosition: (d) => [d.point.lon, d.point.lat],
+        });
+        map.once('styleload', () => {
+            map.addLayer(deckHexagonLayer);
+        });
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>

@@ -1,0 +1,23 @@
+.button {
+  padding: 0;
+  width: 40px;
+  flex-shrink: 0;
+
+  &:not(:disabled) {
+    color: var(--text-blue-1) !important;
+  }
+
+  &:hover {
+    color: var(--shape-blue-dark-2) !important;
+  }
+
+  &:active {
+    color: var(--shape-blue-dark-3) !important;
+  }
+
+  &:hover,
+  &:active {
+    background-color: unset !important;
+    border: none;
+  }
+}

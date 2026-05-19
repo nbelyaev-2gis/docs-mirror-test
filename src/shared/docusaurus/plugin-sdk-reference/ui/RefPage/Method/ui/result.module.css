@@ -1,0 +1,15 @@
+.docTitle {
+  min-width: 100px;
+
+  &.gray {
+    color: var(--secondary);
+  }
+}
+
+.docItem {
+  overflow-wrap: anywhere;
+}
+
+.docItem + .docItem {
+  margin-top: 15px;
+}

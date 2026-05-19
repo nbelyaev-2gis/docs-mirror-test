@@ -1,0 +1,50 @@
+---
+sidebar: iossdk
+---
+# UIKit
+
+## Карта
+
+Все варианты поставки SDK содержат стандартный набор UI-элементов для управления картой, которые вы можете добавить в иерархию и использовать для управления параметрами карты.
+
+Процесс создания и добавления `Map` подробно описан в разделе [Создание карты](/ios/sdk/examples/map#creating-map).
+
+Все перечисленные ниже элементы для удобства объединены в [IMapControlFactory](/ios/sdk/reference/stable/IMapControlFactory) и [IRoadEventCardViewFactory](/ios/sdk/reference/stable/IRoadEventCardViewFactory).
+
+Стандартный набор включает в себя:
+
+<img src="/img/mobile-sdk/ios_map_controls_1.png" width="200" /> <img src="/img/mobile-sdk/ios_map_controls_2.png" width="200" /> <img src="/img/mobile-sdk/ios_map_controls_3.png" width="200" />
+
+1. [IndoorControl](/ios/sdk/reference/stable/IndoorControl) для переключения этажей.
+2. [TrafficControl](/ios/sdk/reference/stable/TrafficControl) для управления видимостью пробок на карте.
+3. [ZoomControl](/ios/sdk/reference/stable/ZoomControl) для масштабирования.
+4. [CreateRoadEventControl](/ios/sdk/reference/stable/CreateRoadEventControl) для добавления дорожного события.
+5. [CompassControl](/ios/sdk/reference/stable/CompassControl) для отображения текущего угла поворота карты относительно севера.
+6. [CurrentLocationControl](/ios/sdk/reference/stable/CurrentLocationControl) для перелёта к текущему местоположению пользователя.
+7. [CreateRoadEventView](/ios/sdk/reference/stable/IRoadEventCardViewFactory) для описания нового дорожного события.
+8. [RoadEventCardView](/ios/sdk/reference/stable/IRoadEventCardViewFactory) для просмотра информации о дорожном событии.
+
+## Навигатор
+
+Полный вариант поставки SDK содержит набор UI-элементов для отображения и управления навигацией. Для удобства все элементы объединены в [INavigationMapControlsFactory](/ios/sdk/reference/stable/INavigationMapControlsFactory) и [INavigationViewControlsFactory](/ios/sdk/reference/stable/INavigationViewControlsFactory). Способ их использования и добавления описан в разделе [Навигатор](/ios/sdk/examples/navigation).
+
+Набор UI-элементов навигации состоит из:
+
+<img src="/img/mobile-sdk/ios_navi_controls_1.png" width="200" /> <img src="/img/mobile-sdk/ios_navi_controls_2.png" width="200" />
+
+1. [ThermometerControl](/ios/sdk/reference/stable/INavigationViewControlsFactory#nav-lvl1--makeThermometerControl) для отображения уровня пробок на маршруте.
+2. [NextManeuverControl](/ios/sdk/reference/stable/INavigationViewControlsFactory#nav-lvl1--makeNextManeuverControl) для отображения информации о следующем манёвре.
+3. [SpeedControl](/ios/sdk/reference/stable/INavigationViewControlsFactory#nav-lvl1--makeSpeedControl) для отображения текущей скорости и скоростного ограничения.
+4. [TrafficAndParkingMapControl](/ios/sdk/reference/stable/INavigationMapControlsFactory#nav-lvl1--makeTrafficAndParkingMapControl) для управления видимостью пробок и парковок на карте.
+5. [ZoomControl](/ios/sdk/reference/stable/INavigationMapControlsFactory#nav-lvl1--makeZoomControl) для масштабирования (приближения и удаления) карты.
+6. [CompassControl](/ios/sdk/reference/stable/INavigationMapControlsFactory#nav-lvl1--makeCompassControl) для отображения текущего угла поворота карты относительно севера.
+7. [NavigationFollowingControl](/ios/sdk/reference/stable/INavigationMapControlsFactory#nav-lvl1--makeNavigationFollowingControl) для управления слежением за маркером местоположения.
+8. [RemainingRouteInfoControl](/ios/sdk/reference/stable/INavigationViewControlsFactory#nav-lvl1--makeRemainingRouteInfoControl) для отображения информации в режиме [ведения по маршруту](/ios/sdk/examples/navigation#turn-by-turn-mode).
+
+<img src="/img/mobile-sdk/ios_navi_controls_3.png" width="200" /> <img src="/img/mobile-sdk/ios_navi_controls_4.png" width="200" /> <img src="/img/mobile-sdk/ios_navi_controls_5.png" width="200" />
+
+9. [RemainingRouteInfoControl](/ios/sdk/reference/stable/INavigationViewControlsFactory#nav-lvl1--makeRemainingRouteInfoControl) для отображения информации в режиме [свободной навигации](/ios/sdk/examples/navigation#free-drive-mode).
+10. [RemainingRouteInfoControl](/ios/sdk/reference/stable/INavigationViewControlsFactory#nav-lvl1--makeRemainingRouteInfoControl) для отображения информации в режиме [навигации внутри зданий](/ios/sdk/examples/navigation#indoor-navigation).
+11. [IndoorControl](/ios/sdk/reference/stable/INavigationMapControlsFactory#nav-lvl1--makeIndoorControl) для выделения этажей, через которые проходит маршрут.
+
+

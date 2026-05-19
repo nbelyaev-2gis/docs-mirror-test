@@ -1,0 +1,121 @@
+---
+sidebar: mapgljsapi
+---
+# Глобус
+
+Вы можете настроить вид карты так, чтобы при достаточно большом отдалении плоская карта превращалась в глобус. Если режим глобуса включён, он действует на 2-8 уровне масштабирования. Вы можете настроить работу глобуса в зависимости от [графического режима](#configure-in-style-editor) и затем управлять им с помощью [API](#configure-using-api).
+
+![Вид карты в режиме глобуса](/img/mapgl/globe/globe.png)
+
+## Настройка графических режимов {#configure-in-style-editor}
+
+Если вы используете несколько [графических режимов](/mapgl/map/configuration/graphics-presets) карты, рекомендуется включать глобус только в режиме `immersive`, так как для отображения глобуса требуются значительные ресурсы системы.
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+2. Откройте нужный стиль.
+
+3. Настройте работу глобуса в зависимости от графического режима:
+
+   1. На вкладке **Другое** выберите пункт **Графические режимы**:
+
+      ![Настройки графического режима](/img/mapgl/graphicspreset/presets.png)
+
+   2. Настройте переключатели **Глобус** в нужных графических режимах.
+
+4. Проверьте вид глобуса в обновлённых настройках графических режимов:
+
+   1. Откройте раздел **Настройки**.
+   2. Включите опцию **Глобус**.
+   3. В выпадающем списке **Графический режим** выберите нужный режим.
+   4. Уменьшите масштаб карты, чтобы увидеть глобус.
+
+## Включение глобуса {#configure-using-api}
+
+По умолчанию режим глобуса отключен, и при отдалении показывается плоская карта. Чтобы включить его, используйте [глобальную переменную стиля](/mapgl/map-style/global-style-variables) `globeEnabled` при инициализации карты:
+
+```js
+const map = new mapgl.Map('container', {
+    center,
+    zoom: 3,
+    key: 'Your API access key',
+    styleState: { globeEnabled: true },
+});
+```
+
+Чтобы переключать режим глобуса динамически, используйте метод `map.patchStyleState()`, например:
+
+```js
+function toggleGlobe() {
+    let { globeEnabled } = map.getStyleState();
+    map.patchStyleState({ globeEnabled: !globeEnabled });
+}
+```
+
+Пример карты с режимом глобуса и возможностью его динамического изменения:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Глобус" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+          
+          #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 2;
+          }
+        </style>
+    </head>
+    <body>
+        <div id="controls">
+          <button onclick="toggleGlobe()">Переключить глобус</button>
+        </div>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const center = [0, 25.23584];
+
+            const map = new mapgl.Map('container', {
+              center,
+              zoom: 3,
+              key: 'Your API access key',
+              // Глобус включен через переменную стиля globeEnabled
+              styleState: { globeEnabled: true }
+            });
+
+            // Вы можете динамически переключать режим глобуса с помощью метода map.patchStyleState()
+            function toggleGlobe () {
+            let { globeEnabled } = map.getStyleState();
+            map.patchStyleState({ globeEnabled: !globeEnabled });
+            }
+
+            map.setCenter([center[0] + 179, center[1]], { duration: 120000 });
+        </script>
+    </body>
+</html>`}
+</HtmlExampleWithSrcCode>
+
+## Ограничения
+
+В режиме глобуса не отрисовываются следующие типы стилевых слоёв:
+
+* полигон с высотой,
+* линия с высотой,
+* подпись линии,
+* 3D-модель,
+* 3D-модель здания,
+* 3D-полигон.

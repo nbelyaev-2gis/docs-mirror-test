@@ -1,0 +1,44 @@
+---
+sidebar: regionsAPI
+---
+# Примеры
+
+## Список доступных регионов
+
+```http
+https://catalog.api.2gis.com/2.0/region/list?key=YOUR_KEY
+```
+
+## Поиск региона
+
+```http
+https://catalog.api.2gis.com/2.0/region/search?q=Москва&key=YOUR_KEY
+```
+
+## Поиск региона по координате
+
+```http
+https://catalog.api.2gis.com/2.0/region/search?q=37.622161%2C55.751597&key=YOUR_KEY
+```
+
+## Получение дополнительной информации
+
+### Получение границ региона
+
+```http
+https://catalog.api.2gis.com/2.0/region/search?q=Москва&fields=items.bounds&key=YOUR_KEY
+```
+
+### Получение городов-спутников
+
+```http
+https://catalog.api.2gis.com/2.0/region/search?q=Москва&fields=items.satellites&key=YOUR_KEY
+```
+
+### Получение часового пояса
+
+```http
+https://catalog.api.2gis.com/2.0/region/search?q=Москва&**fields=items.time_zone**&key=YOUR_KEY
+```
+
+

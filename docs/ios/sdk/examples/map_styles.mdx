@@ -1,0 +1,177 @@
+---
+sidebar: iossdk
+---
+# Стили карты
+
+Вы можете изменять внешний вид карты и её объектов с помощью стилей. Стили — это правила, которые определяют в каком порядке и в каком виде отображать данные карты.
+
+Для работы со стилями нужно получить объект фабрики стилей [IStyleFactory](/ios/sdk/reference/stable/IStyleFactory) от центрального объекта SDK [Container](/ios/sdk/reference/stable/class#container/var-style-factory).
+
+## Подключение стиля к карте {#connect-style}
+
+Вы можете подключить стили из [Редактора стилей](https://styles.2gis.com/) к карте, добавленной в мобильное приложение. В Редакторе стилей вы можете детально настраивать отрисовку любых компонентов карты с помощью более 200 стилевых слоёв: см. список [готовых слоёв](/maps/styles/layers/configured/msdk).
+
+Если вы установили проект с помощью `xcframework`, вы можете использовать стили карты по умолчанию из `DGis.xcframework`.
+
+Чтобы подключить стиль из Редактора стилей:
+
+1. Создайте стиль карты и настройте стилевые слои с помощью Редактора стилей: см. инструкцию [Создание стилей и настройка стилевых слоёв](/maps/styles/create). Для создания вы можете использовать базовые стили с готовыми слоями.
+
+2. Экспортируйте стиль: см. инструкцию [Подключение стиля для iOS SDK](/maps/styles/connect#ios-sdk).
+
+3. Переместите скачанный стиль в проект с мобильным приложением.
+
+4. Подключите стиль с помощью метода [loadResource()](/ios/sdk/reference/stable/IStyleFactory#nav-lvl1--loadResource) или [loadFile()](/ios/sdk/reference/stable/IStyleFactory#nav-lvl1--loadFile) и укажите объект стиля в качестве параметра `styleFuture`:
+
+   ```swift
+   // Получение фабрики стилей
+   let styleFactory = sdk.styleFactory
+
+   // Установка стиля в настройках карты
+   var mapOptions = MapOptions.default
+   mapOptions.styleFuture = styleFactory.loadResource(name: "styles.2gis", bundle: .main)
+
+   // Создание карты с указанными настройками
+   let mapFactory = sdk.makeMapFactory(options: mapOptions)
+   let map = mapFactory.map
+   ```
+
+5. Если вы установили проект с помощью `xcframework` и используете стиль из Редактора стилей в приложении, удалите следующие файлы:
+
+   * `DGis.xcframework/ios-arm64/DGis.framework/Assets/ru.dgis.sdk/common-styles.2gis`,
+   * `DGis.xcframework/ios-arm64_x86_64-simulator/DGis.framework/Assets/ru.dgis.sdk/common-styles.2gis`.
+
+6. Если ранее у вас был подключён другой стиль, выпустите новую версию приложения.
+
+<br />
+
+Методы [loadResource()](/ios/sdk/reference/stable/IStyleFactory#nav-lvl1--loadResource) и [loadFile()](/ios/sdk/reference/stable/IStyleFactory#nav-lvl1--loadFile) возвращают отложенное значение ([Future](/ios/sdk/reference/stable/class#future)), чтобы не задерживать загрузку карты. Если стиль загружен, вы можете преобразовать его в объект `Future` с помощью метода [makeReadyValue()](/ios/sdk/reference/stable/class#future/make-ready-value):
+
+```swift
+var mapOptions = MapOptions.default
+mapOptions.styleFuture = Future.makeReadyValue(style)
+```
+
+## Изменение стиля карты {#change-style}
+
+Чтобы изменить стиль карты, которая уже добавлена в приложение:
+
+1. Экспортируйте обновлённый стиль из Редактора стилей: см. инструкцию [Подключение стиля для iOS SDK](/maps/styles/connect#ios-sdk).
+2. Укажите новый стиль в свойстве [style](/ios/sdk/reference/stable/class#map/var-style) объекта `Map`.
+
+    В отличие от указания стиля при создании карты, `style` является не отложенным значением [Future](/ios/sdk/reference/stable/class#future), а загруженным стилем карты ([Style](/ios/sdk/reference/stable/class#style)). Установите значение `style` после завершения загрузки `Future`:
+
+    <Tabs>
+    <TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+    ```swift
+    // Получение фабрики стилей
+    let styleFactory = sdk.styleFactory
+
+    // Загрузка нового стиля карты
+    // Метод loadFile() принимает только локальные URL (file://)
+    self.cancellable = styleFactory.loadFile(url: styleFileURL).sinkOnMainThread(
+        receiveValue: { [map = self.map] style in
+            // Изменение стиля карты после загрузки
+            map.style = style
+        },
+        failure: { error in
+            print("Не удалось загрузить стиль из файла <\(fileURL)>. Ошибка: \(error)")
+        })
+    ```
+
+    </TabItem>
+    <TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+    ```swift
+    // Получение фабрики стилей
+    let styleFactory = sdk.styleFactory
+
+    // Загрузка нового стиля карты
+    // Метод loadFile() принимает только локальные URL (file://)
+    self.cancellable = styleFactory.loadFile(url: styleFileURL).sink(
+        receiveValue: { [map = self.map] style in
+            // Изменение стиля карты после загрузки
+            map.style = style
+        },
+        failure: { error in
+            print("Не удалось загрузить стиль из файла <\(fileURL)>. Ошибка: \(error)")
+        })
+    ```
+
+    </TabItem>
+    </Tabs>
+
+3. Выпустите новую версию приложения.
+
+## Переключение темы {#switch-theme}
+
+Стили карты могут содержать несколько тем (например, дневную и ночную), между которыми можно переключаться «на лету» без необходимости загрузки дополнительного стиля.
+
+### При создании карты {#switch-theme-on-map-creation}
+
+Вы можете указать темы при создании карты с помощью параметра [appearance](/ios/sdk/reference/stable/struct#map-options/var-appearance) в `MapOptions`. В iOS 13 и выше можно использовать автоматическое переключение между светлой и тёмной темами (см. инструкцию [Dark Mode](https://developer.apple.com/design/human-interface-guidelines/dark-mode) в документации Apple):
+
+```swift
+// Установка стиля в настройках карты
+var mapOptions = MapOptions.default
+
+// Название светлой темы в используемом стиле
+let lightTheme: Theme = "day"
+
+// Название тёмной темы в используемом стиле
+let darkTheme: Theme = "night"
+
+if #available(iOS 13.0, *) {
+	// Автоматическое переключение между темами в iOS 13 и выше
+	mapOptions.appearance = .automatic(light: lightTheme, dark: darkTheme)
+} else {
+	// Использование светлой темы в остальных случаях
+	mapOptions.appearance = .universal(lightTheme)
+}
+
+// Создание карты с указанными настройками
+let mapFactory = sdk.makeMapFactory(options: mapOptions)
+```
+
+### После создания карты {#switch-theme-after-map-creation}
+
+Изменить тему после создания карты вы можете с помощью параметра [appearance](/ios/sdk/reference/stable/IMapView#nav-lvl1--var%20appearance) в `MapView`:
+
+```swift
+// Слой карты
+let mapView = mapFactory.mapView
+
+// Изменение темы на тёмную
+mapView.appearance = .universal(darkTheme)
+```
+
+## Управление стилевыми слоями {#manage-style-layers}
+
+Вы можете динамически включать и выключать отображение стилевого слоя на карте. Чтобы включить слой (например, слой с парковками):
+
+1. Инициализируйте глобальную переменную:
+
+   1. Откройте [Редактор стилей](https://styles.2gis.com/).
+   2. В блоке **Мои стили** откройте карточку нужного стиля.
+   3. В разделе **Слои** выберите слой, который нужно включить.
+   4. В блоке **Данные (JSON)** отредактируйте JSON-файл и добавьте нужную глобальную переменную (`global`). Например, для слоя с парковками — это переменная `parkingOn`:
+
+        {/*  prettier-ignore  */}
+
+      <img src="/img/mobile-sdk/add-attribute.png" alt="Добавление глобальной переменной" width="650"  />
+
+      Глобальная переменная может использоваться в нескольких слоях, но только внутри одного стиля.
+
+2. Экспортируйте и подключите стиль: см. инструкцию [Подключение стиля для iOS SDK](/maps/styles/connect#ios-sdk).
+
+3. Установите значение `true` для атрибута с помощью метода [setAttributeValue()](/ios/sdk/reference/stable/class#attributes/set-attribute-value). Например, чтобы включить отображение слоя парковок:
+
+   ```swift
+   self.map.attributes.setAttributeValue(
+               name: "parkingOn",
+               value: .boolean(true)
+           )
+   ```
+
+4. Выпустите новую версию приложения.

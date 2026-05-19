@@ -1,0 +1,12 @@
+.container {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+}
+
+.container > h1 {
+  scroll-margin-top: var(--gap-18m);
+}
+
+.inheritsContainer {
+  margin-top: var(--gap-6m);
+}

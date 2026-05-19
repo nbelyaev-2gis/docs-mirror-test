@@ -1,0 +1,230 @@
+---
+sidebar: styleeditor
+---
+# Подключение и публикация стилей
+
+Вы можете [подключить стиль](#connecting-a-style), который вы настроили в Редакторе стилей, к карте, добавленной на веб-страницу или в мобильное приложение. Если после подключения вы изменили стиль в Редакторе, [опубликуйте изменения стиля](#publishing-style-changes), чтобы они применились к картам.
+
+Также вы можете [поделиться созданным стилем](#share-a-link-to-a-style) с другими пользователями Редактора стилей.
+
+## Подключение стиля {#connecting-a-style}
+
+### MapGL JS API
+
+Чтобы подключить стиль к карте [MapGL JS API](/mapgl/overview):
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+2. В блоке **Мои стили** откройте карточку нужного стиля.
+
+3. Нажмите **Поделиться** в верхнем меню.
+
+    {/*  prettier-ignore  */}
+
+   ![Поделиться ссылкой на стиль](/img/styles/share-style-mapgl.png)
+
+4. В поле **Идентификатор стиля** скопируйте идентификатор стиля.
+
+    {/*  prettier-ignore  */}
+
+   <img src="/img/styles/style-id.png" alt="Идентификатор стиля" width="600"  />
+
+5. Добавьте идентификатор в код карты с помощью параметра `style` класса `Map` и укажите стартовый масштаб карты в параметре `styleZoom`:
+
+   ```js
+   const map = new mapgl.Map('container', {
+       center: [55.31878, 25.23584],
+       key: 'Your API access key',
+       style: 'Your Style ID',
+       styleZoom: 13,
+   });
+   ```
+
+   Подробные примеры см. в инструкции [Стили карт](/mapgl/examples/styles).
+
+### iOS SDK {#ios-sdk}
+
+Чтобы подключить стиль к карте в [iOS SDK](/ios/sdk/overview):
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+2. В блоке **Мои стили** откройте карточку нужного стиля.
+
+3. Нажмите **Поделиться** в верхнем меню.
+
+    {/*  prettier-ignore  */}
+
+   ![Поделиться ссылкой на стиль](/img/styles/share-style-mobile.png)
+
+4. Нажмите **Экспорт стиля**.
+
+    {/*  prettier-ignore  */}
+
+   <img src="/img/styles/share-style-links.png" alt="Экспорт стиля" width="600"  />
+
+5. Отметьте нужные стили в списке, укажите темы стилей для удобного переключения на уровне кода в мобильном приложении (например, `day` – дневная, `night` — ночная и т. д.) и выберите версию SDK.
+
+    {/*  prettier-ignore  */}
+
+   <img src="/img/styles/export-style.png" alt="Настройки экспорта" width="350"  />
+
+6. Нажмите **Экспортировать**.
+
+7. В открывшейся вкладке **История** выберите сгенерированный архив и нажмите **Скачать стиль**.
+
+8. Переместите скачанные стили в папку с мобильным приложением и подключите их:
+
+   ```swift
+   // Получение фабрики стилей
+   let styleFactory = sdk.styleFactory
+
+   // Установка стиля в настройках карты
+   var mapOptions = MapOptions.default
+   mapOptions.styleFuture = styleFactory.loadResource(name: "styles.2gis", bundle: .main)
+
+   // Создание карты с указанными настройками
+   let mapFactory = sdk.makeMapFactory(options: mapOptions)
+   let map = mapFactory.map
+   ```
+
+   Подробные примеры см. в инструкции [Стили карт](/ios/sdk/examples/map_styles).
+
+### Android SDK {#android-sdk}
+
+Чтобы подключить стиль к карте в [Android SDK](/android/sdk/overview):
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+2. В блоке **Мои стили** откройте карточку нужного стиля.
+
+3. Нажмите **Поделиться** в верхнем меню.
+
+    {/*  prettier-ignore  */}
+
+   ![Поделиться ссылкой на стиль](/img/styles/share-style-mobile.png)
+
+4. Нажмите **Экспорт стиля**.
+
+    {/*  prettier-ignore  */}
+
+   <img src="/img/styles/share-style-links.png" alt="Экспорт стиля" width="600"  />
+
+5. Отметьте нужные стили в списке, укажите темы стилей для удобного переключения на уровне кода в мобильном приложении (например, `day` – дневная, `night` — ночная и т. д.) и выберите версию SDK.
+
+    {/*  prettier-ignore  */}
+
+   <img src="/img/styles/export-style.png" alt="Настройки экспорта" width="350"  />
+
+6. Нажмите **Экспортировать**.
+
+7. В открывшейся вкладке **История** выберите сгенерированный архив и нажмите **Скачать стиль**.
+
+8. Переместите скачанные стили в папку с мобильным приложением и подключите их:
+
+   ```kotlin
+   // Установка стиля в настройках карты
+   val mapContainer = findViewById<LinearLayout>(R.id.map_container)
+   val mapOptions = MapOptions().apply {
+       styleFile = File.fromAsset(sdkContext, "custom-styles.2gis")
+   }
+
+   // Создание карты с указанными настройками
+   mapView = MapView(this, mapOptions)
+   mapContainer.addView(mapView)
+   ```
+
+   Подробные примеры см. в инструкции [Стили карт](/android/sdk/examples/map_styles).
+
+### Flutter SDK {#flutter-sdk}
+
+Чтобы подключить стиль к карте в [Flutter SDK](/flutter/sdk/overview):
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+2. В блоке **Мои стили** откройте карточку нужного стиля.
+
+3. Нажмите **Поделиться** в верхнем меню.
+
+    {/*  prettier-ignore  */}
+
+   ![Поделиться ссылкой на стиль](/img/styles/share-style-mobile.png)
+
+4. Нажмите **Экспорт стиля**.
+
+    {/*  prettier-ignore  */}
+
+   <img src="/img/styles/share-style-links.png" alt="Экспорт стиля" width="600"  />
+
+5. Отметьте нужные стили в списке, укажите темы стилей для удобного переключения на уровне кода в мобильном приложении (например, `day` – дневная, `night` — ночная и т. д.) и выберите версию SDK.
+
+    {/*  prettier-ignore  */}
+
+   <img src="/img/styles/export-style.png" alt="Настройки экспорта" width="350"  />
+
+6. Нажмите **Экспортировать**.
+
+7. В открывшейся вкладке **История** выберите сгенерированный архив и нажмите **Скачать стиль**.
+
+8. Переместите скачанные стили в папку с мобильным приложением и подключите их:
+
+   ```dart
+   Future<sdk.MapOptions> _initializeMapOptions() async {
+       // Асинхронная загрузка стиля карты из файла
+       final style = await sdk.StyleBuilder(_sdkContext)
+          .loadStyle(sdk.File('style.2gis'))
+          .value;
+
+       // Создание MapOptions с загруженным стилем
+       return sdk.MapOptions(style: style);
+   }
+
+    final mapOptions = await _initializeMapOptions();
+
+    // Теперь MapOptions можно передать в MapWidget
+    sdk.MapWidget(
+       sdkContext: sdkContext,
+       mapOptions: mapOptions,
+       controller: mapWidgetController,
+    );
+   ```
+
+   Подробные примеры см. в инструкции [Стили карт](/flutter/sdk/examples/map_styles).
+
+## Публикация изменений в стиле {#publishing-style-changes}
+
+В Редакторе стилей вы работаете с черновиком проекта. Все изменения автоматически сохраняются, но не публикуются в сервисах, где используется стиль.
+
+Чтобы обновить стиль во всех сервисах, к которым подключена карта:
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+2. В блоке **Мои стили** откройте карточку нужного стиля.
+3. Нажмите **Опубликовать** в верхнем меню.
+
+    {/*  prettier-ignore  */}
+
+   ![Публикация стиля](/img/styles/publish-style.png)
+
+## Поделиться ссылкой на стиль {#share-a-link-to-a-style}
+
+Чтобы поделиться ссылкой на проект со стилем с другими пользователями Редактора стилей:
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+2. В блоке **Мои стили** откройте карточку нужного стиля.
+
+3. Нажмите **Поделиться** в верхнем меню.
+
+    {/*  prettier-ignore  */}
+
+   ![Поделиться ссылкой на стиль](/img/styles/share-style-mobile.png)
+
+4. Скопируйте ссылку на стиль:
+
+   * **Ссылка для просмотра** — другой пользователь сможет посмотреть стиль, но не сможет скопировать его себе.
+   * **Ссылка для копирования** — другой пользователь сможет как посмотреть стиль, так и скопировать его себе для дальнейшей работы. Используйте эту ссылку, если хотите дать возможность пользователям создавать свои стили из копии вашего: см. инструкцию [Создание стиля из копии другого пользователя](/maps/styles/create#from-a-style-copy-of-another-user).
+
+    {/*  prettier-ignore  */}
+
+   <img src="/img/styles/share-style-links.png" alt="Ссылки на стиль" width="600"  />
+
+

@@ -1,0 +1,47 @@
+.build app:
+  stage: build
+  tags: [io, docker-engine]
+  interruptible: true
+  script:
+    - !reference [.echo global envs, script]
+    - >
+      echo -e "
+      🐳 BUILD ENV VARIABLES:\n
+      - APP_IMAGE=${APP_IMAGE}\n
+      - BRAND=${BRAND}\n
+      - DISTRIBUTION_MODE=${DISTRIBUTION_MODE}\n
+      - APP_URL=${APP_URL}\n
+      - APIKEY_MAPGL=${APIKEY_MAPGL}\n
+      - APIKEY_MAPGL_JSFIDDLE=${APIKEY_MAPGL_JSFIDDLE}\n
+      - APIKEY_NAVIGATION=${APIKEY_NAVIGATION}\n
+      - APIKEY_PLACES=${APIKEY_PLACES}\n
+      - SEARCH_API_URL=${SEARCH_API_URL}\n
+      - SEARCH_API_COLLECTION=${SEARCH_API_COLLECTION}\n
+      - APIKEY_DOCS_SEARCH=${APIKEY_DOCS_SEARCH}\n
+      - CHAT_BOT_API_URL=${CHAT_BOT_API_URL}\n
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}\n
+      - GA_TRACKING_ID=${GA_TRACKING_ID}\n
+      - UX_FEEDBACK_ID=${UX_FEEDBACK_ID}\n
+      - NODE_IMAGE=${NODE_IMAGE}"
+    - docker pull ${DEPS_IMAGE} || true
+    - docker pull ${APP_IMAGE} || true
+    - docker build -t ${APP_IMAGE} --target runner
+      --cache-from ${DEPS_IMAGE}
+      --cache-from ${APP_IMAGE}
+      --build-arg NODE_IMAGE=${NODE_IMAGE}
+      --build-arg BRAND=${BRAND}
+      --build-arg APP_URL=${APP_URL}
+      --build-arg DISTRIBUTION_MODE=${DISTRIBUTION_MODE}
+      --build-arg APIKEY_MAPGL=${APIKEY_MAPGL}
+      --build-arg APIKEY_MAPGL_JSFIDDLE=${APIKEY_MAPGL_JSFIDDLE}
+      --build-arg APIKEY_NAVIGATION=${APIKEY_NAVIGATION}
+      --build-arg APIKEY_PLACES=${APIKEY_PLACES}
+      --build-arg SEARCH_API_URL=${SEARCH_API_URL}
+      --build-arg SEARCH_API_COLLECTION=${SEARCH_API_COLLECTION}
+      --build-arg APIKEY_DOCS_SEARCH=${APIKEY_DOCS_SEARCH}
+      --build-arg CHAT_BOT_API_URL=${CHAT_BOT_API_URL}
+      --build-arg S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      --build-arg GA_TRACKING_ID=${GA_TRACKING_ID}
+      --build-arg UX_FEEDBACK_ID=${UX_FEEDBACK_ID}
+      -f ./docker/Dockerfile.app .
+    - docker push ${APP_IMAGE}

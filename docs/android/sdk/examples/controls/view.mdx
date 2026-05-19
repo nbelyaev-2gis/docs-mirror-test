@@ -1,0 +1,170 @@
+---
+sidebar: androidsdk
+---
+# Android View
+
+Вы можете добавить UI-элементы в макет своего приложения, используя стандартный подход Android View или фреймворк [Android Compose](/android/sdk/examples/controls/compose).
+
+## Карта {#map}
+
+Все варианты поставки SDK содержат стандартный набор UI-элементов для управления картой, которые вы можете добавить в макет и использовать для управления параметрами карты.
+
+Все перечисленные ниже UI-элементы должны добавляться как дочерние View по отношению к `MapView`. Процесс создания и добавления `MapView` подробно описан в разделе [Создание карты](/android/sdk/examples/map#creating-map).
+
+Стандартный набор включает в себя:
+
+1. [IndoorControl](/android/sdk/reference/stable/class#ru.dgis.sdk.map.indoor-control) для переключения этажей.
+2. [TrafficControl](/android/sdk/reference/stable/class#ru.dgis.sdk.traffic.traffic-control) для показа текущего уровня пробок и для управления видимостью пробок на карте.
+3. [ZoomControl](/android/sdk/reference/stable/class#ru.dgis.sdk.map.zoom-control) для масштабирования (приближения и отдаления) карты.
+4. [CompassControl](/android/sdk/reference/stable/class#ru.dgis.sdk.map.compass-control) для отображения текущего угла поворота карты относительно севера.
+5. [MyLocationControl](/android/sdk/reference/stable/class#ru.dgis.sdk.map.my-location-control) для перелёта к текущему местоположению пользователя.
+6. [AddRoadEventCard](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.add-road-event-card) для описания нового дорожного события.
+7. [AddRoadEventButton](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.add-road-event-button) для добавления дорожного события.
+8. [RoadEventCard](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.road-event-card) для просмотра информации о дорожном событии.
+
+<img src="/img/mobile-sdk/android_map_controls_1.jpg" width="200" /> <img src="/img/mobile-sdk/android_map_controls_3.jpg" width="200" /> <img src="/img/mobile-sdk/android_map_controls_2.jpg" width="200" />
+
+## Навигатор {#navigator}
+
+Полный вариант поставки SDK содержит набор UI-элементов для отображения и управления навигацией. Для удобства все элементы объединены в [DefaultNavigationControls](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.default-navigation-controls). Способ их использования и добавления описан в разделе [Навигатор](/android/sdk/examples/navigation).
+
+Набор UI-элементов навигации состоит из:
+
+1. [TrafficLineControl](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.traffic-line-control) для отображения уровня пробок на маршруте.
+2. [ManeuverControl](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.maneuver-control) для отображения информации о следующем манёвре.
+3. [SpeedInfoControl](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.speed-info-control) для отображения текущей скорости и скоростного ограничения.
+4. [TrafficAndParkingControl](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.traffic-and-parking-control) для управления видимостью пробок и парковок на карте.
+5. [ZoomControl](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.zoom-control) для масштабирования (приближения и отдаления) карты.
+6. [CompassControl](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.compass-control) для отображения текущего угла поворота карты относительно севера.
+7. [FollowControl](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.follow-control) для управления слежением за маркером местоположения.
+8. [DashboardControl](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.dashboard-control) для отображения информации в режиме [ведения по маршруту](/android/sdk/examples/navigation#ведение-по-маршруту).
+
+<img src="/img/mobile-sdk/android_navi_controls_4.jpg" width="200" /> <img src="/img/mobile-sdk/android_navi_controls_1.jpg" width="200" />
+
+9. [DashboardControl](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.dashboard-control) для отображения информации в режиме [свободной навигации](/android/sdk/examples/navigation#ree-drive-mode).
+10. [DashboardControl](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.dashboard-control) для отображения информации в режиме [навигации внутри зданий](/android/sdk/examples/navigation#indoor-navigation).
+11. [MarkedByRouteIndoorControl](/android/sdk/reference/stable/class#ru.dgis.sdk.map.marked-by-route-indoor-control) для выделения этажей, через которые проходит маршрут.
+
+<img src="/img/mobile-sdk/android_navi_controls_2.jpg" width="200" /> <img src="/img/mobile-sdk/android_navi_controls_3.jpg" width="200" /> <img src="/img/mobile-sdk/android_navi_controls_5.jpg" width="200" />
+
+## Справочник {#directory}
+
+[SearchLayout](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-layout) — компонент, предоставляющий интерактивную строку поиска и список результатов. Является частью поставки как Full, так и Map-версии SDK.
+
+<img src="/img/mobile-sdk/search_control_overview_android.gif" height="600" />
+
+Чтобы добавить компонент `SeachLayout` в ваш макет, выполните шаги ниже:
+
+### 1. Интеграция
+
+Добавление [SearchLayout](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-layout) в макет происходит так же, как и любого UI-элемента Android:
+
+```xml
+<ru.dgis.sdk.directory.SearchLayout
+    android:id="@+id/search_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:dgis_pageSize="10"
+    app:dgis_searchType="online"
+    app:dgis_sortingType="relevance"
+    app:dgis_suggestorType="general" />
+```
+
+Атрибуты `dgis_*` предназначены для первоначальной настройки, подробнее о них можно узнать в документации к [SearchOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-options).
+
+Вы также можете создать `SearchLayout` из кода:
+
+```kotlin
+// Например, создадим опции и изменим SearchType
+// Остальные параметры оставим по умолчанию
+val options = SearchOptions(searchType = SearchType.Online)
+val searchLayout = SearchLayout(this, options)
+```
+
+Вы можете как настроить `SearchLayout` при создании, так и конфигурировать параметры в течение жизненного цикла. Об этом в следующем подразделе.
+
+### 2. Настройка
+
+После создания [SearchLayout](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-layout), в методе [configureSearchEngine()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-layout/configure-search-engine) становятся доступными методы интерфейса [SearchViewConfigurator](/android/sdk/reference/stable/interface#ru.dgis.sdk.directory.search-view-configurator). Методы позволяют как изменить первоначальные настройки создания (тип поиска, размер выдачи и т.д.), так и сконфигурировать другие параметры: провайдера геопозиции, ограничения типа объектов и другие.
+
+```kotlin
+val locationProvider: LocationService
+val searchLayout = findViewById<SearchLayout>(R.id.search_layout)
+
+searchLayout.configureSearchEngine { // this: SearchViewConfigurator
+    // Добавим LocationService, чтобы получать расстояние до объекта относительно текущей
+    // геопозиции
+    setLocationProvider(LocationService)
+
+    // Изменим максимальное количество объектов в выдаче
+    setPageSize(10)
+}
+```
+
+### 3. Получение результатов
+
+Метод [addSearchViewCallback](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-layout/add-search-view-callback) позволяет добавить экземпляр [SearchViewCallback](/android/sdk/reference/stable/interface#ru.dgis.sdk.directory.search-view-callback). Методы интерфейса позволяют реагировать на события, происходящие в `SearchLayout`, такие как очищение поисковой строки, завершение поиска и другие.
+
+```kotlin
+searchLayout.addSearchViewCallback(object : SearchViewCallback {
+    // Вызовется при очищении поисковой строки.
+    override fun searchAborted() {
+        ...
+    }
+    // Вызовется при выборе пользователем пункта в выдаче, который является
+    // объектом DirectoryObject.
+    override fun directoryObjectChosen(obj: DirectoryObject) {
+        ...
+    }
+
+    // Вызовется при успешно завершившемся поиске, в результате которого получен
+    // список DirectoryObject. Список может быть пустым.
+    override fun searchCompletedSuccessfully(items: List<DirectoryObject>) {
+        ...
+    }
+    // Вызовется при возникновении исключения про поиске.
+    override fun searchCompletedWithException(message: String) {
+       ...
+    }
+
+    // Вызовется при клике на кнопку закрытия поиска. SearchLayout при этом будет удален из иерархии независимо от того, реализован ли метод.
+    override fun searchClosed() {
+        ...
+    }
+})
+```
+
+Вы можете реализовать как все, так и только необходимые методы.
+
+### 4. Настройка темы
+
+<img src="/img/mobile-sdk/search_control_theme_android.gif" height="600" />
+
+Вы можете изменять цветовую схему и некоторые другие параметры [SearchLayout](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-layout) с помощью изменения атрибутов темы.
+
+Для изменения стиля компонента необходимо установить атрибут `dgis_searchTheme`, который будет указывать на стиль в теме вашего приложения.
+
+```xml
+<resources>
+    <style name="AppTheme" ...>
+        ...
+        <item name="dgis_searchTheme">@style/customSearchTheme</item>
+        ...
+    </style>
+</resources>
+```
+
+Доступные атрибуты:
+
+| Имя атрибута                          | Описание                                                 |
+| ------------------------------------- | -------------------------------------------------------- |
+| `dgis_searchPrimaryBackgroundColor`   | Основной цвет фона                                       |
+| `dgis_searchSecondaryBackgroundColor` | Дополнительный цвет фона                                 |
+| `dgis_searchIconTint`                 | Цвет иконки лупы                                         |
+| `dgis_searchInputActiveTextColor`     | Цвет текста                                              |
+| `dgis_searchInputTextSize`            | Размер текста в поисковой строке                         |
+| `dgis_searchResultTitleTextSize`      | Размер текста в заголовке результата поисковой выдачи    |
+| `dgis_searchResultAddressTextSize`    | Размер текста в подзаголовке результата поисковой выдачи |
+| `dgis_searchResultDistanceTextSize`   | Размер текста в расстоянии до объекта                    |
+
+

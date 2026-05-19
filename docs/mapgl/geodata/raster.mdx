@@ -1,0 +1,232 @@
+---
+sidebar: mapgljsapi
+---
+# Растровые WMS/WMTS-источники
+
+MapGL JS API позволяет отображать данные от внешних растровых источников, поэтому пользователь может добавлять на карту слои различных географических объектов, хилшейда, спутниковых снимков и других данных. Для этого нужно подключить [RasterTileSource](/mapgl/reference/class#raster-tile-source) и добавить слой в стиль карты для этого источника. RasterTileSource позволяет запрашивать тайлы как по bounding box (Web Map Service — WMS), так и по их координатам в матрице тайлов (Web Map Tile Service — WMTS).
+
+## WMS
+
+[WMS](https://www.ogc.org/standard/wms/) — стандарт, разработанный OGC (Open Geospatial Consortium), позволяющий динамически получать географические данные в виде изображения (в форматах PNG, JPEG, GIF и др.) с привязкой к местности. Построение изображения производится на основе его параметров, переданных в пользовательском запросе: географических координат (bounding box), формата и размеров. WMS позволяет получать изображение данных по слоям, а также сделать фон итогового изображения прозрачным. Это дает возможность, например, накладывать друг на друга слои, полученные с разных серверов. Для кастомизации можно указать в запросе стили для слоев данных.
+
+Чтобы подключить источник данных WMS, используйте пример кода ниже:
+
+```js
+const source = new mapgl.RasterTileSource(map, {
+    url: (_x, _y, _zoom, bbox) => {
+        const southWest = bbox.southWest.map((c) => String(c).replace(',', '.')).join(',');
+        const northEast = bbox.northEast.map((c) => String(c).replace(',', '.')).join(',');
+        return `https://ows.terrestris.de/osm/service?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=OSM-Overlay-WMS&HEIGHT=256&WIDTH=256&SRS=EPSG:3857&STYLES=&BBOX=${southWest},${northEast}`;
+    },
+    attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attributes: { bar: 'asd' },
+});
+```
+
+Аргумент `bbox` функции из опции `url` в [RasterTileSourceOptions](/mapgl/reference/interface#raster-tile-source-options) должен содержать значения координат в проекции EPSG:3857 (Веб-Меркатор, Псевдо-Меркатор).
+
+Чтобы источник отличался от других, добавьте ему уникальное свойство через поле `attributes`. После этого его можно связать с новым слоем стиля карты, а значит и отобразить.
+
+Большинство сервисов требуют указывать копирайт — вы можете сделать это через поле `attribution`.
+
+## WMTS
+
+[WMTS](https://www.ogc.org/standard/wmts/) — стандарт, разработанный OGC. Он разделяет логику работы с WMS, но заточен на производительность и масштабируемость: пользователю возвращаются уже преподготовленные или закешированные изображения размером 256 или 512 пикселей, что не требует манипуляций с ними и с обработкой географических данных.
+
+Чтобы подключить источник данных WMTS, используйте пример кода ниже:
+
+```js
+const source = new mapgl.RasterTileSource(map, {
+    url: (x, y, zoom) => `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`,
+    attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attributes: { bar: 'asd' },
+});
+```
+
+Чтобы источник отличался от других, добавьте ему уникальное свойство через поле `attributes`. После этого его можно связать с новым слоем стиля карты, а значит и отобразить.
+
+Большинство сервисов требуют указывать копирайт — вы можете сделать это через поле `attribution`.
+
+## Добавление слоя в стиль карты
+
+Стиль карты — это конфиг, который описывает, как отрисовывать данные карты. Стиль состоит из слоев, каждый из которых содержит:
+
+* в поле `filter` — логику фильтрации данных карты для определения, какие именно данные будет отрисовывать этот слой;
+* в поле `style` — описание внешнего вида объектов отрисовки (цвет, ширина, шрифт и пр.).
+
+Подробнее про стиль карты можно узнать в [Спецификации стиля](/mapgl/styles-specification).
+
+Сначала создайте новый слой:
+
+```js
+const layer = {
+    id: 'raster-tile-layer', // ID каждого слоя должен быть уникальным
+
+    // Фильтрация или выбор данных для этого слоя
+    filter: [
+        'match',
+        ['sourceAttr', 'bar'],
+        ['asd'],
+        true, // Значение при совпадении атрибута 'bar' источника со значением 'asd'
+        false, // Значение при несовпадении
+    ],
+
+    // Тип объекта отрисовки
+    type: 'raster',
+
+    // Стиль объекта отрисовки
+    style: {
+        opacity: 1,
+    },
+};
+```
+
+Затем добавьте слой после загрузки стиля:
+
+```js
+map.on('styleload', () => {
+    map.addLayer(layer);
+});
+```
+
+`filter` использует следующие выражения:
+
+* `SourceAttrExpression` — для получения значений из свойства `bar` источника данных;
+* `MatchExpression` — для сопоставления полученного свойства из атрибута `bar` со строковым значением `asd`.
+
+Пример работы [RasterTileSource](/mapgl/reference/class#raster-tile-source) со стандартом WMS:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Источник RWMS" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 11,
+                key: 'Your API access key',
+            });
+
+            const source = new mapgl.RasterTileSource(map, {
+                url: (_x, _y, _zoom, bbox) => {
+                    const southWest = bbox.southWest.map((c) => String(c).replace(',', '.')).join(',');
+                    const northEast = bbox.northEast.map((c) => String(c).replace(',', '.')).join(',');
+                    return \`https://ows.terrestris.de/osm/service?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=true&LAYERS=OSM-Overlay-WMS&HEIGHT=256&WIDTH=256&SRS=EPSG:3857&STYLES=&BBOX=\${southWest},\${northEast}\`;
+                },
+                attribution:
+                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+
+                attributes: { bar: 'asd' },
+            })
+
+            const layer = {
+                type: 'raster',
+
+                id: 'raster-tile-layer',
+
+                filter: [
+                    'match',
+                    ['sourceAttr', 'bar'],
+                    ['asd'],
+                    true,
+                    false
+                ],
+                style: {
+                    opacity: 1,
+                },
+            };
+
+            map.on('styleload', () => {
+                map.addLayer(layer);
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Пример работы [RasterTileSource](/mapgl/reference/class#raster-tile-source) со стандартом WMTS:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Источник WMTS" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 11,
+                key: 'Your API access key',
+            });
+
+            const source = new mapgl.RasterTileSource(map, {
+                url: (x, y, zoom) => \`https://tile.openstreetmap.org/\${zoom}/\${x}/\${y}.png\`,
+                attribution:
+                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+
+                attributes: { bar: 'asd' },
+            })
+
+            const layer = {
+                type: 'raster',
+
+                id: 'raster-tile-layer',
+
+                filter: [
+                    'match',
+                    ['sourceAttr', 'bar'],
+                    ['asd'],
+                    true,
+                    false
+                ],
+
+                style: {
+                    opacity: 1,
+                },
+            };
+
+            map.on('styleload', () => {
+                map.addLayer(layer);
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

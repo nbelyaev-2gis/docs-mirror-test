@@ -1,0 +1,114 @@
+---
+sidebar: androidsdk
+---
+# Стили карты
+
+Вы можете изменять внешний вид карты и её объектов с помощью стилей. Стили — это правила, которые определяют в каком порядке и в каком виде отображать данные карты.
+
+## Подключение стиля к карте {#connect-style}
+
+Вы можете подключить стили из [Редактора стилей](https://styles.2gis.com/) к карте, добавленной в мобильное приложение. В Редакторе стилей вы можете детально настраивать отрисовку любых компонентов карты с помощью более 200 стилевых слоёв: см. список [готовых слоёв](/maps/styles/layers/configured/msdk).
+
+Чтобы подключить стиль из Редактора стилей:
+
+1. Создайте стиль карты и настройте стилевые слои с помощью Редактора стилей: см. инструкцию [Создание стилей и настройка стилевых слоёв](/maps/styles/create). Для создания вы можете использовать базовые стили с готовыми слоями.
+2. Экспортируйте стиль: см. инструкцию [Подключение стиля для Android SDK](/maps/styles/connect#android-sdk).
+3. Переместите скачанный стиль в проект с мобильным приложением.
+4. Подключите стиль с помощью метода [File()](/android/sdk/reference/stable/class#ru.dgis.sdk.file) и укажите объект стиля в качестве параметра `styleFile`:
+
+   ```kotlin
+   // Установка стиля в настройках карты
+   val mapContainer = findViewById<LinearLayout>(R.id.map_container)
+   val mapOptions = MapOptions().apply {
+       styleFile = File.fromAsset(sdkContext, "custom-styles.2gis")
+   }
+
+   // Создание карты с указанными настройками
+   mapView = MapView(this, mapOptions)
+   mapContainer.addView(mapView)
+   ```
+
+   Вы можете указать [File()](/android/sdk/reference/stable/class#ru.dgis.sdk.file) с помощью различных конструкторов:
+
+   ```kotlin
+   styleFile = File("custom-styles.2gis")
+
+   styleFile = File.fromAsset(sdkContext, "custom-styles.2gis")
+
+   styleFile = File.fromString("custom-styles.2gis")
+   ```
+
+5. Если ранее у вас был подключён другой стиль, выпустите новую версию приложения.
+
+## Изменение стиля карты {#change-style}
+
+Чтобы изменить стиль карты, которая уже добавлена в приложение:
+
+1. Экспортируйте обновлённый стиль из Редактора стилей: см. инструкцию [Подключение стиля для Android SDK](/maps/styles/connect#android-sdk).
+2. Загрузите новый стиль с помощью [StyleBuilder](/android/sdk/reference/stable/class#ru.dgis.sdk.map.style-builder):
+
+    ```kotlin
+    // Загрузка нового стиля карты
+    val newStyle = StyleBuilder(sdkContext).loadStyle(File.fromAsset(sdkContext, "custom-styles.2gis"))
+
+    // Изменение стиля карты после загрузки
+    newStyle.onResult { map.style = it }
+    ```
+
+3. Выпустите новую версию приложения.
+
+## Переключение темы {#switch-theme}
+
+Стили карты могут содержать несколько тем (например, дневную и ночную), между которыми можно переключаться «на лету» без необходимости загрузки дополнительного стиля.
+
+### При создании карты {#switch-theme-on-map-creation}
+
+Вы можете указать темы при создании карты с помощью метода [setTheme()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-view/set-theme):
+
+```kotlin
+// Установка стиля в настройках карты
+val mapContainer = findViewById<LinearLayout>(R.id.map_container)
+val mapOptions = MapOptions().apply {
+    // Переключение между темами
+    setTheme(theme = MapTheme("day", Color(255,0,0)))
+}
+
+// Создание карты с указанными настройками
+mapView = MapView(this, mapOptions)
+mapContainer.addView(mapView)
+```
+
+### После создания карты {#switch-theme-after-map-creation}
+
+Изменить тему после создания карты вы можете с помощью метода [setTheme()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-view/set-theme):
+
+```kotlin
+mapView.setTheme(MapTheme.defaultDarkTheme)
+```
+
+## Управление стилевыми слоями {#manage-style-layers}
+
+Вы можете динамически включать и выключать отображение стилевого слоя на карте. Чтобы включить слой (например, слой с парковками):
+
+1. Инициализируйте глобальную переменную:
+
+   1. Откройте [Редактор стилей](https://styles.2gis.com/).
+   2. В блоке **Мои стили** откройте карточку нужного стиля.
+   3. В разделе **Слои** выберите слой, который нужно включить.
+   4. В блоке **Данные (JSON)** отредактируйте JSON-файл и добавьте нужную глобальную переменную (`global`). Например, для слоя с парковками — это переменная `parkingOn`:
+
+        {/*  prettier-ignore  */}
+
+      <img src="/img/mobile-sdk/add-attribute.png" alt="Добавление глобальной переменной" width="650"  />
+
+      Глобальная переменная может использоваться в нескольких слоях, но только внутри одного стиля.
+
+2. Экспортируйте и подключите стиль: см. инструкцию [Подключение стиля для Android SDK](/maps/styles/connect#android-sdk).
+
+3. Установите значение `true` для атрибута с помощью метода [setAttributeValue()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.attributes/set-attribute-value). Например, чтобы включить отображение слоя парковок:
+
+   ```kotlin
+   map.attributes.setAttributeValue("parkingOn", AttributeValue(true))
+   ```
+
+4. Выпустите новую версию приложения.

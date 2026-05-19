@@ -1,0 +1,135 @@
+---
+sidebar: mapgljsapi
+---
+# Графические режимы
+
+:::note[Ограниченная доступность]
+
+Функциональность доступна для MapGL JS API [версии 1.55.0](/mapgl/releases#v1550) и выше.
+
+:::
+
+Иммерсивные возможности MapGL JS API требуют высокой производительности устройств пользователей. Чтобы управлять уровнем графики и иммерсивности на карте, настройте графические режимы карты в Редакторе стилей. Вы можете установить активный режим для всех пользователей или позволить пользователям выбирать режим, чтобы они могли отключать неактуальные возможности.
+
+Для графических режимов вы можете указать настройки графики — набор флагов, которые включают или выключают иммерсивные возможности карты:
+
+* [Иммерсивные дороги](/mapgl/map-style/immersive/road-infrastructure): дороги реалистичной ширины с разметкой и высотой.
+* [Тени](/mapgl/map-style/immersive/lighting#shadows). Для отображения теней настройте [освещение](/mapgl/map-style/immersive/lighting) карты.
+* [Туман и небо](/mapgl/map-style/immersive/sky) на горизонте.
+* [Глобус](/mapgl/map-style/immersive/globe): вид карты при достаточном отдалении.
+* [3D-модели](/mapgl/map-style/immersive/models): отображение пользовательских и встроенных моделей (например, [деревьев](/mapgl/map-style/immersive/trees)).
+
+Карта использует настройки графики, которые соответствуют текущему значению [глобальной переменной стиля](/mapgl/map-style/global-style-variables) `graphicsPreset` (это одно из полей объекта [StyleState](/mapgl/reference/interface#style-state)). Доступны три значения: `light`, `normal` и `immersive`.
+
+Пример использования:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Графические режимы" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            select {
+                position: absolute;
+                z-index: 1;
+                top: 16px;
+                left: 16px;
+            }
+        </style>
+    </head>
+    <body>
+        <select>
+            <option value="light">light</option>
+            <option value="normal">normal</option>
+            <option value="immersive">immersive</option>
+        </select>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.642698, 55.746780],
+                zoom: 17.5,
+                pitch: 35,
+                key: 'Your API access key',
+                graphicsPreset: 'immersive',
+                style: '8780eed4-0428-4982-b615-aa6cf04d8f5f',
+                styleState: {
+                    immersiveRoadsOn: true,
+                },
+            });
+            const select = document.querySelector('select');
+            select.value = 'immersive';
+            select.addEventListener('change', () => {
+                map.patchStyleState({ graphicsPreset: select.value });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Настройка режимов
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+2. Откройте нужный стиль.
+
+3. На вкладке **Другое** выберите пункт **Графические режимы**:
+
+   ![Настройки графического режима](/img/mapgl/graphicspreset/presets.png)
+
+4. Укажите настройки графики для каждого режима. Например, выключите отображение иммерсивных дорог для режима `normal`:
+
+   ![Выключение иммерсивных дорог в настройках графики](/img/mapgl/graphicspreset/configure.png)
+
+5. Чтобы проверить вид графического режима:
+
+   1. Откройте раздел **Настройки**.
+   2. Включите опцию **Иммерсивные дороги**.
+   3. В выпадающем списке **Графический режим** выберите режим:
+
+   ![Выбор графического режима](/img/mapgl/graphicspreset/enable.png)
+
+<br />
+
+В этом случае при выборе значения `graphicsPreset = immersive` иммерсивные дороги будут включены:
+
+![Режим immersive](/img/mapgl/graphicspreset/immersive.png)
+
+При выборе `graphicsPreset = normal` иммерсивные дороги будут выключены:
+
+![Режим normal](/img/mapgl/graphicspreset/normal.png)
+
+## Включение и переключение режима {#turning-on-preset}
+
+Чтобы установить для карты графический режим и применить его настройки из стиля, при инициализации карты установите [глобальную переменную стиля](/mapgl/map-style/global-style-variables) `graphicsPreset`:
+
+```javascript
+const map = new mapgl.Map('map-container', {
+    graphicsPreset: 'immersive', // 'light', 'normal' или 'immersive'
+});
+```
+
+Чтобы пользователи могли менять активный режим во время работы с картой, используйте метод [map.patchStyleState()](/mapgl/reference/class#map/patch-style-state):
+
+```javascript
+const map = new mapgl.Map('map-container', {
+    graphicsPreset: 'immersive',
+});
+
+// ...
+
+// Переключение режима
+map.patchStyleState({ graphicsPreset: 'normal' });
+```

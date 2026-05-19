@@ -1,0 +1,29 @@
+﻿# Истечение лицензии
+
+Лицензионный ключ действует ограниченное время, в течение которого доступны сервисы On-Premise. Когда срок действия лицензии заканчивается, доступ к сервисам блокируется.
+
+:::warning
+
+Сервисы <Brand /> Про не поддерживают режим soft block (предупреждение о скором истечении лицензии). Блокировка наступает сразу после окончания срока действия лицензии.
+
+:::
+
+## Поведение <Brand /> Про при истечении лицензии
+
+* Запросы к API возвращают HTTP-код `200`, но в логах появляется сообщение об отклонении запроса:
+
+    ```
+    [13:11:17 ERR] HTTP GET /license responded 500 in 6885.0271 ms
+    System.Net.Http.HttpRequestException: The SSL connection could not be established, see inner exception.
+    ---> System.Security.Authentication.AuthenticationException: The remote certificate is invalid because of errors in the certificate chain: NotTimeValid
+    ```
+
+* Веб-интерфейс становится недоступным.
+
+## Действия при истечении лицензии
+
+1. Обратитесь к менеджеру <Brand /> для продления лицензии.
+
+2. Повторно получите лицензию с помощью утилиты 2GIS CLI. Подробнее см. в разделе [Получение лицензии](/on-premise-api-platform/core/install/license#get-license).
+
+3. Убедитесь, что лицензия активна. Подробнее см. в разделе [Проверка статуса лицензии](/on-premise-api-platform/core/install/license#check-license-status).

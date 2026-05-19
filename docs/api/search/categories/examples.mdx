@@ -1,0 +1,68 @@
+---
+sidebar: categoriesAPI
+---
+# Примеры
+
+## Поиск категории по названию
+
+Шаг 1. Получение `id` региона:
+
+```http
+https://catalog.api.2gis.com/2.0/region/search?q=Москва&key=YOUR_KEY
+```
+
+Шаг 2. Поиск категории:
+
+```http
+https://catalog.api.2gis.com/2.0/catalog/rubric/search?q=кафе&region_id=32&key=YOUR_KEY
+```
+
+***
+
+## Получение списка категорий в регионе
+
+Шаг 1. Получение `id` региона:
+
+```http
+https://catalog.api.2gis.com/2.0/region/search?q=Москва&key=YOUR_KEY
+```
+
+Шаг 2. Получение списка категорий:
+
+```http
+https://catalog.api.2gis.com/2.0/catalog/rubric/list?region_id=32&key=YOUR_KEY
+```
+
+***
+
+## Получение списка дочерних категорий
+
+Шаг 1. Получение `id` региона:
+
+```http
+https://catalog.api.2gis.com/2.0/region/search?q=Москва&key=YOUR_KEY
+```
+
+Шаг 2. Получение списка дочерних категорий.
+
+Вариант 1.
+
+1. Получение списка объединяющих категорий:
+
+```http
+https://catalog.api.2gis.com/2.0/catalog/rubric/list?region_id=32&key=YOUR_KEY
+```
+
+2. Получение списка дочерних категорий
+
+```http
+https://catalog.api.2gis.com/2.0/catalog/rubric/list?parent_id=2&region_id=32&key=YOUR_KEY
+```
+
+Вариант 2. Можно получить дочерние категории, добавив параметр `fields=items.rubrics` при запросе на получение списка объединяющих категорий.
+
+```http
+https://catalog.api.2gis.com/2.0/catalog/rubric/list?region_id=32&fields=items.rubrics&key=YOUR_KEY
+```
+
+

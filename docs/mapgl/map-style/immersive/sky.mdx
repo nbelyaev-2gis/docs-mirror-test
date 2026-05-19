@@ -1,0 +1,88 @@
+---
+sidebar: mapgljsapi
+---
+# Небо и туман
+
+Чтобы подробнее рассмотреть иммерсивные детали, пользователю нужно увеличить масштаб и наклон карты. При большом наклоне карты на горизонте становится видно небо и туман, что делает карту более реалистичной. Эта статья рассказывает, как настроить максимальный наклон карты, а также цвет неба и цвет тумана на горизонте.
+
+![Небо и туман](/img/mapgl/sky/intro.png)
+
+## Настройка максимального наклона карты
+
+**Максимальный наклон** карты можно установить:
+
+* используя опцию карты [`maxPitch`](/mapgl/reference/interface#map-options/max-pitch),
+* используя метод карты [`setMaxPitch`](/mapgl/reference/class#map/set-max-pitch).
+
+Рекомендуемое значение: не более 70 градусов.
+
+На малом масштабе (zoom < 16.5) максимальный наклон карты ограничен 45 градусами по умолчанию, а его максимальное значение равно `maxPitch`. Вы можете управлять этим ограничением:
+
+* используя опцию карты [`lowZoomMaxPitch`](/mapgl/reference/interface#map-options/low-zoom-max-pitch),
+* используя метод карты [`setLowZoomMaxPitch()`](/mapgl/reference/class#map/set-low-zoom-max-pitch).
+
+Рекомендуемое значение: не более 45 градусов.
+
+## Настройка неба и тумана
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+2. В левой панели настроек выберите вкладку **Другое** > **Окружающая среда**.
+
+   ![Вкладка редактора](/img/mapgl/sky/editor.png)
+
+### Цвет неба
+
+Измените цвет неба на горизонте. Пример нового цвета:
+
+![Цвет неба #C954DE](/img/mapgl/sky/sky-color.png)
+
+### Цвет тумана
+
+Измените цвет тумана, скрывающий объекты в отдалении. Пример:
+
+![Цвет тумана #7D40A8](/img/mapgl/sky/fog-color.png)
+
+## Отключение неба и тумана
+
+Чтобы отключить небо или туман, установите в параметрах **Цвет неба** или **Цвет тумана** прозрачные цвета.
+
+![Небо и туман выключены](/img/mapgl/sky/sky-fog-off.png)
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Небо и туман" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [82.924252, 55.030281],
+                zoom: 18.5,
+                rotation: -47,
+                pitch: 85,
+                maxPitch: 89,
+                lowZoomMaxPitch: 45,
+                key: 'Your API access key',
+                style: 'c080bb6a-8134-4993-93a1-5b4d8c36a59b'
+            });
+            </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

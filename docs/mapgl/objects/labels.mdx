@@ -1,0 +1,491 @@
+---
+sidebar: mapgljsapi
+---
+# Текстовые метки
+
+## Одна метка
+
+Чтобы добавить [текстовую метку](/mapgl/reference/class#label) на карту, нужно указать ее координаты и текст:
+
+```js
+const label = new mapgl.Label(map, {
+    coordinates: [37.615655, 55.768005],
+    text: 'Текст метки',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Текстовая метка" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+            const label = new mapgl.Label(map, {
+                coordinates: [37.615655, 55.768005],
+                text: 'Текст метки',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Несколько меток
+
+На карту можно добавить несколько текстовых меток:
+
+```js
+const firstLabel = new mapgl.Label(map, {
+    coordinates: [37.577620, 55.778375],
+    text: 'Первая метка',
+});
+const secondLabel = new mapgl.Label(map, {
+    coordinates: [37.608676, 55.766095],
+    text: 'Вторая метка',
+});
+const thirdLabel = new mapgl.Label(map, {
+    coordinates: [37.650029, 55.773766],
+    text: 'Третья метка',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Несколько текстовых меток" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 12,
+                key: 'Your API access key',
+            });
+            const firstLabel = new mapgl.Label(map, {
+               coordinates: [37.577620, 55.778375],
+               text: 'Первая метка',
+            });
+            const secondLabel = new mapgl.Label(map, {
+               coordinates: [37.608676, 55.766095],
+               text: 'Вторая метка',
+            });
+            const thirdLabel = new mapgl.Label(map, {
+               coordinates: [37.650029, 55.773766],
+               text: 'Третья метка',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Многострочный текст
+
+Чтобы использовать многострочный текст в метках, строки нужно разделить символом `\n`:
+
+```js
+const label = new mapgl.Label(map, {
+    coordinates: [37.615655, 55.768005],
+    text: 'Первая строка\nВторая строка\nТретья строка',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Многострочный текст" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+            const label = new mapgl.Label(map, {
+               coordinates: [37.615655, 55.768005],
+               text: 'Первая строка\\nВторая строка\\nТретья строка',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Выравнивание текста
+
+По умолчанию текст центрируется относительно указанных координат. Чтобы изменить расположение текста, нужно указать параметры `relativeAnchor` и `offset` (см. [LabelOptions](/mapgl/reference/interface#label-options) для подробного описания):
+
+```js
+// Горизонтальный и вертикальный центр (расположение по умолчанию)
+const defaultPlacement = new mapgl.Label(map, {
+    coordinates: [37.577620, 55.778375],
+    text: 'Расположение по умолчанию',
+});
+// Выравнивание справа по центру
+const rightCenterPlacement = new mapgl.Label(map, {
+    coordinates: [37.608676, 55.766095],
+    text: 'Выравнивание справа по центру',
+    relativeAnchor: [0, 0.5],
+});
+// Выравнивание по левому верхнему краю с отступом
+const leftTopPlacement = new mapgl.Label(map, {
+    coordinates: [37.660029, 55.773766],
+    text: 'Выравнивание по левому верхнему краю с отступом',
+    offset: [-10, -10],
+    relativeAnchor: [1, 1],
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Выравнивание текста в метке" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+            const defaultPlacement = new mapgl.Label(map, {
+               coordinates: [37.577620, 55.778375],
+               text: 'Расположение по умолчанию',
+            });
+            const rightCenterPlacement = new mapgl.Label(map, {
+               coordinates: [37.608676, 55.766095],
+               text: 'Выравнивание справа по центру',
+               relativeAnchor: [0, 0.5],
+            });
+            const leftTopPlacement = new mapgl.Label(map, {
+               coordinates: [37.660029, 55.773766],
+               text: 'Выравнивание по левому верхнему краю с отступом',
+               offset: [-10, -10],
+               relativeAnchor: [1, 1],
+            });
+
+            const defaultPlacementAnchor = new mapgl.Marker(map, {
+                coordinates: [37.577620, 55.778375],
+                icon: '__BASE_URL__/img/mapgl/anchor.svg',
+                zIndex: 100,
+            });
+            const rightCenterPlacementAnchor = new mapgl.Marker(map, {
+                coordinates: [37.608676, 55.766095],
+                icon: '__BASE_URL__/img/mapgl/anchor.svg',
+                zIndex: 100,
+            });
+            const leftTopPlacementAnchor = new mapgl.Marker(map, {
+                coordinates: [37.650029, 55.773766],
+                icon: '__BASE_URL__/img/mapgl/anchor.svg',
+                zIndex: 100,
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Текст с обводкой
+
+Чтобы добавить обводку для текста, нужно указать параметры `haloColor` (цвет обводки) и `haloRadius` (толщина обводки):
+
+```js
+const label = new mapgl.Label(map, {
+    coordinates: [37.615655, 55.768005],
+    text: 'Текст с обводкой',
+    color: '#0000ff',
+    haloRadius: 2,
+    haloColor: '#00ff0055',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Текст с обводкой" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+            const label = new mapgl.Label(map, {
+                coordinates: [37.615655, 55.768005],
+                text: 'Текст с обводкой',
+                color: '#0000ff',
+                haloRadius: 2,
+                haloColor: '#00ff0055',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Фон текста
+
+Чтобы добавить фоновое изображение для текста, нужно указать параметр `image`. Для фонового изображения можно ограничить области, которые будут растягиваться под размер текста. Для этого используются параметры `stretchX` (разрешено растягивание по горизонтали) и `stretchY` (разрешено растягивание по вертикали).
+
+<NoInvert>
+![tooltip-big-plot.svg](/img/mapgl/tooltip-big-plot.svg)
+</NoInvert>
+
+```js
+const label = new mapgl.Label(map, {
+    coordinates: [37.615655, 55.768005],
+    text: 'Текст с фоном',
+    fontSize: 64,
+    image: {
+        url: 'https://docs.2gis.com/img/mapgl/tooltip-big.svg',
+        size: [500, 250],
+        // Области изображения, которые будут растягиваться горизонтально (синие)
+        stretchX: [
+            [50, 200], // пиксели между X=50 и X=200 (50 ≤ X ≤ 200)
+            [300, 450], // пиксели между X=300 и X=450 (300 ≤ X ≤ 450)
+        ],
+        // Области изображения, которые будут растягиваться вертикально (красные)
+        stretchY: [
+            [50, 150], // пиксели между Y=50 и Y=150 (50 ≤ Y ≤ 150)
+        ],
+        // Отступы вокруг текста (как в CSS)
+        padding: [50, 50, 100, 50],
+    },
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Фон текста" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+            const label = new mapgl.Label(map, {
+               coordinates: [37.615655, 55.768005],
+               text: 'Текст с фоном',
+               fontSize: 64,
+               image: {
+                  url: '__BASE_URL__/img/mapgl/tooltip-big.svg',
+                  size: [500, 250],
+                  stretchX: [
+                        [50, 200],
+                        [300, 450],
+                  ],
+                  stretchY: [
+                        [50, 150],
+                  ],
+                  padding: [50, 50, 100, 50],
+               },
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Чтобы корректно отобразить на карте несколько текстовых меток с фоновыми изображениями, важно указать для каждой метки параметр `zIndex` с уникальным значением:
+
+```js
+const bottomLabel = new mapgl.Label(map, {
+    ...
+    zIndex: 1
+});
+const middleLabel = new mapgl.Label(map, {
+    ...
+    zIndex: 2
+});
+const topLabel = new mapgl.Label(map, {
+    ...
+    zIndex: 3
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Несколько меток с фоном" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+            const bottomLabel = new mapgl.Label(map, {
+                coordinates: [37.577620, 55.778375],
+                text: 'Текст с фоном',
+                zIndex: 1,
+                image: {
+                    url: '__BASE_URL__/img/mapgl/tooltip.svg',
+                    size: [100, 50],
+                    stretchX: [
+                        [10, 30],
+                        [70, 90],
+                    ],
+                    stretchY: [[10, 30]],
+                    padding: [10, 10, 20, 10],
+                },
+            });
+            const middleLabel = new mapgl.Label(map, {
+                coordinates: [37.608676, 55.766095],
+                text: 'Первая строка\\nВторая строка\\nТретья строка',
+                zIndex: 2,
+                image: {
+                    url: '__BASE_URL__/img/mapgl/tooltip@2x.png',
+                    pixelRatio: 2,
+                    size: [100, 50],
+                    stretchX: [
+                        [10, 30],
+                        [70, 90],
+                    ],
+                    stretchY: [[10, 30]],
+                    padding: [10, 10, 20, 10],
+                },
+            });
+            const topLabel = new mapgl.Label(map, {
+                coordinates: [37.650029, 55.773766],
+                text: 'Текст с отладочным изображением',
+                zIndex: 3,
+                image: {
+                    url: '__BASE_URL__/img/mapgl/tooltip-debug.svg',
+                    size: [100, 50],
+                    stretchX: [
+                        [10, 30],
+                        [70, 90],
+                    ],
+                    stretchY: [[10, 30]],
+                    padding: [10, 10, 20, 10],
+                },
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

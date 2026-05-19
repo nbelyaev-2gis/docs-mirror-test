@@ -1,0 +1,149 @@
+﻿---
+sidebar: distancematrixapi
+---
+# Обзор
+
+Distance Matrix API позволяет получить информацию о расстоянии и времени в пути между точками на карте.
+
+Вы можете задать несколько пунктов отправления (начальных точек) и пунктов назначения (конечных точек) и получить расстояние и время в пути между каждой возможной парой точек отправления и назначения. Например, для трёх точек отправления (А, B, C) и трёх точек прибытия (D, E, F) Distance Matrix API рассчитает матрицу с расстоянием и временем для девяти вариантов маршрутов: AD, AE, AF, BD, BE, BF, CD, CE, CF.
+
+Distance Matrix API поддерживает два режима работы:
+
+* [Синхронный](/api/navigation/distance-matrix/start#synchronous-mode) — для расчёта запросов, содержащих до 25 точек отправления или прибытия. В этом режиме запрос сразу возвращает результат.
+* [Асинхронный](/api/navigation/distance-matrix/start#asynchronous-mode) — для расчёта запросов, содержащих большее число точек отправления или прибытия. В этом режиме запрос возвращает идентификатор задачи, который нужно использовать для периодической проверки готовности результата. В стандартном тарифе доступно 25 точек отправления или прибытия. Если вам необходимо увеличить лимит, напишите в [службу поддержки](mailto:support-pm@2gis.ru).
+
+Таким образом, вы можете использовать Distance Matrix API, чтобы определить наиболее эффективные маршруты передвижения между несколькими возможными пунктами отправления и назначения, а также для реализации собственных алгоритмов решения транспортных задач. Сценарии использования см. в [Примерах](/api/navigation/distance-matrix/examples).
+
+:::tip
+
+Distance Matrix API возвращает только краткую информацию о маршруте (расстояние и время). Для получения полной геометрии маршрута используйте [Routing API](/api/navigation/routing/overview).
+
+:::
+
+Наведите курсор на метку на карте, чтобы узнать расстояние и время езды до неё на автомобиле от точки отправления.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Distance Matrix API</title>
+        <meta name="description" content="Вычисление матриц расстояний и времени в пути для нескольких точек назначения с помощью Distance Matrix API" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            #tooltip {
+                padding: 12px 16px;
+                background: #fff;
+                box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+                border-radius: 4px;
+                display: none;
+                position: fixed;
+                pointer-events: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div id="tooltip"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const reqUrl = \`https://routing.api.2gis.com/get_dist_matrix?key=Your directions API access key&version=2.0\`;
+
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 11,
+                key: 'Your API access key',
+            });
+
+            function renderMarkersWithData(routes) {
+                function generateTooltipText(index) {
+                    const data = routes.find((item) => item.target_id === index);
+                    if (!data) return undefined;
+                    return 'Расстояние: ' + data.distance.toLocaleString() + ' м.<br>Время в пути: ' + Math.round(
+                        data.duration / 60,
+                    ) + ' мин.';
+                }
+                const tooltipEl = document.getElementById('tooltip');
+
+                const startPoint = points.shift();
+                const marker = new mapgl.Marker(map, {
+                    coordinates: [startPoint.lon, startPoint.lat],
+                    label: {
+                        text: 'Точка отправления',
+                        fontSize: 13,
+                    },
+                });
+
+                points.forEach((point, index) => {
+                    const marker = new mapgl.Marker(map, {
+                        coordinates: [point.lon, point.lat],
+                        icon: '__BASE_URL__/img/dotMarker.svg',
+                    });
+                    marker.on('mouseover', (event) => {
+                        const offset = 5;
+                        tooltipEl.style.top = \`\${event.point[1] + offset}px\`;
+                        tooltipEl.style.left = \`\${event.point[0] + offset}px\`;
+                        tooltipEl.innerHTML = generateTooltipText(index + 1);
+                        tooltipEl.style.display = 'block';
+                    });
+                    marker.on('mouseout', (e) => {
+                        tooltipEl.style.display = 'none';
+                    });
+                });
+            }
+
+            const points = [
+                {
+                    lat: 55.716226,
+                    lon: 37.729171,
+                },
+                {
+                    lat: 55.723976,
+                    lon: 37.624403,
+                },
+                {
+                    lat: 55.71893,
+                    lon: 37.564967,
+                },
+                {
+                    lat: 55.730375,
+                    lon: 37.483024,
+                },
+            ];
+
+            fetch(reqUrl, {
+                method: 'POST',
+                body: JSON.stringify({
+                    points,
+                    sources: [0],
+                    targets: [1, 2, 3],
+                    transport: 'driving',
+                    start_time: new Date().toISOString(),
+                }),
+            })
+                .then((res) => res.json())
+                .then((parsed) => renderMarkersWithData(parsed.routes))
+                .catch((err) => console.error('error', err));
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Тарифы {#tariffs}
+
+* При отправке запросов к Distance Matrix API оплачивается количество не запросов, а расчётов для каждой пары точек отправления и прибытия. Например, в одном запросе вы указываете 2 точки отправления и 3 точки прибытия, поэтому оплачиваются 6 расчётов.
+* Актуальные тарифы можно посмотреть в [Менеджере Платформы](https://platform.2gis.ru/ru/tariffs?utm_source=docs&utm_medium=referral&utm_campaign=api_dm).
+
+## Варианты размещения {#distribution}
+
+- **Облако**: все методы Distance Matrix API доступны через публичные endpoint-ы <Brand />.
+- **On-Premise**: все методы Distance Matrix API доступны при установке API-платформы <Brand /> в закрытом контуре. Подробнее см. в разделе [API-платформа для сервера](/on-premise-api-platform/overview/summary).

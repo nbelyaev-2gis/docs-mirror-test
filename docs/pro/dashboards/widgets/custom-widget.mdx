@@ -1,0 +1,295 @@
+---
+sidebar: pro
+---
+# Произвольный виджет
+
+Произвольный виджет позволяет встраивать пользовательское содержимое в сцены дашборда через фреймы (`<iframe>`). Виджет — это HTML-страница, которая подключается к приложению через библиотеку [Penpal](https://github.com/Aaronius/penpal) и получает доступ к [API виджета](#api-reference): управлению картой и подписками на события.
+
+В форме создания виджета вы можете указать:
+
+* URL внешней страницы. Для связи приложения и виджета потребуется подключить Penpal вручную: подробнее см. в разделе [Ссылка](#link).
+* HTML- или JavaScript-код. Виджет будет вставлен через атрибут `srcdoc` в теге `<iframe>`. Penpal-соединение установится автоматически: подробнее см. в разделе [Код](#code).
+
+## Создание виджета {#creating-a-widget}
+
+<img src="/img/pro/widgets-custom-create.png" alt="Пример создания произвольного виджета" width="650" />
+
+1. Перейдите на вкладку **Дашборды**.
+2. Откройте дашборд.
+3. Откройте сцену с помощью стрелок ![Стрелка влево](/img/pro/left-arrow-icon.svg) и ![Стрелка вправо](/img/pro/right-arrow-icon.svg). Если в дашборде одна сцена, она откроется автоматически.
+4. В верхнем меню дашборда нажмите значок ![Виджеты](/img/pro/widgets-icon.svg).
+5. Выберите тип виджета **Произвольный виджет**.
+6. Введите URL источника или исходный код для HTML-элемента, который будет отображаться в виджете. Если вы указали URL, подключите Penpal и установите соединение с приложением: подробнее см. в разделе [Ссылка](#link).
+7. Нажмите **Создать**.
+
+Новый виджет автоматически добавится в выбранную сцену дашборда.
+
+## Параметры {#parameters}
+
+### Общие настройки виджета {#general-settings}
+
+| <div style={{"width":"180px"}}>Параметр</div> | Описание |
+| --------------------------------------------- | -------- |
+| **Название виджета** | Название виджета. |
+
+### Ссылка {#link}
+
+| <div style={{"width":"180px"}}>Параметр</div> | Описание |
+| --------------------------------------------- | -------- |
+| **Ссылка на ресурс** | URL-адрес внешней страницы с приложением в формате `https://example.com`. Для связи виджета и приложения подключите Penpal с помощью кода ниже.<br /><br />Пример виджета со встроенным сайтом:<br /><img src="/img/pro/widgets-custom-url.png" alt="Произвольный виджет со ссылкой" width="500" /> |
+
+Чтобы подключить Penpal, добавьте в код приложения:
+
+```html
+<script src="https://pro.2gis.ru/static/penpal/penpal.min.js"></script>
+<script>
+(function() {
+  var messenger = new Penpal.WindowMessenger({
+    remoteWindow: window.parent,
+    allowedOrigins: ['*']
+  });
+  var connection = Penpal.connect({
+    messenger: messenger,
+    methods: {
+      onEvent: function(event) {
+        window.dispatchEvent(new CustomEvent('pro:widget:event', { detail: event }));
+      }
+    },
+    timeout: 30000
+  });
+  window.__proWidgetBridge = {
+    ready: connection.promise,
+    destroy: function() { connection.destroy(); }
+  };
+})();
+</script>
+```
+
+### Код {#code}
+
+| <div style={{"width":"180px"}}>Параметр</div> | Описание |
+| --------------------------------------------- | -------- |
+| **Код** | Исходный код на языке HTML- или JavaScript для HTML-элемента, который будет отображаться в виджете. Код выполняется внутри элемента `iframe`.<br /><br />Пример виджета со встроенной интерактивной картой:<br /><img src="/img/pro/widgets-custom-code.png" alt="Произвольный виджет с кодом" width="650" /> |
+
+<details>
+<summary>Пример виджета для управления картой</summary>
+
+HTML-код ниже создаёт виджет с элементами управления картой в <Brand /> Про: кнопками увеличения, уменьшения масштаба и перемещения к центру карты (заданной точке). В виджете отображается текущий уровень масштабирования и координаты центра карты.
+
+<img src="/img/pro/widgets-custom-code-map.png" alt="Пример виджета для управления картой" width="650" />
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    button { margin: 4px; padding: 8px 16px; }
+  </style>
+</head>
+<body>
+  <button id="zoom-in">+</button>
+  <button id="zoom-out">-</button>
+  <button id="center">Центр карты</button>
+  <p id="info">Загрузка...</p>
+
+  <script>
+    var currentState;
+
+    function renderInfo(state) {
+      document.getElementById('info').textContent =
+        `Zoom: ${state.zoom}, Center: ${state.center[0].toFixed(2)}, ${state.center[1].toFixed(2)}`;
+    }
+
+    // Автоматическое подключение __proWidgetBridge
+    __proWidgetBridge.ready.then(async (remote) => {
+      currentState = await remote.getMapState();
+      renderInfo(currentState);
+
+      document.getElementById('zoom-in').onclick = () =>
+        remote.setMapState({ zoom: currentState.zoom + 1 }, { animate: true });
+
+      document.getElementById('zoom-out').onclick = () =>
+        remote.setMapState({ zoom: currentState.zoom - 1 }, { animate: true });
+
+      document.getElementById('center').onclick = () =>
+        remote.setMapState(
+          { center: [37.615655, 55.768005], zoom: 14 },
+          { animate: true, duration: 1000 }
+        );
+
+      // Подписка на изменения карты
+      await remote.subscribe(['mapState']);
+    });
+
+    window.addEventListener('pro:widget:event', (e) => {
+      if (e.detail.type === 'mapState') {
+        currentState = e.detail.payload;
+        renderInfo(currentState);
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+</details>
+
+## API виджета {#api-reference}
+
+Методы ниже доступны через объект `remote`, полученный из `__proWidgetBridge.ready`:
+
+```js
+const remote = await __proWidgetBridge.ready;
+```
+
+### Управление картой {#map}
+
+#### Получение состояния карты {#map-state}
+
+Чтобы получить текущее состояние карты, используйте метод `remote.getMapState()`:
+
+```js
+const state = await remote.getMapState();
+```
+
+Пример ответа:
+
+```js
+{
+  center: [37.615655, 55.768005],
+  zoom: 14,
+  pitch: 45,
+  rotation: 90
+}
+```
+
+#### Изменение состояния карты {#set-map-state}
+
+Чтобы установить состояние карты, используйте метод `remote.setMapState(state, options?)`. Можно передать отдельные параметры.
+
+Параметры состояния карты:
+
+| Поле | Тип | Описание |
+| ---- | --- | -------- |
+| `center` | `[lon, lat]` | Координаты центра карты: долгота и широта. Допустимые значения долготы: от `-180` до `180`. Допустимые значения широты: от `-90` до `90`. |
+| `zoom` | `number` | Уровень масштабирования. Допустимые значения: от `1` до `22`. |
+| `pitch` | `number` | Наклон карты. Допустимые значения: от `0` до `60`. |
+| `rotation` | `number` | Поворот карты. Допустимые значения: от `0` до `360`. |
+
+Опции анимации:
+
+| Поле | Тип | Значение по умолчанию | Описание |
+| ---- | --- | --------------------- | -------- |
+| `animate` | `boolean` | `true` | Анимация перехода. |
+| `duration` | `number` | — | Длительность анимации в мс. Допустимые значения: от `0` до `10000`. |
+
+Пример изменения состояния карты:
+
+```js
+// Перемещение карты
+await remote.setMapState({ center: [37.615655, 55.768005] });
+
+// Изменение уровня масштабирования и добавление анимации
+await remote.setMapState({ zoom: 18 }, { animate: true, duration: 1000 });
+
+// Задание нескольких параметров одновременно
+await remote.setMapState({
+  center: [37.615655, 55.768005],
+  zoom: 14,
+  pitch: 45,
+  rotation: 90,
+});
+```
+
+#### Масштабирование по границам {#fit-bounds}
+
+Чтобы изменить центр и масштаб карты в соответствии с указанными границами, используйте метод `remote.fitBounds(params)`:
+
+```js
+await remote.fitBounds({
+  northEast: [37.62, 55.77],
+  southWest: [37.61, 55.76],
+  padding: 20,
+  maxZoom: 18,
+});
+```
+
+Допустимые значения параметра `padding`: от `0` до `1000`.
+
+### Получение контекста {#get-context}
+
+Чтобы получить контекст виджета, используйте метод `remote.getContext()`:
+
+```js
+const ctx = await remote.getContext();
+```
+
+Пример ответа:
+
+```js
+{
+  widgetId: 'abc123...', // ID виджета
+  dashboardId: 'def456...', // ID дашборда
+  sceneId: 'ghi789...', // ID сцены
+  theme: 'dark', // тема
+  brand: 'brandName', // бренд
+  locale: 'en' // язык
+}
+```
+
+### Подписка на события {#events-api}
+
+Чтобы подписаться на события, используйте метод `remote.subscribe(events)`. События поставляются через `CustomEvent` в браузере.
+
+Типы событий:
+
+| Тип | Полезная нагрузка | Частота срабатывания |
+| --- | ----------------- | -------------------- |
+| `mapState` | `{ center, zoom, pitch, rotation }` | При изменении карты (не чаще 150 мс). |
+| `theme` | `{ brand, theme }` | При смене темы. |
+| `language` | `{ locale }` | При смене языка. |
+
+Метод `subscribe()` создаёт подписку только на будущие обновления. Чтобы получить начальное состояние, запросите его отдельно через `getMapState()` или `getContext()`.
+
+Чтобы отписаться от событий, используйте `remote.unsubscribe(events)`.
+
+Пример подписки на события:
+
+```js
+// Запрос начального состояния
+const initialState = await remote.getMapState();
+
+// Подписка на события
+await remote.subscribe(['mapState']);
+
+// Обработка событий
+window.addEventListener('pro:widget:event', (e) => {
+  const { type, payload } = e.detail;
+  switch (type) {
+    case 'mapState':
+      console.log('Карта:', payload.center, payload.zoom);
+      break;
+  }
+});
+
+// Отписка от событий
+await remote.unsubscribe(['mapState']);
+```
+
+## Ограничения {#limitations}
+
+Ограничения работы с виджетами:
+
+* **Частота вызовов**: 30 вызовов в секунду на виджет. При превышении запрос отклоняется.
+* **Таймаут соединения**: 30 секунд на установку соединения с приложением.
+* **Песочница**: `iframe` создаётся с настройкой `sandbox="allow-scripts"`, поэтому отсутствует доступ к cookies, `localStorage`, `sessionStorage` и `DOM` родительской страницы.
+* **Валидация параметров**: все параметры, переданные через API виджета, проверяются. Невалидные значения отклоняются: см. допустимые значения в разделе [API виджета](#api-reference).
+
+## Что дальше? {#whats-next}
+
+* Узнайте больше про другие типы [Виджетов](/pro/dashboards/widgets/overview).
+* Посмотрите доступные [Операции с виджетами](/pro/dashboards/widgets/manage).
+* [Быстрый старт](/pro/start).
+* Узнайте, как работать с [Данными](/pro/data/overview) и [Визуализацией данных](/pro/data/visualization/overview).
+* Узнайте о возможностях [Слоёв](/pro/dashboards/layers/create), [Дашбордов](/pro/dashboards/dashboards/create) и [Сцен](/pro/dashboards/scenes/create).
+* Познакомьтесь с готовыми [Сценариями аналитики](/pro/presets/overview).

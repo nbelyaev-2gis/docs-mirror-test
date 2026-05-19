@@ -1,0 +1,40 @@
+.button {
+  height: auto !important;
+  padding: var(--gap-2m) var(--gap-3m) !important;
+  background-color: var(--text-blue-1-8) !important;
+  border: none !important;
+
+  @media screen and (--media-xs) {
+    &[class] {
+      margin-inline: var(--gap-1m);
+      width: calc(100% - 2 * var(--gap-1m)) !important;
+    }
+  }
+
+  .aiIcon {
+    color: var(--text-blue-1);
+  }
+
+  .text {
+    flex: 1 1 auto;
+    padding-left: 8px;
+    text-align: left;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-sm);
+    color: var(--text-main);
+  }
+
+  .arrowUpIcon {
+    color: var(--text-disabled);
+  }
+
+  & > div {
+    width: 100%;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+}
+
+[data-theme='dark'] .button {
+  background-color: var(--shape-level-1-6) !important;
+}

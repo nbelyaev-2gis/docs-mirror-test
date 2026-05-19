@@ -1,0 +1,20 @@
+stages:
+  - build
+  - tools
+  - s3 sync
+  - test
+  - review
+  - deploy-staging
+  - ui test
+  - deploy-prod
+  - stop review
+  - index
+
+include:
+  - local: .gitlab/ci/templates/*.gitlab-ci.yml
+  - local: .gitlab/ci/master.gitlab-ci.yml
+    rules:
+      - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  - local: .gitlab/ci/mr.gitlab-ci.yml
+    rules:
+      - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_DRAFT == "false"

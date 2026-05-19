@@ -1,0 +1,419 @@
+---
+sidebar: mapgljsapi
+---
+# Построение маршрутов
+
+Вы можете строить оптимальные маршруты между несколькими точками на карте (до 10 точек) с помощью плагина [Directions](/mapgl/plugins/directions/overview).
+
+## Начало работы {#getting-started}
+
+Чтобы начать работу с плагином Directions, выполните следующие шаги:
+
+1. [Получите ключ доступа](#getting-access-key).
+2. [Подключите плагин](#install-plugin).
+3. [Инициализируйте плагин](#initialize-plugin).
+
+### 1. Получите ключ доступа {#getting-access-key}
+
+Плагин работает на основе [Routing API](/api/navigation/routing/overview). Чтобы работать с API сервиса, получите ключ доступа:
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=api_vector).
+2. Создайте [демо-ключ](/platform-manager/subscription/keys#demo) или купите [подписку](/platform-manager/subscription/purchase) для доступа к API.
+
+Работать с ключами можно в Менеджере Платформы: подробнее см. в документации [личного кабинета](/platform-manager/overview).
+
+### 2. Подключите плагин {#install-plugin}
+
+#### При помощи тега script
+
+Чтобы подключить плагин, добавьте следующую строку в код HTML-страницы (после подключения MapGL):
+
+```html
+<script src="__MAPGL_PLUGIN_DIRECTIONS_URL__"></script>
+```
+
+#### При помощи npm
+
+Если вы используете npm, подключите плагин с помощью пакета [@2gis/mapgl-directions](https://www.npmjs.com/package/@2gis/mapgl-directions):
+
+```bash
+npm install @2gis/mapgl-directions
+```
+
+### 3. Инициализируйте плагин {#initialize-plugin}
+
+#### При помощи тега script
+
+Инициализируйте объект [Directions](/mapgl/plugins/directions/reference/class#directions):
+
+```js
+const directions = new mapgl.Directions(map, {
+    directionsApiKey: 'Your Directions API key',
+});
+```
+
+#### При помощи npm
+
+Импортируйте плагин как ES-модуль:
+
+```js
+import { Directions } from '@2gis/mapgl-directions';
+```
+
+Или как модуль CommonJS:
+
+```js
+const { Directions } = require('@2gis/mapgl-directions');
+
+const directions = new Directions(map, {
+    directionsApiKey: 'Your Directions API key',
+});
+```
+
+## Использование плагина
+
+После инициализации вы можете вызвать следующие методы:
+
+* [carRoute()](/mapgl/plugins/directions/reference/class#directions/car-route) для построения автомобильного маршрута;
+* [pedestrianRoute()](/mapgl/plugins/directions/reference/class#directions/pedestrian-route) для построения пешеходного маршрута.
+
+Оба метода принимают массив географических координат в качестве параметра `points`. Например:
+
+```js
+directions.carRoute({
+    points: [
+        [37.582591, 55.775364],
+        [37.656625, 55.765036],
+    ],
+});
+directions.pedestrianRoute({
+    points: [
+        [37.582591, 55.775364],
+        [37.656625, 55.765036],
+    ],
+});
+```
+
+Чтобы удалить маршрут, вызовите метод `clear()`:
+
+```js
+directions.clear();
+```
+
+## Примеры использования
+
+### Автомобильный маршрут {#car-route}
+
+Выберите две точки на карте, чтобы построить между ними автомобильный маршрут.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Построение автомобильного маршрута с помощью плагина Directions" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            #reset {
+                padding: 4px 10px;
+                background: #00a81f;
+                border-radius: 4px;
+                box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+                border: none;
+                color: #fff;
+                font-size: 12px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_DIRECTIONS_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const directions = new mapgl.Directions(map, {
+                directionsApiKey: 'Your directions API access key',
+            });
+            const markers = [];
+
+            let firstPoint;
+            let secondPoint;
+            let selecting = 'a';
+
+            const controlsHtml = \`<button id="reset">Сбросить точки</button>\`;
+            new mapgl.Control(map, controlsHtml, {
+                position: 'topLeft',
+            });
+            const resetButton = document.getElementById('reset');
+
+            resetButton.addEventListener('click', function() {
+                selecting = 'a';
+                firstPoint = undefined;
+                secondPoint = undefined;
+                directions.clear();
+            });
+
+            map.on('click', (e) => {
+                const coords = e.lngLat;
+
+                if (selecting != 'end') {
+                    markers.push(
+                        new mapgl.Marker(map, {
+                            coordinates: coords,
+                            icon: '__BASE_URL__/img/dotMarker.svg',
+                        }),
+                    );
+                }
+
+                if (selecting === 'a') {
+                    firstPoint = coords;
+                    selecting = 'b';
+                } else if (selecting === 'b') {
+                    secondPoint = coords;
+                    selecting = 'end';
+                }
+
+                if (firstPoint && secondPoint) {
+                    directions.carRoute({
+                        points: [firstPoint, secondPoint],
+                    });
+                    markers.forEach((m) => {
+                        m.destroy();
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+### Пешеходный маршрут {#pedestrian-route}
+
+Выберите две точки на карте, чтобы построить между ними пешеходный маршрут.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Построение пешеходного маршрута с помощью плагина Directions" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            #reset {
+                padding: 4px 10px;
+                background: #00a81f;
+                border-radius: 4px;
+                box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+                border: none;
+                color: #fff;
+                font-size: 12px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_DIRECTIONS_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 17,
+                key: 'Your API access key',
+            });
+
+            const directions = new mapgl.Directions(map, {
+                directionsApiKey: 'Your directions API access key',
+            });
+            const markers = [];
+
+            let firstPoint;
+            let secondPoint;
+            let selecting = 'a';
+
+            const controlsHtml = \`<button id="reset">Сбросить точки</button>\`;
+            new mapgl.Control(map, controlsHtml, {
+                position: 'topLeft',
+            });
+            const resetButton = document.getElementById('reset');
+
+            resetButton.addEventListener('click', function() {
+                selecting = 'a';
+                firstPoint = undefined;
+                secondPoint = undefined;
+                directions.clear();
+            });
+
+            map.on('click', (e) => {
+                const coords = e.lngLat;
+
+                if (selecting != 'end') {
+                    markers.push(
+                        new mapgl.Marker(map, {
+                            coordinates: coords,
+                            icon: '__BASE_URL__/img/dotMarker.svg',
+                        }),
+                    );
+                }
+
+                if (selecting === 'a') {
+                    firstPoint = coords;
+                    selecting = 'b';
+                } else if (selecting === 'b') {
+                    secondPoint = coords;
+                    selecting = 'end';
+                }
+
+                if (firstPoint && secondPoint) {
+                    directions.pedestrianRoute({
+                        points: [firstPoint, secondPoint],
+                    });
+                    markers.forEach((m) => {
+                        m.destroy();
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Настройки отображения
+
+Графически маршрут представляет собой несколько линий, расположенных друг под другом:
+
+* основная линия маршрута сверху (route line);
+* линия подложки посередине (substrate line);
+* линия обводки внизу (halo line).
+
+Вы можете изменить ширину любой линии с помощью параметра `style`. Ширину можно задать в пикселях или как [InterpolateExpression](/mapgl/plugins/directions/reference/typeAlias#interpolateexpression) (в этом случае ширина будет меняться в зависимости от масштаба карты). Чтобы скрыть линию, укажите значение ширины `0`.
+
+Пример:
+
+```js
+directions.carRoute({
+    points: [
+        [37.582591, 55.775364],
+        [37.656625, 55.765036],
+    ],
+    style: {
+        // Основная линия (зелёная)
+        routeLineWidth: [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            10,
+            30, // Ширина основной линии будет меняться от 30 пикселей на масштабе 10 и ниже...
+            14,
+            3, // ...до 3 пикселей на масштабе 14 и выше
+        ],
+        // Линия подложки (белая)
+        substrateLineWidth: [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            10,
+            3, // Ширина линии подложки будет меняться от 3 пикселей на масштабе 10 и ниже...
+            14,
+            50, // ...до 50 пикселей на масштабе 14 и выше
+        ],
+        // Ширина линии обводки равна 60 пикселям при любом масштабе карты
+        haloLineWidth: 60,
+    },
+});
+```
+
+Увеличьте или уменьшите масштаб карты, чтобы увидеть, как изменится ширина линий.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Изменение ширины линий маршрута с помощью плагина Directions" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            #reset {
+                padding: 4px 10px;
+                background: #00a81f;
+                border-radius: 4px;
+                box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+                border: none;
+                color: #fff;
+                font-size: 12px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_DIRECTIONS_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+            const directions = new mapgl.Directions(map, {
+                directionsApiKey: 'Your directions API access key',
+            });
+
+            directions.carRoute({
+                points: [
+                    [37.582591, 55.775364],
+                    [37.656625, 55.765036],
+                ],
+                style: {
+                    routeLineWidth: ['interpolate', ['linear'], ['zoom'],
+                        10, 30, // Масштаб, ширина
+                        14, 3 // Масштаб, ширина
+                    ],
+                    substrateLineWidth: ['interpolate', ['linear'], ['zoom'],
+                        10, 3, // Масштаб, ширина
+                        14, 50 // Масштаб, ширина
+                    ],
+                    // Статическое значение ширины
+                    haloLineWidth: 60,
+                }
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

@@ -1,0 +1,252 @@
+---
+sidebar: mapgljsapi
+---
+# Хилшейд
+
+Хилшейд (также hillshade, отмывка рельефа, теневой рельеф, shaded relief) – это метод представления рельефа на картах, при котором кажется, что на элементы рельефа сбоку падает свет. Карты с хилшейдом подчеркивают красоту рельефа и помогают показать формы ландшафта в деталях.
+
+![Хилшейд](/img/mapgl/hillshade/introduction.png)
+
+Хилшейд представляет собой иллюзию трехмерности и не изменяет геометрическое расположение объектов на карте (для этого нужен [3D-рельеф](/mapgl/map-style/immersive/terrain)). Это наиболее легкий и производительный способ показать рельеф на карте.
+
+По умолчанию хилшейд отключен. Для включения настройте его в [Редакторе стилей](https://styles.2gis.com/).
+
+## Настройка в редакторе стилей {#setup-in-style-editor}
+
+1. Создайте новый стилевой слой с типом `полигон` и выберите для него данные **Хилшейд светлый** или **Хилшейд темный**:
+
+   ![Создать слой с хилшейдом](/img/mapgl/hillshade/source.png)
+
+2. Во вкладке **Стиль** настройте внешний вид полигонов. Рекомендуемые настройки представлены ниже:
+
+   <details>
+   <summary>Светлый слой</summary>
+
+   * Цвет заливки:
+      * Точка 1: цвет `#FFFFFF1A`, масштаб `10`.
+      * Точка 2: цвет `#FFFFFF00`, масштаб `14,5`.
+   * Цвет обводки:
+      * Точка 1: цвет `#FFFFFF1A`, масштаб `10`.
+      * Точка 2: цвет `#FFFFFF00`, масштаб `14,5`.
+   * Ширина обводки: `0 px`.
+
+   ![Пример настройки стиля для светлого слоя](/img/mapgl/hillshade/light_settings.png)
+
+   </details>
+
+   <details>
+   <summary>Тёмный слой</summary>
+
+   * Цвет заливки:
+      * Точка 1: цвет `#00000008`, масштаб `10`.
+      * Точка 2: цвет `#00000000`, масштаб `14,5`.
+   * Цвет обводки:
+      * Точка 1: цвет `#00000008`, масштаб `10`.
+      * Точка 2: цвет `#00000000`, масштаб `14,5`.
+   * Ширина обводки: `0 px`.
+
+   ![Пример настройки стиля для темного слоя](/img/mapgl/hillshade/dark_settings.png)
+
+   </details>
+
+### Приоритет слоев с хилшейдом
+
+Располагать эти слои следует после всех природных площадных объектов: воды, суши, растительности.
+
+![Пример расположения слоя с хилшейдом](/img/mapgl/hillshade/ordering.png)
+
+## Динамическое включение и отключение
+
+Хилшейд, как и любые другие стилевые слои, можно включать/отключать при помощи [глобальных переменных стиля](/mapgl/map-style/global-style-variables).
+
+1. Добавьте к фильтрам стилевых слоев хилшейда зависимость от глобальной переменной. Например, для переменной `hillshade` это будет выглядеть следующим образом:
+
+   ![Глобальная переменная hillshade](/img/mapgl/hillshade/globalvar.png)
+
+2. Включите или отключите отображение слоев хилшейда при помощи метода [map.patchStyleState()](/mapgl/reference/class#map/patch-style-state):
+
+   ```ts
+   // Включить слои хилшейда
+   map.patchStyleState({ hillshade: true });
+   ```
+
+   <br  />
+
+   ```ts
+   // Отключить слои хилшейда
+   map.patchStyleState({ hillshade: false });
+   ```
+
+Пример использования глобальной переменной:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Хилшейд" />
+        <link rel="stylesheet" type="text/css" href="/css/switch.css" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            #buttons {
+                position: absolute;
+                z-index: 2;
+
+                top: 0;
+                left: 0;
+                margin: 8px;
+                padding: 2px 4px;
+
+                display: flex;
+                align-items: center;
+                background-color: white;
+                border-radius: 8px;
+                font: 13px sans-serif;
+            }
+
+            #buttons label {
+                padding: 0 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div id="buttons">
+            <label>Хилшейд</label>
+            <input type="checkbox" role="switch" onclick="toggleHillshade(event)" checked="true" />
+            <label id="stateCaption">Включен</label>
+        </div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [40.315645, 43.647376],
+                zoom: 9.5,
+                pitch: 41.41,
+                rotation: 19.20,
+                key: 'Your API access key',
+                style: '8500c08c-0d73-4147-bb73-e6dcba21fa47',
+                styleState: {
+                    hillshade: true
+                }
+            });
+
+            const stateCaption = document.getElementById('stateCaption');
+
+            function toggleHillshade(ev) {
+                const enabled = ev.target.checked;
+                map.patchStyleState({ hillshade: enabled })
+                stateCaption.innerText = enabled ? 'Включен' : 'Выключен';
+            }
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Добавление к существующему стилю
+
+Слои хилшейда можно добавить к существующему стилю при помощи метода [map.addLayer()](/mapgl/reference/class#map/add-layer). Пример:
+
+```ts
+map.on('styleload', function () {
+    map.addLayer({
+        type: 'polygon',
+        id: 'hillshade-dark',
+        filter: ['match', ['get', 'db_sublayer'], ['Hillshade_dark'], true, false],
+        style: {
+            color: ['interpolate', ['linear'], ['zoom'], 10, '#00000008', 14.5, '#00000000'],
+            strokeWidth: 0,
+        },
+    });
+    map.addLayer({
+        type: 'polygon',
+        id: 'hillshade-light',
+        filter: ['match', ['get', 'db_sublayer'], ['Hillshade_light'], true, false],
+        style: {
+            color: ['interpolate', ['linear'], ['zoom'], 10, '#FFFFFF1A', 14.5, '#FFFFFF00'],
+            strokeWidth: 0,
+        },
+    });
+});
+```
+
+:::warning
+
+Событие [StyleLoadEvent](/mapgl/reference/interface#style-load-event) должно вызываться перед методами [map.addLayer()](/mapgl/reference/class#map/add-layer) и [map.removeLayer()](/mapgl/reference/class#map/remove-layer). Карта не может добавлять и удалять стилевые слои, пока не загрузится ее основной стиль.
+
+:::
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Хилшейд" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            #buttons {
+                position: absolute;
+                top: 0;
+                left: 0;
+                padding: 8px;
+                z-index: 2;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [40.315645, 43.647376],
+                zoom: 9.5,
+                pitch: 41.41,
+                rotation: 19.20,
+                key: 'Your API access key',
+            });
+
+            map.on('styleload', function () {
+                map.addLayer({
+                    type: 'polygon',
+                    id: 'hillshade-dark',
+                    filter: ["match", ["get", "db_sublayer"], ["Hillshade_dark"], true, false],
+                    style: {
+                        color: ["interpolate", ["linear"], ["zoom"], 10, "#00000008", 14.5, "#00000000"],
+                        strokeWidth: 0
+                    }
+                });
+                map.addLayer({
+                    type: 'polygon',
+                    id: 'hillshade-light',
+                    filter: ["match", ["get", "db_sublayer"], ["Hillshade_light"], true, false],
+                    style: {
+                        color: ["interpolate", ["linear"], ["zoom"], 10, "#FFFFFF1A", 14.5, "#FFFFFF00"],
+                        strokeWidth: 0
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

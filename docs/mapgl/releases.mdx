@@ -1,0 +1,1467 @@
+---
+sidebar: mapgljsapi
+---
+# Релизы MapGL API
+
+There are two ways to choose MapGL version:
+
+1. (**recommended**) major version: https://mapgl.2gis.com/api/js/v1
+2. fixed version: https://mapgl.2gis.com/api/js/v1.72.3
+
+Major version guarantees to have stable API (breaking changes will land into the next major version).
+It is updated regularly with new features, bug fixes and performance improvements.
+
+Fixed version does not have any updates.
+That's why it has a short **support period of 3 months** after a new version is released.
+We guarantee that the version will be working during the support period.
+**The only reason to choose fixed version** is when you need
+[Subresource Integrity (SRI)](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity).
+Because of short support period you have to update the version regularly.
+
+## v1.72.3
+
+**URL:** https://mapgl.2gis.com/api/js/v1.72.3
+
+**SRI:** sha512-Bs1FNW6l3HhIEjgdeI6b3T/IuYxOouAn01VPM46zXcG1bf/cGSbt3/z7FcJmzkPevEWRLqI+nScMR0voF76tmw==
+
+**Release Date:** 08.05.2026
+
+- Metrics are now submitted when the graphics preset changes
+- Raster tile source URL function now processes map key when available
+- POI icon data is now included in the click event's targetData
+- Improved dashed line identify behavior by disabling depth testing for 2D striped lines
+- Fixed dashed polylines disappearing and distorted rendering at low zoom levels, including identify passes
+- Drawing of universe tiles is skipped when they are covered by regional tiles starting at zoom level 10 to improve performance
+- Improved globe rendering performance and smoothness by switching to direct rendering with subdivision
+- WebGL state now resets when rendering customLayers. It improves compatibility with thirdparty WebGL libraries (e.g. deck.gl)
+- Added stretchable icon config type (StyleStretchableIconConfig) and split StyleIconConfig into simple/stretchable variants
+- Style expressions now use kebab-case as the primary naming and still accept camelCase aliases for backward compatibility
+- Added elevated wall segments (arches)
+- Fixed GLTF material animation target resolution for pointer paths
+
+## v1.72.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.72.0
+
+**SRI:** sha512-x85xBizQZwnFKVsj/oj1MG0rR9BywXT1eRRXgg/M046otP/Zine22ILdHHc5i8WvMjd/gJi41YkcqVlIt4j5Uw==
+
+**Release Date:** 02.04.2026
+
+**Support End Date:** 08.08.2026
+
+-   Added the public [Arrow](/mapgl/reference/class#arrow) object for rendering arrows on the map
+-   Fixed [markers](/mapgl/objects/markers) disappearing when panning across the antimeridian in loopWorld mode
+-   Fixed lighting of transparent objects in models
+-   Fixed several rendering issues in Firefox affecting globe rendering and dynamic objects
+
+## v1.71.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.71.0
+
+**SRI:** sha512-bzLE2+6sF6Apxq4MlS99iDQ55wmHPdmAiswK2FlT/IJ9Z4bRAk121nHFC3McyU3l/cBr8f5vGHEf/+Hrv31jcQ==
+
+**Release Date:** 10.03.2026
+
+**Support End Date:** 02.07.2026
+
+-   Improved descriptions for the public style layer types
+-   Updated UBO processing
+-   Fixed road identification on terrain
+-   Added the `forceSyncIdentify` flag that forces the map to use synchronous objects picking
+
+## v1.70.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.70.1
+
+**SRI:** sha512-P9RRcFklI/9RIlgZjHPbsxCyoj9tRmUsiToos6JOXBZfxQdE2EPKMSSbe1qrDOSFj5N9e2OEdIvymWW+jeokhg==
+
+**Release Date:** 12.02.2026
+
+**Support End Date:** 10.06.2026
+
+-   Fixed [globe](/mapgl/map-style/immersive/globe) rotation with the [loopWorld: false](/mapgl/map/configuration/loopedmap) option
+
+## v1.69.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.69.1
+
+**SRI:** sha512-+dcmrruTpD1EXtvjourezNCQ7TGJ5s2Eh23oSxy9IVvMG8QUKK+QoTNv4hFlMxxw3HcL0Zj/dgG+qNQAlBaqAw==
+
+**Release Date:** 19.01.2026
+
+**Support End Date:** 12.05.2026
+
+-   Fixed a bug with model transformation on the initial animation frame
+-   Improved the public style types
+-   Fixed a bug that caused overpasses to unexpectedly appear at non-integer zoom levels
+-   Fixed a bug with map loading in about:blank
+-   Improved identify mechanism in the case of infinitely animated objects
+-   Fixed a bug when the identify scene contains hidden objects
+-   Added support for the WASM version of the Draco decoder, faster decoding and generation of glTF models
+
+<!-- ## v1.69.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.69.0
+
+**SRI:** sha512-wVKUZ95+0JsyYfR/oen+R6ihA+RaQmoK4/F9osNnCKaQFnN2vOaQ0a9pFlEqqdclJP48ADNjPILA2oCDzPLfYw==
+
+**Release Date:** 26.12.2025
+
+-   Fixed a bug that caused overpasses to unexpectedly appear at non-integer zoom levels
+-   Fixed a bug with map loading in about:blank
+-   Improved identify mechanism in the case of infinitely animated objects
+-   Fixed a bug when the identify scene contains hidden objects
+-   Models can now be rendered along a line, required for rendering the territory fences
+-   Added support for the WASM version of the Draco decoder, faster decoding and generation of glTF models -->
+
+<!-- ## v1.68.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.68.0
+
+**SRI:** sha512-7NGdb+i8FYZIvoiSqK72hz3iOSWkHUhkjvZhgwynD9UqZVtGi/JFw5O2uoalGx+VaPrvvkXhJPGacjyI1YWODQ==
+
+**Release Date:** 10.12.2025
+
+-   Improved identify mechanism in the case of infinitely animated objects
+-   Fixed a bug when the identify scene contains hidden objects
+-   Models can now be rendered along a line, required for rendering the territory fences
+-   Added support for the WASM version of the Draco decoder, faster decoding and generation of glTF models -->
+
+## v1.67.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.67.0
+
+**SRI:** sha512-TcdTh0KWQhBRrhEvZgIlGqrzQ6U/SZH5chQBv0WI+R4GHK4Ai38XpjxT6f2xgP4157C3GBnvApb3RPEvy16z1g==
+
+**Release Date:** 20.11.2025
+
+**Support End Date:** 19.04.2026
+
+-   Increased view distance at high map pitches
+-   Render cache disabled for some problematic cases
+-   Fixed [terrain](/mapgl/map-style/immersive/terrain) rendering during map initialization
+-   Fixed WebGL 1 errors related to the `EXT_frag_depth extension`
+-   Fixed tunnel rendering on [terrain](/mapgl/map-style/immersive/terrain)
+-   Fixed issue where a patterned line sometimes failed to render completely
+-   Fixed calculation of models show ratio when zoom level passes 18
+
+## v1.66.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.66.0
+
+**SRI:** sha512-RsAUO9bc7cxeKDN/XuyOhH0+mE26TbgxdVPbKzV5eceJU9/crcZsbj+lIStCC2cggbj+uamqNCN1oVPj+XBaXg==
+
+**Release Date:** 06.10.2025
+
+**Support End Date:** 20.02.2026
+
+* Improved [3D Terrain](/mapgl/map-style/immersive/terrain)
+* Recently selected floor is remembered within floor complex
+* Fixed visibility of commercial POI inside floor plans
+* Fixed lighting of [textured polygon](/mapgl/map-style/examples/texturedpolygon)
+
+## v1.65.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.65.0
+
+**SRI:** sha512-6xxd6KVBOcze7loe8Y9lJs+RMx7Pz+Mrib9TVw0PZ8QsauHIzMZ/ZFfPMcD2bsoLefE0zy1dq2CSE1YUZtnNOw==
+
+**Release Date:** 18.09.2025
+
+**Support End Date:** 06.01.2026
+
+* Added a new map option `iconIdentifyOpacity` to control how icons are rendered in the identify scene. Pixels with alpha less than this value won't be drawn in the identify scene. Default value is 0.3
+* Optimized map rendering with the `light` graphics preset
+* Added the group case to the `showLayers` and `hideLayers` methods
+* Adjusted the boundaries for automatic selection of graphic presets — the immersive preset is now selected more frequently
+* Fixed font resolve expression for the second label of the point
+
+## v1.64.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.64.0
+
+**SRI:** sha512-zshtsngCKYHZQbQZXKXtxUKyvCnWZEuVgZEqsfzLSFRCNge+Cz2RSU8c9F3lS3UEA8hvPhOKQXjimenhmXiOMA==
+
+**Release Date:** 05.09.2025
+
+**Support End Date:** 18.12.2025
+
+* For complexes that don't have floor plans buildings remain visible
+* Added Linear and Step interpolation to gltf-model animation
+* Floor plans are now selected more reliably as camera moves
+* Dictionaries in metatiles are now supported for tourist routes
+* Rendering cache disabled on WebGL1. It fixed some visual artifacts
+* Fixed coordinates parsing in GeoJSON
+* Fixed problems with click and hover over models in Firefox
+* Fixed globe antimeridian rendering
+* Fixed broken objects identification in Globe-mode
+
+## v1.63.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.63.0
+
+**SRI:** sha512-HbxMmNbeuokJCJQowai2Crg2bl+sZuDPf+tPRNSPViK9BpkIsv8VKAHWfjyZYNIjHASXkAVz4JiJwrvMwMSg/w==
+
+**Release Date:** 07.08.2025
+
+**Support End Date:** 05.12.2025
+
+* Added a hide button to Floor control for displaying the building without floor plans
+* Fixed errors on D3D9 systems in some specific cases
+* Fixed texture pixelation effect on some mobile devices
+* Optimized map updating logic during movement
+
+## v1.62.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.62.0
+
+**SRI:** sha512-CpAJKhirnHI0KKfSsQsOGQr1jL0bw6aN+z715dRO4wWkm2I1wAKrc/1yPORx0I1XuYKNR3WTHYQD87Cyey+zfA==
+
+**Release Date:** 11.07.2025
+
+**Support End Date:** 07.11.2025
+
+* Added the trafficOn option to map initialization settings.
+* Enhanced traffic-related methods in the map instance.
+* Optimized map styles storage.
+* Fixed z-fighting issues between extruded polygons with zero height and polylines.
+* Fixed a bug with 3D model rendering on devices with Mali GPUs.
+* Fixed the behavior of the copyright control.
+* Fixed WebGL 1 errors related to EXT\_frag\_depth extension issues on certain devices.
+
+## v1.61.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.61.0
+
+**SRI:** sha512-yyAgla7ThMFTUyOKRk7shNxSgq1rtUIi1AwNnab1V7JyPAV/aex/AFs1R8RVZhn7xJRV3RR3G8Ocazngb5/uMw==
+
+**Release Date:** 11.06.2025
+
+**Support End Date:** 11.10.2025
+
+* Fixed a bug with rendering of text on intersecting substrates
+* Fixed incorrect map behavior when changing the browser zoom level
+* More accurate height positioning of glTF models + support for negative height values
+* Fixed the GeoJsonSource destroy error
+* Always pass the internal generated ID in the events of GeoJSON features
+* Optimized map performance when zooming and moving
+* Extended the error event: added handling for webglcontextlost, invalidtilekey, and styleloaderror
+* Fixed map flickering when selecting features after switching styles
+* Slightly improved rendering performance
+* Fixed model rendering on Android devices with Mali GPUs
+* Fixed disappearance of animated models
+
+## v1.60.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.60.0
+
+**SRI:** sha512-8Sd8fRKpKXVUxQ1jiL1Pvtlo3jtwJK1hZV0jedHK0cRa6Rg4wC+7+Z0EXx+14/msRBnft2J2aDb2IxOhFKaMIQ==
+
+**Release Date:** 28.04.2025
+
+**Support End Date:** 11.09.2025
+
+* Added [minZoom](/mapgl/reference/interface#zenith-source-options/min-zoom) and [maxZoom](/mapgl/reference/interface#zenith-source-options/max-zoom) options to [ZenithSource](/mapgl/reference/class#zenith-source)
+
+## v1.59.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.59.0
+
+**SRI:** sha512-EFaRLQlcLcuBI9+Ptqdqo6pNiZMUfSeYgpUciwkFrW7k6I/ZUUNFYWOO6WWaI9iVCheJQCi3T69rknBXFhrTAg==
+
+**Release Date:** 28.04.2025
+
+**Support End Date:** 28.07.2025
+
+* Style groups now can have a common defaults (can be set through [style editor](/maps/styles/overview))
+* Various fixes in gltf-models rendering
+* Fixed rendering artifacts of the overpass border
+* Fixed incorrect labelLine layer display in floors mode
+* Improvements in instanced models rendering
+
+## v1.58.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.58.1
+
+**SRI:** sha512-bwC4kJmmB/O5XlHnagXKC/v+Cd91OzK/vRrIsshK+cyYPYjeYMHLzRznw3Ijr7Ewst830JBJZI37w+OJu9m4fA==
+
+**Release Date:** 25.03.2025
+
+**Support End Date:** 28.07.2025
+
+* Fixed map crash after multiple reloads on iOS devices
+* Improved accuracy of [Polyline](/mapgl/reference/class#polyline) object
+
+## v1.58.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.58.0
+
+**SRI:** sha512-1ZbHAg0b3kIQc9vTo3Sfkt+zx/fjd1uJ4spIeXlZAuZGU5lbOLLeoQ13x9nqPpniYlPaPJ7Jkavvai3wvoMiBA==
+
+**Release Date:** 21.03.2025
+
+**Support End Date:** 25.06.2025
+
+* Improved globe rendering in dark mode, the intensity of the halo can now be adjusted via the color's alpha channel.
+* Fixed a bug related to HtmlMarker in globe mode.
+* Fixed processing of point objects for floors, transitions in metro stations are now visible on floors.
+* Fixed the logic of lowZoomMaxPitch in globe mode, empty tiles no longer fall within the visible area.
+
+## v1.57.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.57.0
+
+**SRI:** sha512-r04yjbUQX+eqmORerLRS4gJLXqSnrhnvFb3YP1/iuIf3ncBI3l2cg0L5E6ryNWH1sBQ4pv7IRSAZ8x/cl1D2Uw==
+
+**Release Date:** 26.02.2025
+
+**Support End Date:** 21.06.2025
+
+* Fixed a bug related to `styleload` event emitter behaviour in some cases
+* Fixed a bug related to models position on Android devices
+* Fixed a bug related to tiles displacement in some cases
+* Implemented the ability to disable models in the [graphics presets](/mapgl/map/configuration/graphics-presets)
+
+## v1.56.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.56.0
+
+**SRI:** sha512-Z8csu1vPzDUceoCXeHVyZy7zHL/P+s2QUz3iU0KxAuXzsEv3/+XiyYJCmCnFhwbxYyYWnaegwsmC8cwZWdIp/g==
+
+**Release Date:** 03.02.2025
+
+**Support End Date:** 26.05.2025
+
+* Added the `enableTwoFingerDragging` [map option](/mapgl/reference/interface#map-options) to enable two-finger dragging gestures
+* Fixed an issue where dashed lines disappeared at low zoom levels
+* Added the `globeOff` flag for controlling globe mode in [graphics presets](/mapgl/reference/interface#graphics-preset)
+* Fixed bugs on systems using DirectX9 as the graphics backend
+* Fixed polyline identification at low zoom levels and when overlapping 3D objects
+
+## v1.55.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.55.0
+
+**SRI:** sha512-DjgDZRgbjNFjD7GS+e5OXSUJP+iSpGGffsvSktmPrNL1KIFLV0trBUA5a7hTsvjK0z2vTwI8c99WEXGu5M//2w==
+
+**Release Date:** 25.12.2024
+
+**Support End Date:** 03.05.2025
+
+* Added the `HtmlMarkerOptions.lableing` option to [HtmlMarker](/mapgl/reference/class#html-marker)
+* Added the graphics presets functionality
+* Added new [LngLatBoundsClass](/mapgl/reference/class#lng-lat-bounds-class) methods: `getCenter`, `containsPoint`, `containsBounds` and `intersects`
+* Added a new data source: [GeoJsonViewportSource](/mapgl/geodata/geojson-viewport)
+* Fixed a bug related to the display of markers on some Android devices
+* Improved performance related to glTF models drawing
+
+## v1.54.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.54.1
+
+**SRI:** sha512-LE96WllmU9YC48MDF3bhdfOsvJ1YUpPho6N3qnV/+nOEKLWCr3L6v6nx4u0guppQ1tHm/NyUWdmv1ucS8A4bWw==
+
+**Release Date:** 10.12.2024
+
+**Support End Date:** 25.03.2025
+
+* Optimized glTF models animation when the camera is static
+* Improved dashed line rendering
+* Fixed a bug with uniforms binding in some rare cases
+
+## v1.54.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.54.0
+
+**SRI:** sha512-9+vHPwIK4MNsAcrgj7SYCOEoP/v1e5GUhfrnlqpqI89dXk6Uc3NLAcqWpVKuSOUxqc3QmKmA3RkAULThyVgI+w==
+
+**Release Date:** 05.12.2024
+
+**Support End Date:** 10.03.2025
+
+* Added height in meters to the third coordinate component in [CircleMarker](/mapgl/reference/class#circle-marker)
+* Added support of glTF models without textures. The baseColorFactor is now taken into account when calculating color according to the glTF specification
+* Fixed a bug with incorrect viewport calculation for 3D terrain
+* Fixed a bug with tunnels rendering on Windows with Intel GPU
+* Optimized tile selection algorithm
+
+## v1.53.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.53.0
+
+**SRI:** sha512-h4DhIF0P7Yg4+AO8q9rjbWav4BT24bp1vSgdzJDNALlmYbHq8ztE/zYaWvTYUqBwo7rJdpKO/D3Hp7FMEDnFvA==
+
+**Release Date:** 05.11.2024
+
+**Support End Date:** 05.03.2025
+
+* Fixed a bug that broke rotation on iPad
+* Fixed a bug with identification of overlapping dynamic objects
+* Added support for the next major version of ZenithSource tiles format
+
+## v1.52.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.52.0
+
+**SRI:** sha512-YbkONEIEUmPX0wzc61pvjG+4dGO3j+ptaHGW6+dw/RKpBIYSKPZZ+9rRx2nP9kj1jI3gePbMWXzSvTMOvyltUA==
+
+**Release Date:** 21.10.2024
+
+**Support End Date:** 05.02.2025
+
+* Fixed an issue where clicking on one POI would select a different one
+* Added the `layerId` property to the `targetData` field of the map event
+* Fixed a bug where warnings were logged to the console and models disappeared when switching styles
+* Reduced artifacts related to shadows appearing at a distance from objects
+* Added support for height in meters for marker, with the height specified as the third component of the coordinates
+* Fixed a rendering cache issue on certain devices
+* Added an option to disable rendering cache
+* Fixed an issue with buildings floating in the air on DirectX 9
+* Now polygons on floors can be rendered by `polygonExtrusion` style layer
+* Added support for the `tolerance` option in the GeoJsonSource data source
+
+## v1.51.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.51.1
+
+**SRI:** sha512-IwmLD71Yr6ykwHdB1feTiEzbAymg+el6KCq76UZyiUA2J5tDZwqaxyehrNzmZJb84g1S5zMf3FiC7F1NPyVxkA==
+
+**Release Date:** 20.09.2024
+
+**Support End Date:** 21.01.2025
+
+* Fixed a bug with rendering of text on intersecting substrates
+
+## v1.51.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.51.0
+
+**SRI:** sha512-jqmwyq7o9p8tRznMn4GTrXdYmT0ivo2CmwM0dzMDY55fMqPrfDhhvmV0IBRprhgBLnQasJywe/zE0ZmuJIjuig==
+
+**Release Date:** 13.09.2024
+
+**Support End Date:** 20.12.2024
+
+* Fixed rendering of text on intersecting substrates
+* Fixed some memory leaks
+* Fixed `showLayers`/`hideLayers` functionality by `id`
+* Added `styleloaderror` event
+* Made some [Polyline](/mapgl/reference/class#polyline) options public: `renderingMode`, `hiddenPartColor` and `hiddenPartGapColor`
+
+## v1.50.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.50.1
+
+**SRI:** sha512-8wYWf8VcHOyGVLZ9R1TzsCuipxr9pM8I3sszN+8EnQLhQla1i7LWWT0DE7kvtbuu2zQf4G6i4i5HW3Zsel2c/g==
+
+**Release Date:** 23.08.2024
+
+**Support End Date:** 13.12.2024
+
+* Fixed a bug with icons being transparent at low zoom levels
+
+## v1.50.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.50.0
+
+**SRI:** sha512-UpeJha7+sJsAl9pwAOaoTjPz/d16MJBXVx1oqRTVVRX4Ja1BYQPvOdEiIPOf3y6sJL7Uu7rNyeLED8UM6IzNqA==
+
+**Release Date:** 19.08.2024
+
+**Support End Date:** 23.11.2024
+
+* Added support for arbitrary string IDs
+* Added the `opacity` and `hoverOpacity` options to [Marker](/mapgl/reference/class#marker)
+* `promoteId` and `idScope` options are added to [GeoJsonSource](/mapgl/reference/class#geo-json-source)
+* Fixed a performance issue related to [RasterTileSource](/mapgl/reference/class#raster-tile-source) (Retina devices case)
+* Fixed shadow issues on specific models
+* Improved performance on slow CPU devices
+* Optimized the same input parameter case in the following [Marker](/mapgl/reference/class#marker) methods: `setIcon`, `setHoverIcon` and `setRotation`
+
+## v1.49.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.49.0
+
+**SRI:** sha512-UJSlwASCc8ZUaznYBIzhy1rOpH7x6tNH0bQXOM06YVPm3e5D52njA0z6mTxat1W8It4b1L3pgJcQbkVLQEXwSw==
+
+**Release Date:** 22.07.2024
+
+**Support End Date:** 19.11.2024
+
+* Added shadows rendering
+* Added an opportunity to hide layers by type (`showLayers` and `hideLayers` methods)
+* Improved dashed polylines appearance at small angles between segments
+* Fixed a bug when interaction with map controls causes parent form element submit
+* Fixed a bug related to errors while loading SVG files with Unicode symbols beyond Latin-1 range
+* Fixed a bug with loading icons from Data URL
+* Fixed a bug related to multiple requests for traffic metadata
+
+## v1.48.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.48.0
+
+**SRI:** sha512-90FUY1z5cb/cDXCj/R1I9UCfH2ZRZe3SS7s6kxfhWCLtP8riZNzv4EpRDkHNOSqut0plt6gHQhVWj125cQYrig==
+
+**Release Date:** 25.06.2024
+
+**Support End Date:** 22.10.2024
+
+* Added a new map method `hasLayer`
+* Added support for Georgian language
+* Fixed a bug related to broken sorting inside raster layers group
+* Fixed a bug related to map crash on invalid center argument passed
+* Fixed a bug related to ScaleControl not being updated on map move
+* Fixed a bug related to black screen issue on some older systems and mobile devices in desktop mode
+* Fixed a bug related to the functionality of some shaders on DirectX9
+
+## v1.47.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.47.1
+
+**SRI:** sha512-vSLNOWM/3apNkb/R/zvXBGw/tZn6pzTM85fPGtzfzPqibXHBqoGQw7lrsyvMIbmuG3HhlR8hxSqGM8Y8sRbveA==
+
+**Release Date:** 13.05.2024
+
+**Support End Date:** 25.09.2024
+
+* Fixed a bug related to 3D-models appearing. Objects linked with 3D-model were hidden even if downloading/parsing of the 3D-model had failed
+* Fixed a bug related to labelLine style layer. Labels were broken in cases where `textLabelingSideMargin` was smaller than `lineEndingOffsets`
+* Fixed a bug related to Label dynamic object in looped map
+* Fixed a bug related to 3D-models appearing. Objects linked with 3D-model might not be hidden in case several objects are linked with a 3D-model
+* Added support for Armenian language. Since all the fonts have been rebuilt, you may encounter slight differences in screenshot fonts tests. In this case, we recommend updating your reference screenshots
+* Added method `setZIndex` for HTML Marker
+
+## v1.47.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.47.0
+
+**SRI:** sha512-rPwclEfHMQpmbj8wclml5yT2Xx5287HyGrn14AHO2Tz9/JyQ9/buWjk2QOO4+p0HKx2694SAsrHgQEciPp+VvA==
+
+**Release Date:** 15.04.2024
+
+**Support End Date:** 13.08.2024
+
+* Added the Looped map mode
+* Fixed a bug where [fog](/mapgl/map-style/immersive/sky) wasn't applied to [heatmap](/mapgl/map-style/examples/heatmap)
+* Fixed a caching bug related to adding a new [GeoJsonSource](/mapgl/reference/class#geo-json-source)
+* Added new [Label](/mapgl/reference/interface#label-options) options: `interactive` and `labeling`
+
+## v1.46.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.46.0
+
+**SRI:** sha512-rncqjHZLBpQ+ryDSqhk3YocpwDn2/XjU4W5KuRrCO1yPqueSikr8jpGvsGvaXP8UgxZQbs7cRWS4BXCPQ6pBeQ==
+
+**Release Date:** 27.03.2024
+
+**Support End Date:** 15.07.2024
+
+* Added `disableRounding` option for [HtmlMarker](/mapgl/reference/class#html-marker)
+* Fixed a bug causing labels to flicker on mobile devices
+
+## v1.45.2
+
+**URL:** https://mapgl.2gis.com/api/js/v1.45.2
+
+**SRI:** sha512-5kwPuvjt/ElOt/KPsraRJBGXFJaXPLnrF3yDE8G9GGnxkktyVuMZUivEb/fRDNbDlgOB9VAM4MW+kMu1YoMx+g==
+
+**Release Date:** 28.02.2024
+
+**Support End Date:** 27.06.2024
+
+* Fixed bug when labels disappear after fog turning off
+* Optimized tile generation process
+
+## v1.45.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.45.1
+
+**SRI:** sha512-42TqTf1P9hFV2z8Heg85bSkJvOMjdO+mOScUBe6Gkg+Eo/ANGV/S+Zdx4C6sfL93WB09YTRTKqlB7i7egE0YxA==
+
+**Release Date:** 13.02.2024
+
+**Support End Date:** 28.05.2024
+
+* Fixed bug when fog was not applied to raster tiles
+
+## v1.45.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.45.0
+
+**SRI:** sha512-kRIzzdchVN3RnvnHi0zhavjtO0ZmEvJeNV/CPKyPZSt+wrLh8KT5MUSpEjTvfps1nBJh/r+JeTSBYIJlKxX1Sw==
+
+**Release Date:** 02.02.2024
+
+**Support End Date:** 13.05.2024
+
+* Added `lowZoomMaxPitch` option and `setLowZoomMaxPitch` method to the map
+* Added the ability to enable/customize sky and fog using the style editor
+* Fixed bug with zoom/rotation when map option `disableRotationByUserInteraction` is `true`
+
+## v1.44.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.44.0
+
+**SRI:** sha512-jK0DkSp5sydUL8m4SIK3WGoTP3yHFY/ch/JvrAD8lb+7gP4b67mE7sxcCyz/EkyaFcJNFGR8j9BkILt5nRF5KA==
+
+**Release Date:** 19.01.2024
+
+**Support End Date:** 02.05.2024
+
+* Little improvements in a polygon side stroke rendering
+
+## v1.43.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.43.0
+
+**SRI:** sha512-hpmXNqXbFJoXfnn1BniqaPzJ7XD/BNci2oy+X0gWNxf+VxBy8mMVOWFbH1kHKDaTypFA7Zk6Un2ICGHTemtVtQ==
+
+**Release Date:** 12.01.2024
+
+**Support End Date:** 19.04.2024
+
+* Added `setStyleFromUrl` method to the Map class that allows to fetch a styles object from URL and apply it to the map
+* Fixed posteffects shifting on devices with a fractional pixel ratio
+* Fixed a reduction in performance after tile generating with a large number of buildings
+* Improved zooming in/out for trackpads
+* Added some rendering optimizations
+
+## v1.42.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.42.0
+
+**SRI:** sha512-w0WQIsSX8a7wdP6I9DGTJUuuNlRckdtSHrh5/bkHiM86pvMUrv7YBR4qIelWl0cHQKcn/AS4dXp/QVW/qucQcA==
+
+**Release Date:** 07.12.2023
+
+**Support End Date:** 12.04.2024
+
+* Improved glTF-model appearance animation
+* Expanded the area 3D models are drawn within
+* Fixed shader accuracy bug in FireFox
+* Fixed a bug related to buildings visibility during their loading with visible floors
+* Fixed anti-aliasing after calling setViewport method
+* Fixed rendering artifacts in Chrome + Vulkan (Linux)
+* Accelerated map generation when buildings are replaced with models or floors
+
+## v1.41.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.41.1
+
+**SRI:** sha512-I8tuzesRKXBeFCeSttN99f45ztx4N+hE8GrdJRjoLeL+NAbgn6ifuv8oVRW9+YZELBCtvn9WfjnEKY6tVcF/yg==
+
+**Release Date:** 07.11.2023
+
+**Support End Date:** 07.03.2024
+
+* `disableAntiAliasing` map option is true by default now
+
+## v1.41.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.41.0
+
+**SRI:** sha512-jZ32UcIX2ajjYAVm/SQDVl6pAwiHTiNBK6+2OuadCUWeWLG3Wl4TkB2bQcDDflQilfE5yIF/4sc52Eix5YQ1WQ==
+
+**Release Date:** 02.11.2023
+
+**Support End Date:** 07.02.2024
+
+* Supported `bbox` in `RasterTileSourceOptions.url` function for generating WMS(EPSG:3857) requests
+* Height in meters is supported as third coordinate in `HtmlMarkerOptions.coordinates`
+* Fixed a bug related to the incorrect position of `Marker`
+* Fixed the fog effect on `CircleMarker`
+* Improved the traffic tile generation speed
+* The WebGL2 is used by default now
+* Anti-aliasing is added as a default for static map scenes
+
+## v1.40.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.40.0
+
+**SRI:** sha512-r/OJEdpyfWM54LutP4CT2MTYNNkT15IXIikFbuo3kZB7m1cF+x5c6B3pywvPv340sv/px72UT9kAZCaoZEoOSA==
+
+**Release Date:** 28.09.2023
+
+**Support End Date:** 02.02.2024
+
+* Updated RTL-plugin inside on-premise image
+* Fixed a bug related to immersive models appearing
+
+## v1.39.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.39.0
+
+**SRI:** sha512-o0GTlexWkchK7CDoCyV3SZp3GyLwFEUyfHZbK1dAG/bziXm1+9VVW8+w4YPUhYyfiCF1LU0FTbItY3yFjA69TA==
+
+**Release Date:** 17.08.2023
+
+**Support End Date:** 28.12.2023
+
+* Fixed a bug related to the `\uFDFD` ligature
+* Added the `MODELS_TILESET` on-premise option
+* Fixed a bug related to models on the edge of a tile
+
+## v1.38.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.38.1
+
+**SRI:** sha512-ZI6DJ8Hheb/I2TPiV0Re4FqDxYu8Z+7gm5q5V857SxcSJ41fIBdcSZDmKgXAL9K9PvvwyRy4v2/IS/T3g7QkXQ==
+
+**Release Date:** 1.08.2023
+
+**Support End Date:** 17.11.2023
+
+* 3D terrain now supports WebGL2
+* Minor performance improvement
+
+## v1.38.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.38.0
+
+**SRI:** sha512-1MGyRisT/ONz76o2b+ZWobmoenz9F5JQJmXpcCakOTSpK3d/Fg//4NrlhaEJqg6QQ7HpigE/UVuAsnc2lnzUiA==
+
+**Release Date:** 20.07.2023
+
+**Support End Date:** 1.11.2023
+
+* Floor plans now appear from 18 style zoom level and above
+* Supported a new data type - multipoint - which is used for 3D model data from the default data source
+* Now you can use `'db_icon'` as an argument for the `get` expression against the default data source
+* Fixed a bug when building polygon did't appear after zoom out from GLTF model
+* Fixed a bug when floor plan objects became non-interactive after GLTF model disappearance
+
+## v1.37.2
+
+**URL:** https://mapgl.2gis.com/api/js/v1.37.2
+
+**SRI:** sha512-oPjl7LaNTqPDxqnCPAJ9etDEwuzR7pYAIwNcaZseA0q455Fu9WLXYgQKU4mt13/BrEpXyM40EFyuNgwOpT0bOw==
+
+**Release Date:** 26.06.2023
+
+**Support End Date:** 20.10.2023
+
+* Fixed models batching degradation
+* Fixed a bug related to model IDs
+
+## v1.37.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.37.1
+
+**SRI:** sha512-YBbAI5l5wsQZRSdBKOX2JMyU/Jiojkno6BYq5yQqvWPSzxX2JP4RHe/+ELArpCliAMTn4pDUeB3yg48hmAS5Lw==
+
+**Release Date:** 22.06.2023
+
+**Support End Date**: 26.09.2023
+
+* Fixed public types reference
+
+## v1.37.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.37.0
+
+**SRI:** sha512-YBbAI5l5wsQZRSdBKOX2JMyU/Jiojkno6BYq5yQqvWPSzxX2JP4RHe/+ELArpCliAMTn4pDUeB3yg48hmAS5Lw==
+
+**Release Date:** 22.06.2023
+
+**Support End Date**: 22.09.2023
+
+* Turned on GLTF models default source
+* Enabled anonymous statistics reporting
+* Fixed background color of the map on relief toggle
+* Fixed GLTF models rendering bug when on some platforms GLTF models partially turned black
+* Fixed a bug when map objects are painted with black until map style is ready
+* Fixed building's labels height
+* Fixed geojson null properties processing
+* Optimized tile loading process and floors cache management
+
+## v1.36.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.36.0
+
+**SRI:** sha512-xXnVboB2zu22ckxAR5Gl1W6YtkXFTnwgw6BWEN+xDoL8jiXEDXx8MnpUkTr/X9M2eg5vzEVwnJKfoZCWB1092Q==
+
+**Release Date:** 24.04.2023
+
+**Support End Date**: 22.09.2023
+
+* Added an opportunity to cover `polygon` layer with a texture pattern
+* Added an opportunity to use gradient for sideColor attrs
+* Added an opportunity to render `.gltf`/`.glb` models
+* Fixed building's label height calculation bug
+
+## v1.35.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.35.1
+
+**SRI:** sha512-YA9PUiFN4s/AYd7HEOV9xBPbkFL3EKYujzr92C71x0iC47SuJkgo4kOPbLhXkqR4nKtasoHaQu0MH8W7HzCp/w==
+
+**Release Date:** 05.04.2023
+
+**Support End Date**: 24.07.2023
+
+* Restored handling of map click events, when adding Marker while terrain is enabled
+* Fixed infinite resizing of the map, when the option `enableTrackResize` is enabled
+* Added defaults for `style` and `styleOptions` (on-premise)
+
+## v1.35.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.35.0
+
+**SRI:** sha512-I95x74802tV3xu17WWqnJW4DQkk42bSUAFc94Vy568Gf3B5BqiZ1XUAlu8zm3e/v8M8bysMMXJXrqhPbQgUxGg==
+
+**Release Date:** 15.03.2023
+
+**Support End Date**: 05.07.2023
+
+* Added `enableTrackResize` option to automatically update the map when the HTML root container is resized
+* Broken glyphs are no longer displayed in RTL text
+
+## v1.34.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.34.1
+
+**SRI:** sha512-fa19VYYu0LEST0tT277ZMSjJBAyEjmtFf2x8fu6sdq3JiLvkrHpoqfuD0iU5N0STBUSMSL+zyC56gX2ihCQ/tg==
+
+**Release Date:** 21.02.2023
+
+**Support End Date**: 15.06.2023
+
+* Returned behaviour of incremental rendering of the map at startup
+* Fixed wrong drawing order of markers with a hover icon
+* Fixed redundant refetching of 3D-models on a style change
+
+## v1.34.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.34.0
+
+**SRI:** sha512-zpgmQsv2r+efNg3DU3Du2cWmrDvgTinOrUWOWB3+aLntJrSzHb5x38JF85snUmA5+xHELqV0FEb53Waez76AZg==
+
+**Release Date:** 26.01.2023
+
+**Support End Date**: 21.05.2023
+
+* Now you can use `'db_id'` as an argument for the `get` expression against the default data source
+* Fixed an issue with broken rendering of rasters and POI in Ubuntu Chrome on the systems with Intel UHD Graphics
+
+## v1.33.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.33.1
+
+**SRI:** sha512-ecpxdRbZJWOQJDpv3ACErJz4VMEC0NeU2biwa1O7ZMnqCC/9KeUO8tBlI0Oh/06bg0zrW99NHTJO9UGlvvqqYg==
+
+**Release Date:** 21.12.2022
+
+**Support End Date**: 26.04.2023
+
+* Fixed path check in the on-premise Docker image
+
+## v1.33.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.33.0
+
+**SRI:** sha512-p6MxOVcMREpUCahQl4JzZmE9MJuHkeM9KNPuvg+XvNV10iL0gHYFe3Cw8r/dN1Dl5S7w4aF6zwD6OcmkYmcxFA==
+
+**Release Date:** 12.12.2022
+
+**Support End Date**: 21.03.2023
+
+* Added the maximum zoom limit option ([maxZoom](/mapgl/reference/interface#fit-bounds-options/max-zoom)) to the [fitBounds()](/mapgl/reference/class#map/fit-bounds) method.
+* Added `^` and `log10` style expressions.
+* Fixed the default marker anchor.
+* Fixed a wrong styling with the [setFeatureStateMap()](/mapgl/reference/class#default-source/set-feature-state-map) method in the case of `null` and empty feature values.
+
+## v1.32.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.32.1
+
+**SRI:** sha512-wX/mh3xvoNQpp5jrSyastruOZPoZ0WsbsM3RVeNoZzmsX+6gwe9t6mraa7Jtt/5QbzmcJQolVusl+VY5WJFdLA==
+
+**Release Date:** 15.11.2022
+
+**Support End Date**: 12.03.2023
+
+* Introduced support for WebGL2. WebGL2 will be enabled automatically, but you can fix version with [webglVersion](/mapgl/reference/interface#map-options/webgl-version) map option.
+* Fixed iconAnchor processing for landmark POI
+* Fixed city-scale POI display conditions
+
+## v1.32.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.32.0
+
+**SRI:** sha512-X7aLkkpQ5kEYCi3XnOTjkBdjjNge9AhqiFqKNt9rEE+YWybqe6ShTTDWjj63Q+g6DCHVbvEc9ylskSmkkXgdfw==
+
+**Release Date:** 3.11.2022
+
+**Support End Date**: 15.02.2023
+
+* Added support for new version of tiles, that will be enabled by default in the future
+
+## v1.31.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.31.1
+
+**SRI:** sha512-ZBhsKGFxlh1lz+QCz7CBnqIJiszWTdysr1KeYp3GaQxi4RVzcfQHUvVaCHtu64gsndzah/ghFn9BWGAs6r6VCg==
+
+**Release Date:** 31.10.2022
+
+**Support End Date**: 3.02.2023
+
+* Fixed a bug which broke the previous version of the npm package
+
+## v1.31.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.31.0
+
+**SRI:** sha512-ZBhsKGFxlh1lz+QCz7CBnqIJiszWTdysr1KeYp3GaQxi4RVzcfQHUvVaCHtu64gsndzah/ghFn9BWGAs6r6VCg==
+
+**Release Date:** 28.10.2022
+
+**Support End Date**: 31.01.2023
+
+* Changed a logo in the copyright
+* Fixed a bug with broken labels in cases when rtl-plugin was failed to load
+* Added a method `getStyleState()` to get the current map style variables
+* Added a new option `useHeightForAnimation` for method `setZoom()`. This option is needed for simultaneous smooth animation of map's center and zoom
+* Fixed a bug in method `addIcon()` when path to the icon includes protocol
+* Fixed a broken bundle for Edge 18 caused by `globalThis` in JavaScript-bundle
+* Fixed an error with incorrect order of rendering of selected object, which happened in the rare cases
+
+## v1.30.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.30.1
+
+**SRI:** sha512-UlnjOQ9o3i4uI7MCumlFFNtStFrjg0P6hW38lG6dOV8oZ3MN3ZtJ9RZSpQlP/adoXxnCeyWrQnuTOH7orPdmhg==
+
+**Release Date:** 12.09.2022
+
+**Support End Date**: 28.01.2023
+
+* Fixed a wrong styling with [setFeatureStateMap()](/mapgl/reference/class#default-source/set-feature-state-map) method when 0 passed as a feature value.
+* Fixed [fitBounds()](/mapgl/reference/class#map/fit-bounds) animation when zoom outruns pan.
+
+## v1.30.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.30.0
+
+**SRI:** sha512-16Btcu0P5rjeGYb7bXYb3wTL9a6yzMmsIb6zjwwnrV1YACt+cCFB9Im0JaUtqClnaV0zk3l2NMbNJQ1VfXO5Gg==
+
+**Release Date:** 02.09.2022
+
+**Support End Date**: 12.12.2022
+
+* Now non-stretchable icons grab sizing from style layer, not from `icons` style field
+* Added [addIcon()](/mapgl/reference/class#map/add-icon) method
+* Added new [floorId](/mapgl/reference/interface#default-event-target-data/floor-id) field to map events data.
+
+## v1.29.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.29.0
+
+**SRI:** sha512-64sI8xrPZz6WTEag8ZrLBKATdvlomDhh2aXgOCW41G0a85Nfg9bE03X8CsCFljwJoVNEGzpqBj7rfI5wxW8feA==
+
+**Release Date:** 26.07.2022
+
+**Support End Date**: 02.12.2022
+
+* Added [setFeatureStateMap()](/mapgl/reference/class#default-source/set-feature-state-map) method.
+* Fixed a bug with broken zoom after an intensive interaction with map on Safari for iOS
+* Fixed a bug that was caused by subsequential removals of the layers
+
+## v1.28.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.28.0
+
+**SRI:** sha512-vfkLFA7TxzG/i8J74JtXtjSahwjcYNYErnFxw+YE95yeFHPg3STjlU+KHz3gAtzu3PDREeLOajAb8nm+UKGPLg==
+
+**Release Date:** 27.04.2022
+
+**Support End Date**: 26.10.2022
+
+* Added a new `Raster` class that allows to draw an arbitrary image on the map plane within the given geo-coordinates.
+
+## v1.27.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.27.0
+
+**SRI:** sha512-QEKWeB9ztMmEKV4z0+vdykUHXmsxctnXzaUE8uimJqaEheEWlqI1EycQrrx2h+kb53jcC2JVH+8DfdgcSEhIDQ==
+
+**Release Date:** 26.04.2022
+
+**Support End Date**: 27.07.2022
+
+* Added the ability to draw a point layer along linear objects from <Brand /> tiles.
+* Google Analytics disabled by default.
+
+## v1.26.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.26.0
+
+**SRI:** sha512-2mejYMySrrkqoSPSCbmE9Df7AukuaF6X35nm0Lh/CYmFvDRBJiobKGvvBZMYYURqmnjHT1LWg47qOl0mY9G6dQ==
+
+**Release Date:** 18.04.2022
+
+**Support End Date**: 26.07.2022
+
+* Fixed bug when map crashes in case of unknown style layer with absent fields (style, filter, etc).
+* Added [getRotation()](/mapgl/reference/class#map/get-rotation) method for [HtmlMarker](/mapgl/reference/class#html-marker).
+* Added scale control and map option [scaleControl](/mapgl/reference/interface#map-options/scale-control)
+* Smooth style change now supported in Models
+* Minimal zoom for commercial POI was set to 10
+
+## v1.25.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.25.0
+
+**SRI:** sha512-dKEiOJWpm9mCf3Hs281OrRdLK4OHcF+15KJA/A2nnIC/7uUrFjUAGwGKFbDBXzf3M9PGC3OkRpTt8lWC2zNnPQ==
+
+**Release Date:** 28.03.2022
+
+**Support End Date**: 18.07.2022
+
+* Added `to-color` style expression.
+* Added `interactive` option for [HtmlMarker](/mapgl/reference/class#html-marker).
+* Now an exception is thrown when the `id` property of [Layer](/mapgl/styles-specification#layer) is `undefined`.
+
+## v1.24.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.24.1
+
+**SRI:** sha512-UxI6nCSCH7V1283JR5fA6J2lFoNhWfb2Kr4y63+kGq4t2GpnhQpdrHQvK94DIpTTzCOAQli/VcnHtPGEZvgLWw==
+
+**Release Date:** 10.03.2022
+
+**Support End Date:** 28.06.2022
+
+* Fixed a bug when labels blink after `geoJsonSource.setData()` calling.
+* Fixed an exception throwing when map.removeLayer() method removes a non-existent style layer.
+
+## v1.24.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.24.0
+
+**SRI:** sha512-TA2asa83r/M6+8SXgNzE3JpTpE6nG++0FQ1yxb/iIMuR5B3brg5bFdEc/dM7wCAiyZj8VPESlPbaqutPwR9Z+A==
+
+**Release Date:** 02.03.2022
+
+**Support End Date:** 10.06.2022
+
+* Added `iconOffset` property to the `point` style layer
+
+## v1.23.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.23.0
+
+**SRI:** sha512-9AnRVsj0ANvT2fdNqt1x4cl0wab2wqGiogTxhlE+LoeXhhjX/Lx0SaYImdo2RTlk2MzlajYCjR2UMyUZFqCnGw==
+
+**Release Date:** 17.02.2022
+
+**Support End Date:** 02.06.2022
+
+* Added `isUser` field to the moving event data. It helps to understand that the movement was made by a user gesture or by calling an API method.
+* Added the map option `keepCenterWhileUserZoomRotate`, which prevents the map center from changing after user gestures of zooming and rotating.
+* Added the ability to change `GeoJsonSource` data with the `setData()` method.
+* Added `in`, `any`, `==`, `!=`, `>`, `>=`, `<`, `<=`, `!`, `to-boolean` style expressions.
+* Added new reserved style state (global) variables `_activeFloorBuildingIds` and `_activeFloorIds`. They make it possible to stylize objects depending on the display of active floor plans on the map.
+* Clarified behaviour of `get`, `global`, and `sourceAttr` expressions. Now they return `null` if the attribute value doesn't exist.
+* Fixed a bug when a label background image doesn't hide after calling the `label.hide()` method.
+* Fixed a bug that caused the second label size to be incorrect for the labeling process.
+* Fixed a bug when a filter in a style layer works only with `match` and `all` expressions.
+* Fixed a bug when the map throws shader initialization exceptions right after self-destruct.
+* The `map.getProjectionMatrix()` method was marked as deprecated and is not recommended for use.
+
+## v1.22.0
+
+**URL:** https://mapgl.2gis.com/api/js/v1.22.0
+
+**SRI:** sha512-rsmQRslZ64rAQirb3gjswyf/kXUM72jIzue1VXX5lyVrvoTJ3SgdLPtOj/YjtpbBc3XeMShzOuV77jBnQaxsGw==
+
+**Release Date:** 27.12.2021
+
+**Support End Date:** 17.05.2022
+
+* Added new `heatmap` style layer.
+* Added Arabic language support.
+* Fixed buildings flickering when switching to 3d.
+* Support for using get-expression as an interpolate-expression argument.
+* Changed the copyright appearance for new clients.
+
+## v1.21.1
+
+**URL:** https://mapgl.2gis.com/api/js/v1.21.1
+
+**SRI:** sha512-0xv+n0ij4KSJW5ZMWQyaKnC5PGyZ3ms6+/cOh9+sKhXkVxAAJspaS7GrP0+Uz2jltY4h5FhzQ0YG4jn5qW1uNw==
+
+**Release Date:** 02.12.2021
+
+**Support End Date:** 27.03.2022
+
+* Some internal bug fixes
+
+## v1.21.0
+
+**Release Date:** 26.11.2021
+
+**Support End Date:** 02.03.2022
+
+* Added the new userData field in all user object init options, for example [PolygonOptions](/mapgl/reference/interface#polygon-options). This field will be available on the user object instance as public userData field.
+* Added the new [DynamicObjectPointerEvent](/mapgl/reference/interface#dynamic-object-pointer-event) type, object with this type will be available in the object event listeners.
+* Added the new options minZoom and maxZoom in RasterTileSource init [options](/mapgl/reference/interface#raster-tile-source-options).
+* Added the new option maxZoom in GeoJsonSource init [options](/mapgl/reference/interface#geo-json-source-options).
+* Fixed bug with GeoJsonSource objects rendering when minzoom of object style layer exceeds 15 zoom level.
+* Fixed bug with polygon stroke and 3d-buildings. Now the stroke of the polygon will always be flush with the fill of the polygon.
+* Fixed bug with Raster tile layer blurring.
+
+## v1.20.1
+
+**Release Date:** 27.10.2021
+
+**Support End Date:** 26.02.2021
+
+* Fixed bug when fonts were not loaded for [Marker](/mapgl/reference/class#marker) and [Label](/mapgl/reference/class#label) objects when text contains glyphs from different font ranges.
+
+## v1.20.0
+
+**Release Date:** 27.10.2021
+
+**Support End Date:** 27.01.2022
+
+* Added the ability to display raster tiles. See [example](/mapgl/geodata/raster) for details.
+* Fixed bug when `styleload` event emits before a style load.
+* Fixed bug when fonts were not loaded for [Marker](/mapgl/reference/class#marker) and [Label](/mapgl/reference/class#label) objects.
+
+## v1.19.1
+
+**Release Date:** 15.10.2021
+
+**Support End Date:** 27.01.2022
+
+* Added a component for sending statistics of showing commercial POI on the map.
+* Changed the format of the `sessionId` option to [UUIDv4](https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_\(random\)).
+
+## v1.19.0
+
+**Release Date:** 07.10.2021
+
+**Support End Date:** 15.01.2022
+
+* Now an unhandled promise rejection does not occur when a new style applies immediately after map initialization.
+* Now we add commercial POI to the map of clients, which use the free plan. This change affects only new clients but not current users.
+
+## v1.18.0
+
+**Release Date:** 01.10.2021
+
+**Support End Date:** 07.01.2022
+
+* Added the ability to control map style layers with [addLayer](/mapgl/reference/class#map/add-layer) and [removeLayer](/mapgl/reference/class#map/remove-layer) methods.
+* [setStyleById](/mapgl/reference/class#map/set-style-by-id) method now returns [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) with `styleId` value.
+* Added new event [styleload](/mapgl/reference/interface#map-event-table/styleload) which emits when a style is loaded.
+
+## v1.17.0
+
+**Release Date:** 15.09.2021
+
+**Support End Date:** 01.01.2022
+
+* Fixed bug with incorrect rendering of multipolygons in [Floors](/mapgl/map/configuration/floors).
+* Added the ability to set the rotation of the [Marker](/mapgl/reference/class#marker) icon.
+* Fixed bug with incorrect anti-aliasing of polygons at map zoom 6 and less.
+
+## v1.16.0
+
+**Release Date:** 06.09.2021
+
+**Support End Date:** 15.12.2021
+
+* Added `topCenter`, `bottomCenter`, `centerLeft` and `centerRight` options to [ControlPosition](/mapgl/reference/typeAlias#control-position).
+
+## v1.15.2
+
+**Release Date:** 25.08.2021
+
+**Support End Date:** 06.12.2021
+
+* Fixed bug where the map center was changed with the pinch-to-zoom gesture at map maximum zoom.
+* In case of the requested style is absent on the style server, fallback to the previous/default style will be used.
+
+## v1.15.1
+
+**Release Date:** 17.08.2021
+
+**Support End Date:** 25.11.2021
+
+* Fixed a bug when polygons became non-interactive after creating them in large quantities.
+* Fixed a bug with gaps in traffic lines.
+* Fixed a bug when labels from one GeoJsonSource remove labels from another forever.
+
+## v1.15.0
+
+**Release Date:** 29.07.2021
+
+**Support End Date:** 17.11.2021
+
+* Added a new class [GeoJsonSource](/mapgl/reference/class#geo-json-source) to show GeoJSON data on the map.
+
+## v1.14.1
+
+**Release Date:** 01.07.2021
+
+**Support End Date:** 29.10.2021
+
+* Fixed bug, when red lines appearing on map with empty or erroneous style.
+* Fixed incorrect drawing of traffic lines.
+
+## v1.14.0
+
+**Release Date:** 23.06.2021
+
+**Support End Date:** 01.10.2021
+
+* Added [setIcon](/mapgl/reference/class#marker/set-icon), [setHoverIcon](/mapgl/reference/class#marker/set-hover-icon) and [setLabel](/mapgl/reference/class#marker/set-label) methods to Marker.
+* Added [preventMapInteractions](/mapgl/reference/interface#html-marker-options/prevent-map-interactions) option to HTMLMaker.
+
+## v1.13.0
+
+**Release Date:** 21.05.2021
+
+**Support End Date:** 23.09.2021
+
+* The options [stroke2Width](/mapgl/reference/interface#circle-marker-options/stroke2width) and [stroke2Color](/mapgl/reference/interface#circle-marker-options/stroke2color) for [CircleMarker](/mapgl/reference/class#circle-marker) are marked as **deprecated**.
+* Added [touchRotationThreshold](/mapgl/reference/interface#map-options/touch-rotation-threshold), to prevent occasional map rotation while zooming.
+* Added the [ability](/mapgl/map/configuration/controls) to set position of the controls during map initialization.
+* Added the [setControlsLayoutPadding](/mapgl/reference/class#map/set-controls-layout-padding), [getControlsLayoutPadding](/mapgl/reference/class#map/get-controls-layout-padding) and [controlsLayoutPadding](/mapgl/reference/interface#map-options/controls-layout-padding) map options to manage the padding of the controls container.
+
+## v1.12.1
+
+**Release Date:** 16.04.2021
+
+**Support End Date:** 21.08.2021
+
+* Fixed bug with traffic styles in editor.
+
+## v1.12.0
+
+**Release Date:** 09.04.2021
+
+**Support End Date:** 16.07.2021
+
+* Internal changes and bug fixes that do not affect the operation of the map engine.
+
+## v1.11.0
+
+**Release Date:** 05.04.2021
+
+**Support End Date:** 09.07.2021
+
+* Added new options [dashLength](/mapgl/reference/interface#polyline-options/dash-length), [gapLength](/mapgl/reference/interface#polyline-options/gap-length) and [gapColor](/mapgl/reference/interface#polyline-options/gap-color) to [Polyline](/mapgl/reference/class#polyline) to draw dashed lines
+
+## v1.10.1
+
+**Release Date:** 29.03.2021
+
+**Support End Date:** 05.07.2021
+
+* [getContainer](/mapgl/reference/class#map/get-container) method now returns HTML Element provided by user.
+
+## v1.10.0
+
+**Release Date:** 25.03.2021
+
+**Support End Date:** 29.06.2021
+
+* Added the [getContainer](/mapgl/reference/class#map/get-container) method.
+* Added more descriptions for types and interfaces in methods used to work with floors.
+
+## v1.9.2
+
+**Release Date:** 22.03.2021
+
+**Support End Date:** 25.06.2021
+
+* Internal changes and bug fixes that do not affect the operation of the map engine.
+* Fixed a bug with the map container selection on long tap on iOS.
+
+## v1.9.1
+
+**Release Date:** 12.03.2021
+
+**Support End Date:** 22.06.2021
+
+* Internal changes that do not affect the operation of the map engine
+
+## v1.9.0
+
+**Release Date:** 03.03.2021
+
+**Support End Date:** 12.06.2021
+
+* You can pass InterpolateExpression to width, width2 and width3 params in [PolylineOptions](/mapgl/reference/interface#polyline-options)
+* Fixed a bug with road render in some rare cases.
+
+## v1.8.1
+
+**Release Date:** 01.03.2021
+
+**Support End Date:** 03.06.2021
+
+* Fixed bug in mapgl npm package
+* Added [setMaxBounds](/mapgl/reference/class#map/set-max-bounds) method
+
+## v1.8.0
+
+**Release Date:** 24.02.2021
+
+**Support End Date:** 01.06.2021
+
+* Added floors control and map option [floorControl](/mapgl/reference/interface#map-options/floor-control)
+* Added new method [setFloorPlanLevel](/mapgl/reference/class#map/set-floor-plan-level) and [floorplanshow](/mapgl/reference/interface#map-event-table/floorplanshow), [floorplanhide](/mapgl/reference/interface#map-event-table/floorplanhide) and [floorlevelchange](/mapgl/reference/interface#map-event-table/floorlevelchange) events
+* Added style global variables and [setStyleState](/mapgl/reference/class#map/set-style-state) and [patchStyleState](/mapgl/reference/class#map/patch-style-state) methods to control it
+* Added [setPadding](/mapgl/reference/class#map/set-padding), [getPadding](/mapgl/reference/class#map/get-padding) methods
+* Added [LngLatBoundsClass](/mapgl/reference/class#lng-lat-bounds-class), which contains useful methods to work with LngLatBounds
+* Fixed hover event after marker size change
+
+## v1.7.1
+
+**Release Date:** 02.02.2021
+
+**Support End Date:** 24.05.2021
+
+* Fixed a bug in the [fitBounds](/mapgl/reference/class#map/fit-bounds) method, when rotation has negative value or rotation has not be considered.
+
+## v1.7.0
+
+**Release Date:** 29.01.2021
+
+**Support End Date:** 02.05.2021
+
+* Added a new method [fitBounds](/mapgl/reference/class#map/fit-bounds) to pan and zoom the map to contain its visible area within the specified geographical bounds.
+* Added a new method [isSupported](/mapgl/reference/method#is-supported) which checks whether the current browser supports MapGL.
+* Added a new method [notSupportedReason](/mapgl/reference/method#not-supported-reason) which checks whether the current browser supports MapGL and which returns the reason in a string.
+
+## v1.6.2
+
+**Release Date:** 24.12.2020
+
+**Support End Date:** 29.04.2021
+
+* Fixed a bug where the inertia of the map doesn't work if a styleZoom was set
+
+## v1.6.1
+
+**Release Date:** 22.12.2020
+
+**Support End Date:** 24.03.2021
+
+* Fixed the map center changing behavior by setting different zoom types. If a styleZoom option was set, the map style zoom doesn't change while map dragging. Conversely, if a zoom option was set — the map zoom doesn't change, but the style zoom does.
+
+## v1.6.0
+
+**Release Date:** 18.12.2020
+
+**Support End Date:** 22.03.2021
+
+* Added a new map option [styleZoom](/mapgl/reference/interface#map-options/style-zoom). This option allows you to set the same zoom that is used in the style settings. The styleZoom and zoom options set the same map scale but in different projections.
+* Added a new method [setLanguage](/mapgl/reference/class#map/set-language) to change the desired map language. The map will try to set the language if it possible.
+* Added a new method [getLanguage](/mapgl/reference/class#map/get-language), which returns the desired map language.
+* Fixed a bug with touch events that leads to the exception with undefined.
+
+## v1.5.0
+
+**Release Date:** 10.12.2020
+
+**Support End Date:** 18.03.2021
+
+* Added a new method [setStyleById](/mapgl/reference/class#map/set-style-by-id) to change the map style by its ID. 🎉
+* Added a new map option [defaultBackgroundColor](/mapgl/reference/interface#map-options/default-background-color). This option allows you to set the default background color while style is loading.
+* Added a new map option [style](/mapgl/reference/interface#map-options/style) that takes a style ID. The map will be initialized with the specified style.
+
+## v1.4.3
+
+**Release Date:** 1.12.2020
+
+**Support End Date:** 10.03.2021
+
+* Internal changes that do not affect the operation of the map engine
+
+## v1.4.2
+
+**Release Date:** 09.11.2020
+
+**Support End Date:** 1.03.2021
+
+* Internal changes that do not affect the operation of the map engine
+
+## v1.4.0
+
+**Release Date:** 22.10.2020
+
+**Support End Date:** 09.02.2021
+
+* Added a new method [setStyleZoom](/mapgl/reference/class#map/set-style-zoom). It sets the map style zoom.
+* Added a new map option [maxBounds](/mapgl/reference/interface#map-options/max-bounds). It restricts map to specified bounding box.
+
+## v1.3.2
+
+**Release Date:** 07.10.2020
+
+**Support End Date:** 22.01.2021
+
+* Added stable fix for missing rerender (IOS 14 and other)
+
+## v1.3.1
+
+**Release Date:** 22.09.2020
+
+**Support End Date:** 07.01.2021
+
+* Added patch for missing rerender on IOS 14
+
+## v1.3.0
+
+**Release Date:** 18.09.2020
+
+**Support End Date:** 22.12.2020
+
+* Added `disableRotationByUserInteraction` and `disablePitchByUserInteraction` to the [MapOptions](/mapgl/reference/interface#map-options). [disableRotationByUserInteraction](/mapgl/reference/interface#map-options/disable-rotation-by-user-interaction) blocks rotation by any user interaction (from keyboard, mouse and etc). [disablePitchByUserInteraction](/mapgl/reference/interface#map-options/disable-pitch-by-user-interaction) prevents users from pitching the map by any interaction.
+* Added a new method [getStyleZoom](/mapgl/reference/class#map/get-style-zoom). It returns the current map style zoom.
+* Added a new method [getWebGLContext](/mapgl/reference/class#map/get-web-glcontext) which returns current WebGLRenderingContext of the map canvas.
+* Added a new method [getCanvas](/mapgl/reference/class#map/get-canvas) which returns HTMLCanvasElement of the map.
+
+## v1.2.0
+
+**Release Date:** 26.08.2020
+
+**Support End Date:** 18.12.2020
+
+* Added the new `relativeAnchor` and `offset` options to the [LabelOptions](/mapgl/reference/interface#label-options). Use these options for the [Label placement](/mapgl/objects/labels) instead an `anchor` option, which is deprecated now.
+* Supported the new label placement options in the [Marker](/mapgl/objects/markers) object.
+
+## v1.1.0
+
+**Release Date:** 04.08.2020
+
+**Support End Date:** 26.11.2020
+
+* Added the new map object [Label](/mapgl/objects/labels) for the independent text labels on the map.
+* Added the ability to use a [stretchable image as background for the marker label](/mapgl/objects/labels).
+* Added the option `autoHideOSMCopyright` to the [MapOptions](/mapgl/reference/interface#map-options). If true, the OSM copyright will be hidden after 5 seconds from the map initialization.
+
+## v1.0.0
+
+**Release Date:** 21.07.2020
+
+**Support End Date:** 04.11.2020
+
+There are no any release notes. This is the first release with a fixed version.
+
+## Old releases
+
+### 05.06.2020
+
+* New option `disableZoomOnScroll` was added to the [Map options](/mapgl/reference/interface#map-options). This option disable zoom on scroll, when a mouse cursor is above the map container.
+
+### 19.05.2020
+
+* New method `setSelectedObjects` was added to the [Map](/mapgl/reference/class#map). This method allows to select any object on the map.
+
+

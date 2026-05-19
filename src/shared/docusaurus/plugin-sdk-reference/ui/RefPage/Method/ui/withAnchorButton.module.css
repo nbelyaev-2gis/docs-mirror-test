@@ -1,0 +1,36 @@
+.hashButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  text-decoration: none;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--prism-color);
+
+  background: var(--prism-background-color);
+  color: var(--prism-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  line-height: 0;
+  transition: opacity var(--ifm-transition-fast) ease-in-out;
+  opacity: 0;
+
+  &:hover,
+  &:focus {
+    opacity: 1 !important;
+    color: var(--prism-color);
+    text-decoration: none;
+  }
+}
+
+.container {
+  &:hover {
+    .hashButton {
+      opacity: 0.4;
+    }
+  }
+}

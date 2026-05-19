@@ -1,0 +1,313 @@
+# Обзор API карт <Brand />
+
+Используйте API карт <Brand /> для интеграции векторных и растровых карт в ваши веб-приложения, мобильные приложения и сайты.
+
+[MapGL JS API](/mapgl/overview/features) позволяет **добавить детальную трёхмерную карту** <Brand /> в ваше веб-приложение или на сайт и показать на ней ваши данные от маркеров и интерактивных 3D-моделей до тепловых карт. С помощью этой JavaScript-библиотеки вы можете работать с векторными тайлами карты, доступ к которым предоставляет сервис [Map Tiles API](/maps/others/maptiles/overview). Выбирайте векторную карту, если хотите использовать иммерсивные возможности или настраивать внешний вид карты под ваши задачи (например, фирменный стиль).
+
+Попробуйте переместить центр карты ниже и изменить масштаб и наклон, чтобы оценить иммерсивный графический режим MapGL JS API:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Карта MapGL JS API" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.643659, 55.746647],
+                zoom: 17.5,
+                pitch: 45,
+                rotation: 1000,
+                key: 'Your API access key',
+                graphicsPreset: 'immersive',
+                style: '8780eed4-0428-4982-b615-aa6cf04d8f5f',
+                styleState: {
+                    immersiveRoadsOn: true,
+                },
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Чтобы **отобразить двумерную растровую карту**, используйте [Raster Tiles API](/maps/others/rastertiles/overview). Вы можете получать растровые тайлы как напрямую через запрос к API, так и с помощью JavaScript-библиотеки [RasterJS API](/maps/others/rasterjs/overview). Используйте растровую карту, если хотите получить точную интерактивную карту с минимальными затратами ресурсов устройства.
+
+Пример интеграции растровой карты с помощью RasterJS API:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html>
+
+<head>
+    <title>RasterJS API</title>
+    <meta name="description" content="Карта RasterJS API" />
+    <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+    <style>
+        html,
+        body,
+        #map {
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script>
+        DG.then(function () {
+            DG.map('map', {
+                center: [55.768005, 37.615655],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+        });
+    </script>
+</body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+[Static API](/maps/others/static/overview) позволяет **получить актуальное статичное изображение карты** в нужной точке и с нужным уровнем масштабирования. Используйте статичные изображения для добавления снимков карты в документы, письма, сообщения и другие материалы, где не требуется интерактивность.
+
+Попробуйте изменить размер изображения, координаты центра карты и её масштаб, чтобы получить нужный фрагмент карты и готовый запрос к Static API:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '630px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static API</title>
+    <meta name="description" content="Карта Static API" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            margin: 0px 0px;
+        }
+
+        .controls label {
+            font-family: Arial;
+            font-size: 14px;
+            color: #6e6d6d;
+        }
+
+        .controls input {
+            border: 1px solid #ccc;
+            padding: 3px 7px;
+            font-family: Arial;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        .controls button {
+            padding: 6px 10px;
+            font-family: Arial;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            background: #0078FF;
+            color: white;
+            cursor: pointer;
+            width: 180px;
+        }
+
+        .controls button:disabled {
+            background: #f2f2f2;
+            color: #6e6d6d;
+            cursor: not-allowed;
+        }
+
+        .code {
+            margin: 10px 0px;
+            padding: 16px 20px;
+            background: #fafafa;
+            border: 1px solid #fafafa;
+            border-radius: 0px;
+            font-family: ptmono, monospace;
+            font-size: 13px;
+            color: #262626;
+            max-width: 870px;
+        }
+
+        #map {
+            display: block;
+            margin: 0px 0px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls">
+        <label>
+            Размер изображения:
+            <input type="text" id="size" value="880x360">
+        </label>
+        <label>
+            Координаты центра:
+            <input type="text" id="center" value="55.768005,37.615655">
+        </label>
+        <label>
+            Масштаб:
+            <input type="number" id="zoom" value="13" min="1" max="18">
+        </label>
+        <button id="updateButton">Обновить карту</button>
+    </div>
+    <div class="code" id="generatedLink"></div>
+    <img id="map" src="" alt="Карта Static API" crossorigin="anonymous">
+
+    <script>
+        const sizeInput = document.getElementById('size');
+        const centerInput = document.getElementById('center');
+        const zoomInput = document.getElementById('zoom');
+        const updateButton = document.getElementById('updateButton');
+        const mapImage = document.getElementById('map');
+        const generatedLink = document.getElementById('generatedLink');
+
+        const updateMap = () => {
+            const size = sizeInput.value.trim();
+            const center = centerInput.value.trim();
+            const zoom = zoomInput.value.trim();
+
+            if (!size || !center || !zoom) {
+                alert('Заполните все поля');
+                return;
+            }
+
+            const [width, height] = size.split('x').map(Number);
+
+            if (width < 120 || width > 1280 || height < 90 || height > 1280 || zoom < 1 || zoom > 18) {
+                alert('Проверьте значения: ширина 120-1280, высота 90-1280, масштаб 1-18');
+                return;
+            }
+
+            const key = 'Your API access key';
+
+            const mapUrl = \`https://static.maps.2gis.com/2.0?s=\${size}&c=\${center}&z=\${zoom}&key=\${key}\`;
+            mapImage.src = mapUrl;
+            generatedLink.textContent = \`https://static.maps.2gis.com/2.0?s=\${size}&c=\${center}&z=\${zoom}&key=API_KEY\`;
+        };
+
+        updateButton.addEventListener('click', updateMap);
+
+        updateMap();
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+Дополнительные инструменты:
+
+* [Редактор стилей](/maps/styles/overview) для настройки внешнего вида векторных карт в зависимости от ваших целей или фирменного стиля вашего проекта.
+* [FloorsJS](/maps/others/floorsjs/overview) для создания удобного виджета навигации по этажам внутри зданий.
+
+## FAQ
+
+### Как начать работать с API карт?
+
+Чтобы работать с API, получите ключ доступа:
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=api_maps_faq).
+2. Создайте [демо-ключ](/platform-manager/subscription/keys#demo) или купите [подписку](/platform-manager/subscription/purchase) для доступа к API.
+3. Изучите примеры запросов и ответов в документации к нужному API.
+
+### Как рассчитывается стоимость использования API?
+
+* Безлимитный доступ к MapGL JS API включён в стоимость использования Map Tiles API, который используется для получения векторных тайлов.
+* Безлимитный доступ к RasterJS API включён в стоимость использования Raster Tiles API, который используется для получения растровых тайлов.
+* Стоимость использования Map Tiles API, Raster Tiles API и Static API рассчитывается по количеству запросов к API. Подробнее о способе расчёта см. в разделе **Тарифы** на странице каждого API.
+* Редактор стилей и FloorsJS предоставляются бесплатно.
+
+### Можно ли использовать API карт бесплатно?
+
+Вы можете [оформить демо-ключ доступа](/platform-manager/subscription/keys#demo) для тестирования API карт на один месяц с ограниченным числом запросов.
+
+### Как отслеживать фактическое использование API-ресурсов?
+
+Вы можете отслеживать прогресс расходования лимитов по сервисам и статистику распределения запросов в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=api_maps_faq). Подробнее см. в разделе [Статистика](/platform-manager/subscription/statistics).
+
+### Как контролировать потребление API-ресурсов?
+
+Чтобы избежать преждевременного исчерпания лимитов, вы можете ограничить использование API-ресурсов вашими приложениями. В личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=api_maps_faq) вы можете:
+
+* Установить лимиты на запросы к конкретным сервисам по всем API-ключам в подписке или по отдельным ключам. При превышении лимитов использование продукта ограничится: запросы к API будут возвращать ошибку.
+* Настроить отправку уведомлений при приближении к лимитам.
+
+Подробнее см. в разделе [Управление ключами доступа](/platform-manager/subscription/managing-keys).
+
+### Что такое тайлы?
+
+Тайл — это квадратное изображение, соответствующее участку карты. Использование тайлов позволяет экономить ресурсы устройств и отображать только видимую часть карты, подгружая необходимые фрагменты при перемещении по карте или при изменении масштаба карты.
+
+### Чем растровые тайлы отличаются от векторных?
+
+Растровые тайлы — это изображения фрагментов карты в формате PNG, которые отрисовываются на стороне сервера и отправляются вашему устройству в готовом виде. Отображение растровой карты требует меньше ресурсов устройства, но не позволяет гибко настраивать внешний вид карты и её поведение. Чтобы работать с растровой картой, используйте [Raster Tiles API](/maps/others/rastertiles/overview) или [Static API](/maps/others/static/overview).
+
+Векторные тайлы — это данные, которые ваше устройство получает и отрисовывает самостоятельно, согласно заданному стилю (правилу отрисовки). Векторные тайлы позволяют изменять внешний вид карты в реальном времени, создавать интерактивные объекты и анимации, а также обеспечивают более плавное масштабирование и перемещение по карте. Для работы с векторной картой используйте библиотеку [MapGL JS API](/mapgl/overview/features).
+
+### Можно ли для работы с тайлами использовать сторонние библиотеки?
+
+* Векторные тайлы: для доступа к Map Tiles API вы можете использовать только библиотеку MapGL JS API.
+* Растровые тайлы: рекомендуется использовать библиотеку RasterJS API. Вы также можете использовать сторонние библиотеки, но их совместимость с растровыми картами <Brand /> не гарантируется и в любой момент может быть нарушена без предупреждения.
+
+Подробнее об условиях см. в [Соглашении об использовании сервисов 2ГИС](https://law.2gis.ru/rules).
+
+### Можно ли напрямую получить доступ к тайлам карты?
+
+Чтобы получить векторные тайлы напрямую для интеграции в ГИС-систему, которая не поддерживает использование MapGL JS API, вы можете установить API-платформу <Brand /> в закрытом контуре (On-Premise) и [экспортировать векторные тайлы в формате Mapbox Vector Tiles (MVT)](/on-premise-api-platform/api-platform/user-guide/vector-tiles). Растровые тайлы вы можете получить напрямую через Raster Tiles API и Static API.
+
+### Какие есть технические ограничения?
+
+MapGL JS API оптимизирован для работы в современных веб-браузерах, полный список браузеров и их версий см. в разделе [Поддержка браузеров](/mapgl/overview/browser-support). Если вы планируете добавлять 3D-объекты на карту, ознакомьтесь с [Требованиями и рекомендациями для 3D-моделей](/mapgl/map-style/immersive/models#requirements).
+
+### Как можно настроить внешний вид карты?
+
+При работе с векторными картами <Brand /> через MapGL JS API вы можете:
+
+* Настроить центр карты, масштаб, элементы управления картой, графический режим, обработку событий и т. д.
+* Изменить внешний вид карты (цвета, освещение, уровень детализации, видимость объектов и подписей и многое другое) с помощью [Редактора стилей](/maps/styles/overview).
+* Добавить на карту свои данные: объекты разной сложности (иконки, маркеры с анимацией, 3D-модели) или источники векторных и растровых геоданных.
+
+При работе с растровыми картами <Brand /> через Raster Tiles API и Static API вы можете:
+
+* Настроить центр карты, масштаб, элементы управления картой, обработку событий и т. д.
+* Добавить на карту свои данные: объекты (маркеры, геометрические фигуры, подписи) или геоданные в формате GeoJSON.
+
+### Можно ли установить сервисы карт в собственной инфраструктуре?
+
+Да, вы можете установить API-платформу <Brand /> в закрытом контуре. Подробнее см. в разделе [On-Premise](/on-premise-api-platform/overview/summary).
+
+### Нет ответа на мой вопрос
+
+Воспользуйтесь поиском по документации или отправьте электронное письмо на [api@2gis.ru](mailto:api@2gis.ru).

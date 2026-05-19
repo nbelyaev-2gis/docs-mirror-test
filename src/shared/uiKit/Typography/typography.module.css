@@ -1,0 +1,274 @@
+.content {
+  font-size: 15px;
+  color: var(--primary);
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  ul,
+  ol,
+  small,
+  img,
+  blockquote,
+  span,
+  button,
+  a,
+  figure,
+  hr {
+    max-width: var(--content-column);
+
+    @media screen and (--media-xl) {
+      max-width: 100%;
+    }
+  }
+
+  h2 {
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 28px;
+    margin: 32px 0 11px 0;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 20px 0 8px 0;
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 20px;
+  }
+
+  .button {
+    box-sizing: border-box;
+    min-width: 198px;
+    padding: 8px 25px 10px 25px;
+    font-size: 15px;
+    color: var(--white);
+    border-radius: 4px;
+    background-color: var(--accent);
+    border: 2px solid var(--accent-dark);
+    outline: none;
+
+    &:focus,
+    &:focus-within {
+      border-color: var(--black);
+    }
+
+    &:hover {
+      background-color: var(--accent-light);
+      border-color: var(--accent);
+    }
+
+    &:active {
+      background-color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    &:disabled {
+      color: #6e6d6d;
+      background-color: #f2f2f2;
+      border-color: #f2f2f2;
+      cursor: not-allowed;
+    }
+  }
+
+  p {
+    margin: 8px 0;
+    font-size: 15px;
+    line-height: 20px;
+  }
+
+  a {
+    text-decoration: none;
+    color: var(--link);
+
+    &:visited {
+      color: var(--link-visited);
+    }
+
+    &:hover,
+    &:active,
+    &:focus {
+      color: var(--link-hover);
+    }
+  }
+
+  ol {
+    margin: 8px 0;
+    padding: 0;
+    font-size: 15px;
+    line-height: 20px;
+    list-style: none;
+    counter-reset: custom-counter;
+
+    /* https://jira.2gis.ru/browse/DIG-4783 */
+    &[start='2'] {
+      counter-reset: custom-counter 1;
+    }
+    &[start='3'] {
+      counter-reset: custom-counter 2;
+    }
+    &[start='4'] {
+      counter-reset: custom-counter 3;
+    }
+    &[start='5'] {
+      counter-reset: custom-counter 4;
+    }
+    &[start='6'] {
+      counter-reset: custom-counter 5;
+    }
+    &[start='7'] {
+      counter-reset: custom-counter 6;
+    }
+    &[start='8'] {
+      counter-reset: custom-counter 7;
+    }
+    &[start='9'] {
+      counter-reset: custom-counter 8;
+    }
+    &[start='10'] {
+      counter-reset: custom-counter 9;
+    }
+    &[start='11'] {
+      counter-reset: custom-counter 10;
+    }
+
+    /* Неопсредственный потомок, `>`, потому что в ol может быть вложен ul с тегами li,
+        которые в противном случае будут инкрементировать счетчик */
+    & > li {
+      position: relative;
+      margin: 0;
+      padding-left: 25px;
+      counter-increment: custom-counter;
+
+      &::before {
+        content: counter(custom-counter) '.';
+        position: absolute;
+        top: 0;
+        left: 0;
+        line-height: inherit;
+        font-size: inherit;
+        font-family: var(--code-ff);
+        color: var(--secondary);
+      }
+
+      & + li {
+        margin-top: 6px;
+      }
+    }
+  }
+
+  ul {
+    margin: 8px 0;
+    padding: 0;
+    font-size: 15px;
+    line-height: 20px;
+
+    & li {
+      position: relative;
+      list-style-type: none;
+      padding-left: 20px;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 7px;
+        left: 0;
+        height: 6px;
+        width: 6px;
+        background-color: var(--secondary);
+        border-radius: 50%;
+      }
+
+      & + li {
+        margin-top: 6px;
+      }
+    }
+  }
+
+  li {
+    & > ul,
+    & > ol {
+      padding-left: 20px;
+    }
+  }
+
+  small {
+    font-size: 11px;
+    line-height: 16px;
+  }
+
+  blockquote {
+    margin: 16px 0;
+    background-color: var(--lighter);
+    padding: 13px 20px 15px 20px;
+    border-radius: 4px;
+
+    p {
+      font-style: italic;
+    }
+
+    footer {
+      text-align: right;
+    }
+  }
+
+  pre {
+    display: inline-block;
+    box-sizing: border-box;
+    padding: 16px 20px;
+    background-color: var(--code-bgr);
+    min-width: var(--content-column-min);
+    max-width: var(--content-column);
+    overflow-y: hidden;
+    overflow-x: auto;
+
+    @media screen and (--media-xl) {
+      max-width: 100%;
+    }
+
+    @media screen and (max-width: 640px) {
+      min-width: unset;
+      width: 100%;
+    }
+  }
+
+  hr {
+    margin: 22px 0 10px 0;
+    border: 0;
+    border-bottom: 1px solid var(--light);
+  }
+
+  table {
+    width: 100%;
+    max-width: var(--content-column);
+    background-color: transparent;
+    border-spacing: 0;
+    border-collapse: collapse;
+    border: 1px solid #c6d2e1;
+
+    thead tr {
+      background-color: #f4f7fb;
+      text-align: left;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    th {
+      white-space: nowrap;
+    }
+
+    th,
+    td {
+      text-align: left;
+      vertical-align: top;
+      padding: 12px;
+      border: 1px solid #c6d2e1;
+    }
+  }
+}

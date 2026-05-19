@@ -1,0 +1,8 @@
+.tests_dev:
+  stage: test
+  image: ${DEPS_IMAGE}
+  tags: [2gis, docker]
+  interruptible: true
+  script:
+    - !reference [.echo global envs, script]
+    - ln -s /app/node_modules ./node_modules

@@ -1,0 +1,19 @@
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-4m);
+
+  padding: var(--gap-3m) var(--gap-4m) var(--gap-4m);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2m);
+}
+
+.title {
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+}

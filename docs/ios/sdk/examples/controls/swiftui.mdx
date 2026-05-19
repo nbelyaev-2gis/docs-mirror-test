@@ -1,0 +1,48 @@
+---
+sidebar: iossdk
+---
+# SwiftUI
+
+## Карта
+
+Все варианты поставки SDK содержат стандартный набор SwiftUI-элементов для управления картой, которые вы можете добавить в иерархию и использовать для управления параметрами карты.
+
+Процесс создания и добавления `Map` подробно описан в разделе [Создание карты](/ios/sdk/examples/map#creating-map).
+
+Перечисленные ниже элементы для удобства объединены в [IMapControlViewFactory](/ios/sdk/reference/stable/interface#imap-control-view-factory).
+
+Стандартный набор включает в себя:
+
+1. [IndoorView](/ios/sdk/reference/stable/struct#indoor-view) для переключения этажей.
+2. [TrafficView](/ios/sdk/reference/stable/struct#traffic-view) для управления видимостью пробок на карте.
+3. [ZoomView](/ios/sdk/reference/stable/struct#zoom-view) для масштабирования.
+4. В разработке.
+5. [CompassView](/ios/sdk/reference/stable/struct#compass-view) для отображения текущего угла поворота карты относительно севера.
+6. [CurrentLocationView](/ios/sdk/reference/stable/struct#current-location-view) для перелёта к текущему местоположению пользователя.
+7. В разработке.
+8. В разработке.
+
+<img src="/img/mobile-sdk/ios_map_controls_1.png" width="200" /> <img src="/img/mobile-sdk/ios_map_controls_2.png" width="200" /> <img src="/img/mobile-sdk/ios_map_controls_3.png" width="200" />
+
+## Навигатор
+
+Полный вариант поставки SDK содержит набор SwiftUI-элементов для отображения и управления навигацией. Для удобства все элементы объединены в [INavigationMapViewsFactory](/ios/sdk/reference/stable/interface#inavigation-map-views-factory) и [INavigationViewsFactory](/ios/sdk/reference/stable/interface#inavigation-views-factory).
+
+Набор SwiftUI-элементов навигации состоит из:
+
+1. [ThermometerView](/ios/sdk/reference/stable/interface#inavigation-views-factory/make-remaining-route-info-view) для отображения уровня пробок на маршруте.
+2. [NextManeuverView](/ios/sdk/reference/stable/interface#inavigation-views-factory/make-remaining-route-info-view) для отображения информации о следующем манёвре.
+3. [SpeedView](/ios/sdk/reference/stable/interface#inavigation-views-factory/make-remaining-route-info-view) для отображения текущей скорости и скоростного ограничения.
+4. [NavigationTrafficAndParkingView](/ios/sdk/reference/stable/interface#inavigation-map-views-factory/make-navigation-traffic-and-parking-view) для управления видимостью пробок и парковок на карте.
+5. [NavigationZoomView](/ios/sdk/reference/stable/interface#inavigation-map-views-factory/make-navigation-traffic-and-parking-view) для масштабирования (приближения и отдаления) карты.
+6. [NavigationCompassView](/ios/sdk/reference/stable/interface#inavigation-map-views-factory/make-navigation-traffic-and-parking-view) для отображения текущего угла поворота карты относительно севера.
+7. [NavigationFollowingView](/ios/sdk/reference/stable/interface#inavigation-map-views-factory/make-navigation-traffic-and-parking-view) для управления слежением за маркером местоположения.
+8. [RemainingRouteInfoView](/ios/sdk/reference/stable/interface#inavigation-views-factory/make-remaining-route-info-view) для отображения информации в режиме [ведения по маршруту](/ios/sdk/examples/navigation#turn-by-turn-mode).
+
+<img src="/img/mobile-sdk/ios_navi_controls_1.png" width="200" /> <img src="/img/mobile-sdk/ios_navi_controls_2.png" width="200" />
+
+9. [RemainingRouteInfoView](/ios/sdk/reference/stable/interface#inavigation-views-factory/make-remaining-route-info-view) для отображения информации в режиме [свободной навигации](/ios/sdk/examples/navigation#free-drive-mode).
+10. [RemainingRouteInfoView](/ios/sdk/reference/stable/interface#inavigation-views-factory/make-remaining-route-info-view) для отображения информации в режиме [навигации внутри зданий](/ios/sdk/examples/navigation#indoor-navigation).
+11. [NavigationIndoorView](/ios/sdk/reference/stable/interface#inavigation-map-views-factory/make-navigation-traffic-and-parking-view) для выделения этажей, через которые проходит маршрут.
+
+<img src="/img/mobile-sdk/ios_navi_controls_3.png" width="200" /> <img src="/img/mobile-sdk/ios_navi_controls_4.png" width="200" /> <img src="/img/mobile-sdk/ios_navi_controls_5.png" width="200" />

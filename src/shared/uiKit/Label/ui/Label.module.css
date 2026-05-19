@@ -1,0 +1,5 @@
+.label {
+  margin-bottom: 6px;
+  display: block;
+  color: var(--text-secondary);
+}

@@ -1,0 +1,51 @@
+.run pr agent:
+  tags: [2gis, docker]
+  image:
+    # Берём актуальный образ из харбора PLM
+    name: docker-hub.2gis.ru/service-platform-manager/pr_agent:latest
+    entrypoint: ['']
+  variables:
+    MR_URL: ${CI_MERGE_REQUEST_PROJECT_URL}/merge_requests/${CI_MERGE_REQUEST_IID}
+    gitlab__url: ${CI_SERVER_PROTOCOL}://${CI_SERVER_FQDN}
+    gitlab__personal_access_token: ${OPENAI_REVIEW_TOKEN}
+    openai__key: ${OPENAI_REVIEW_APIKEY}
+    anthropic__key: ${OPENAI_REVIEW_APIKEY}
+    openai__api_base: https://ai-openai-proxy.k8s.n3.2gis.io/anthropic
+
+    # Список опций см. в https://github.com/qodo-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml/
+    config__git_provider: gitlab
+    config__custom_model_max_tokens: 32768
+    config__model: anthropic/claude-opus-4-6
+    config__fallback_models: '["anthropic/claude-opus-4-5-20251101","anthropic/claude-sonnet-4-6","anthropic/claude-sonnet-4-5-20250929"]'
+    config__reasoning_effort: high
+    config__response_language: ru-RU
+    config__patch_extra_lines_before: 4
+    config__patch_extra_lines_after: 4
+    pr_reviewer__enable_review_labels_effort: false
+    pr_reviewer__num_max_findings: 5
+  script:
+    - >
+      echo -e "
+      🤖 AI ENV VARIABLES:\n
+      - MR_URL=${MR_URL}\n
+      - gitlab__url=${gitlab__url}"
+    - python -m pr_agent.cli --pr_url="${MR_URL}" ${COMMAND}
+
+.ai review:
+  extends: [.run pr agent]
+  variables:
+    COMMAND: review
+  before_script:
+    - export pr_reviewer__extra_instructions=$(cat ${PROMPT_FILE})
+
+.ai describe:
+  extends: [.run pr agent]
+  variables:
+    COMMAND: describe
+
+.ai improve:
+  extends: [.run pr agent]
+  variables:
+    COMMAND: improve
+  before_script:
+    - export pr_code_suggestions__extra_instructions=$(cat ${PROMPT_FILE})

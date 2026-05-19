@@ -1,0 +1,76 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--navbar-height);
+  padding: 0 var(--gap-4m);
+  background-color: var(--shape-base);
+  border-bottom: 1px solid var(--shape-level-2);
+  box-shadow: none;
+  position: sticky;
+  top: 0;
+  z-index: var(--ifm-z-index-fixed);
+  font-family: var(--ifm-font-family-base);
+
+  @media screen and (--media-xs) {
+    padding-right: var(--gap-2m);
+  }
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-4m);
+}
+
+.hamburger {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-main);
+  border-radius: var(--border-radius-md);
+  font-family: inherit;
+
+  &:hover {
+    background-color: var(--shape-level-1);
+  }
+}
+
+.hamburgerIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logoImage {
+  display: flex;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+}
+
+.colorModeToggle {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  @media screen and (--media-xs) {
+    display: none;
+  }
+}

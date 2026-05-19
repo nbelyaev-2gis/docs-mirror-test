@@ -1,0 +1,99 @@
+---
+sidebar: mapgljsapi
+---
+# Дополнение текущего стиля карты «на лету»
+
+Чтобы изменить текущий стиль, экземпляр карты имеет два метода: [addLayer](/mapgl/reference/class#map/add-layer) и [removeLayer](/mapgl/reference/class#map/remove-layer).
+
+## Добавление нового слоя в стиль карты
+
+После создания карты ее стиль будет пустым до тех пор, пока он не будет загружен с сервера. Важно добавлять новые слои только после загрузки стиля, поскольку загруженный стиль полностью перезапишет старый. Для этого в приведенном выше примере используется событие `styleload`, которое генерируется каждый раз после установки нового стиля:
+
+```js
+map.on('styleload', () => {
+    map.addLayer(layer);
+});
+```
+
+Если вы измените стиль карты с помощью метода `map.setStyleById()`, вы также можете использовать [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), возвращаемый этим методом:
+
+```js
+map.setStyleById('e05ac437-fcc2-4845-ad74-b1de9ce07555').then(() => {
+    map.addLayer(layer);
+});
+```
+
+## Добавление перед другим слоем
+
+Слои стиля карты упорядочены относительно друг друга. Порядок слоев определяет последовательность их отрисовки на карте.
+
+По умолчанию метод `map.addLayer(layer)` добавляет новый слой в конец списка, т.е. новый слой будет отрисован последним. Если вам нужно добавить слой не в конец, а перед другим слоем, укажите ID другого слоя в качестве второго аргумента:
+
+```js
+map.addLayer(anotherLayer, 'my-polygons-layer');
+```
+
+Вы также можете добавить слой перед слоями, настроенными в [Редакторе стилей](https://styles.2gis.com/):
+
+```js
+map.addLayer(layer, '577315');
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MapGL JS API</title>
+  <meta name="description" content="Дополнение стиля карты «на лету»" />
+  <style>
+    html,
+    body,
+    #container {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container"></div>
+  <script src="__MAPGL_API_URL__"></script>
+  <script>
+    const map = new mapgl.Map('container', {
+      center: [37.615655, 55.768005],
+      zoom: 13,
+      key: 'Your API access key',
+    });
+    const layer = {
+      "id": "newLayer",
+      "name": "Country, 2GIS",
+      "type": "polygon",
+      "style": {
+        "color": "#949494ee",
+        "visibility": "visible"
+      },
+      "filter": [
+        "match",
+        [
+          "get",
+          "sublayer"
+        ],
+        [
+          "Country_2gis_area"
+        ],
+        true,
+        false
+      ]
+    }
+    map.on('styleload', () => {
+      map.addLayer(layer, '577315');
+    });
+  </script>
+</body>
+`}
+</HtmlExampleWithSrcCode>

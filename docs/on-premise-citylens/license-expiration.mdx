@@ -1,0 +1,35 @@
+﻿# Истечение лицензии
+
+Лицензионный ключ действует ограниченное время, в течение которого доступны сервисы On-Premise. Когда срок действия лицензии заканчивается, доступ к сервисам блокируется.
+
+:::warning
+
+Сервисы <Brand /> Ситискан не поддерживают режим soft block (предупреждение о скором истечении лицензии). Блокировка наступает сразу после окончания срока действия лицензии.
+
+:::
+
+## Поведение <Brand /> Ситискан при истечении лицензии
+
+При выполнении запроса `api/1.0/routes/{{uuid}}/init` из мобильного приложения в логах появляются ошибки:
+
+```
+{"message": "Retrying request 2/3 to http://license/api/v2/authority/citylens-api/test@example.com9cf60abdee55cb0d/check", "@timestamp": "2025-10-06T14:43:00.918562", "level": "WARNING", "logger": "PasportoolClient", "track_uuid": "<id>"}
+{"message": "Retrying request 3/3 to http://license/api/v2/authority/citylens-api/test@example.com9cf60abdee55cb0d/check", "@timestamp": "2025-10-06T14:43:03.928796", "level": "WARNING", "logger": "PasportoolClient", "track_uuid": "<id>"}
+{"message": "10.244.69.47:49114 - \"POST /api/1.0/routes/<id>/init HTTP/1.1\" 500", "@timestamp": "2025-10-06T14:43:03.940320", "level": "INFO", "logger": "uvicorn.access", "track_uuid": "undefined"}
+{
+  "message": "Exception in ASGI application\n",
+  "exc_info": "  + Exception Group Traceback (most recent call last):<...> Cannot connect to host license:443 ssl:True [SSLCertVerificationError: (1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1147)')]\n      +------------------------------------",
+  "@timestamp": "2025-10-06T14:43:03.944955",
+  "level": "ERROR",
+  "logger": "uvicorn.error",
+  "track_uuid": "undefined"
+}
+```
+
+## Действия при истечении лицензии
+
+1. Обратитесь к менеджеру <Brand /> для продления лицензии.
+
+2. Повторно получите лицензию с помощью утилиты 2GIS CLI. Подробнее см. в разделе [Получение лицензии](/on-premise-api-platform/core/install/license#get-license).
+
+3. Убедитесь, что лицензия активна. Подробнее см. в разделе [Проверка статуса лицензии](/on-premise-api-platform/core/install/license#check-license-status).

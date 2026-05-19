@@ -1,0 +1,288 @@
+---
+sidebar: rasterjsapi
+---
+# Базовое использование
+
+## Описание
+
+Ниже приведены примеры базового использования карты. Для получения подробной информации о работе с картой см. разделы [Подключение API](/maps/others/rasterjs/reference/dg-loading) и [Карта](/maps/others/rasterjs/reference/map).
+
+## Создание карты
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Базовое использование" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+      <style>
+         html,
+         body,
+         #map {
+               height: 100%;
+               margin: 0;
+         }
+      </style>
+   </head>
+
+   <body>
+      <div id="map"></div>
+      <script>
+         DG.then(function () {
+               DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 13,
+                  key: 'Your API access key',
+               });
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Создание карты по требованию
+
+Чтобы инициализировать карту по требованию (например, при отображении карты во всплывающем окне):
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Создание карты по требованию" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js?lazy=true"></script>
+      <style>
+         html,
+         body,
+         #mapBlock,
+         #map {
+               height: 100%;
+               margin: 0;
+         }
+      </style>
+   </head>
+
+   <body>
+      <input id="create" type="button" value="Показать карту" />
+      <div id="mapBlock"></div>
+      <script>
+         var createButton = document.getElementById('create');
+         createButton.onclick = function () {
+               var container = document.createElement('div'),
+                  mapBlock = document.getElementById('mapBlock');
+               container.id = 'map';
+               mapBlock.appendChild(container);
+               createButton.style.display = 'none';
+               DG.then(function () {
+                  DG.map('map', {
+                     center: [54.98, 82.89],
+                     zoom: 13,
+                     key: 'Your API access key',
+                  });
+               });
+         }
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Использование опций подключения
+
+Ниже представлен пример вызова карты с набором опций `pkg=basic, skin=light`. В результате будет получена сборка с базовой функциональностью в светлой теме:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Использование опций подключения" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js?pkg=basic&skin=light"></script>
+      <style>
+         html,
+         body,
+         #map {
+               height: 100%;
+               margin: 0;
+         }
+      </style>
+   </head>
+
+   <body>
+      <div id="map"></div>
+      <script>
+         DG.then(function () {
+               DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 13,
+                  key: 'Your API access key',
+               });
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Полный список опций см. в разделе [Опции подключения](/maps/others/rasterjs/reference/dg-loading#options).
+
+## Изменение размера карты
+
+При клике на кнопку изменяется размер контейнера и карта подстраивается под новый размер:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Изменение размера карты" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+      <style>
+         html,
+         body,
+         #map {
+               height: 100%;
+               margin: 0;
+         }
+
+         #changeSize {
+               position: absolute;
+               top: 5px;
+               left: 70px;
+         }
+      </style>
+   </head>
+
+   <body>
+      <div id="map"></div>
+      <input id="changeSize" type="button" value="Изменить размер" />
+      <script>
+         var changeSizeButton = document.getElementById('changeSize');
+         DG.then(function () {
+               var map,
+                  enabled = false;
+               map = DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 15,
+                  animate: true,
+                  key: 'Your API access key',
+               });
+               changeSizeButton.onclick = function () {
+                  enabled = !enabled;
+                  var mapDiv = document.getElementById('map');
+                  mapDiv.style.width = (enabled ? '50' : '100') + '%';
+                  map.invalidateSize();
+               }
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Отключение опций взаимодействия
+
+Пример отображения статической карты:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Отключение опций взаимодействия" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+      <style>
+         html,
+         body,
+         #map {
+               height: 100%;
+               margin: 0;
+         }
+      </style>
+   </head>
+
+   <body>
+      <div id="map"></div>
+      <script>
+         DG.then(function () {
+               DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 13,
+                  dragging: false,
+                  touchZoom: false,
+                  scrollWheelZoom: false,
+                  doubleClickZoom: false,
+                  boxZoom: false,
+                  geoclicker: false,
+                  zoomControl: false,
+                  fullscreenControl: false,
+                  key: 'Your API access key',
+               });
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Определение местоположения пользователя
+
+Пример определения географического расположения пользователя:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Определение местоположения пользователя" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+      <style>
+         html,
+         body,
+         #map {
+               height: 100%;
+               margin: 0;
+         }
+      </style>
+   </head>
+
+   <body>
+      <div id="map"></div>
+      <script>
+         DG.then(function () {
+               var map;
+               map = DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 13,
+                  key: 'Your API access key',
+               });
+               map.locate({ setView: true, watch: true })
+                  .on('locationfound', function (e) {
+                     DG.marker([e.latitude, e.longitude]).addTo(map);
+                  })
+                  .on('locationerror', function (e) {
+                     DG.popup()
+                           .setLatLng(map.getCenter())
+                           .setContent('Доступ к определению местоположения отключён')
+                           .openOn(map);
+                  });
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>

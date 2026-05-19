@@ -1,0 +1,37 @@
+dgctlDockerRegistry: 'docker-hub.2gis.ru'
+imagePullPolicy: Always
+imagePullSecrets: []
+
+replicas: 1
+nodeSelector:
+  role: worker
+affinity: {}
+tolerations: []
+podAnnotations: {}
+podLabels: {}
+annotations: {}
+labels: {}
+
+image:
+  repository: 'service-kit-docs/ui'
+  tag: 'latest'
+
+appPort: 80
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+
+service:
+  deis:
+    domains: []
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128M
+  limits:
+    cpu: 200m
+    memory: 256M

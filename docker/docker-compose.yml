@@ -1,0 +1,32 @@
+services:
+  # контейнер с playwright-тестами
+  playwright:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.playwright
+    volumes:
+      - ../tests:/app/tests
+      - ../src:/app/src
+      - ../tsconfig.json:/app/tsconfig.json
+      - ../playwright.config.ts:/app/playwright.config.ts
+      - ../allure-results:/app/allure-results
+    environment:
+      APP_URL: ${APP_URL}
+      CI: ${CI}
+      PROJECT: ${PROJECT}
+    ipc: host
+    network_mode: host
+    entrypoint: ["/bin/sh", "-c", "tail -f /dev/null"]
+
+  # контейнер для выгрузки Allure отчётов
+  allure:
+    image: docker-hub.2gis.ru/pychapter/allurectl:2.15.1
+    volumes:
+      - ../allure-results:/allure-results
+    environment:
+      - ALLURE_ENDPOINT=https://allure.2gis.dev
+      - ALLURE_PROJECT_ID=994
+      - ALLURE_TOKEN=${ALLURE_TOKEN}
+      - ALLURE_LAUNCH_NAME=${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}
+      - TESTS_BROWSER=${PROJECT}
+      - ALLURE_LAUNCH_TAGS=${ALLURE_LAUNCH_TAGS}

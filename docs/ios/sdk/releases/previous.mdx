@@ -1,0 +1,2251 @@
+---
+sidebar: iossdk
+---
+# Релизы
+
+:::warning
+
+Прекращена поддержка версий SDK, описанных ниже. Используйте [версию 12.0.0 и выше](/ios/sdk/releases/latest). Cм. инструкции по [миграции с предыдущих версий](/ios/sdk/releases/migration).
+
+:::
+
+## 10.8.0 (2024-11-02)
+
+### 🛠 Исправления
+
+* Исправлено потенциальное зависание в [MapObjectManager](/ios/sdk/reference/10.8/class#map-object-manager) при частом добавлении и удалении объектов через метод [MapObjectManager.removeAndAddObjects](/ios/sdk/reference/10.8/class#map-object-manager/remove-and-add-objects).
+* Добавлена дополнительная проверка на корректность обработки жеста наклона карты, чтобы это не приводило к падению приложения.
+* Исправлена ошибка, при которой приложение падало при логировании сетевых запросов.
+* Исправлена ошибка, при которой [MapViewOverlay](/ios/sdk/reference/10.8/struct#map-view-overlay) работал с прерыванием при взаимодействии с картой.
+* Исправлена работа SwiftUI-элементов для карты, которые пересоздавались при каждом обновлении интерфейса.
+* Исправлена ошибка, при которой для некоторых регионов не работало отображение дорожных событий на карте.
+
+## 10.7.0 (2024-08-13)
+
+### 🌟 Новые возможности
+
+* [DashboardButtonSettings](/ios/sdk/reference/10.7/struct#dashboard-button-settings) в [NavigationViewOptions](/ios/sdk/reference/10.7/struct#navigation-view-options) для настройки кнопки добавления дорожных событий в дашборде навигатора.
+
+## 10.6.0 (2024-08-07)
+
+### 🌟 Новые возможности
+
+* [PackageInfo.finalSizeOnDisk](/ios/sdk/reference/10.6/struct#package-info/var-final-size-on-disk) — размер места на диске, которое территория занимает после установки, в байтах.
+* [PackageInfo.currentSizeOnDisk](/ios/sdk/reference/10.6/struct#package-info/var-current-size-on-disk) — размер места на диске, которое занимают установленные файлы территории на данный момент, в байтах.
+* В [NavigationViewTheme](/ios/sdk/reference/10.6/struct#navigation-view-theme) добавлены параметры для настройки UI-элементов [INavigationView](/ios/sdk/reference/10.6/INavigationView). Вы можете настроить цвет иконок основного и дополнительного манёвров, шрифты во всех UI-элементах, кастомизировать UI-элементы компаса и уровня пробок в баллах.
+
+### 🛠 Исправления
+
+* Исправлена работа карты с включенной настройкой `Metal API Validation` в Xcode.
+* Исправлено обновление позиции в дереве кластеризации через [MapObjectManager.withClustering](/ios/sdk/reference/10.6/class#map-object-manager) при изменении позиции маркера.
+* Обновлён дизайн копирайта снимка карты, полученного через [IMapSnapshotter](/ios/sdk/reference/10.6/IMapSnapshotter).
+* Исправлена ошибка, при которой [MapViewOverlay](/ios/sdk/reference/10.6/struct#map-view-overlay) не обновлялся при изменении параметров.
+* В [INavigationView](/ios/sdk/reference/10.6/INavigationView) UI-элемент спидометра теперь отображается при навигации по велосипедным маршрутам.
+* В [INavigationView](/ios/sdk/reference/10.6/INavigationView) UI-элемент слежения за позицией теперь не скрывается при пешей навигации.
+
+## 10.5.0 (2024-06-05)
+
+### 🌟 Новые возможности
+
+* В настройках ключа можно задавать каскадный `appId`. Благодаря этой настройке ключ можно привязать не к конкретному приложению, а к группе приложений с одинаковой шаблонной частью в идентификаторе.
+* Обновлён дизайн копирайта.
+
+### 🛠 Исправления
+
+* Исправлена работа SDK для CarPlay.
+* При отображении маркеров с помощью [Marker](/ios/sdk/reference/10.5/class#marker) текстовые подписи не перекрывают друг друга.
+* Исправлено отображение маркера геопозиции, когда перестают поступать данные от датчика направления.
+
+## 10.4.0 (2024-05-20)
+
+### 🌟 Новые возможности
+
+* Добавлены SwiftUI-элементы для карты: [CurrentLocationView](/ios/sdk/reference/10.4/struct#current-location-view), [ZoomView](/ios/sdk/reference/10.4/struct#zoom-view), [TrafficView](/ios/sdk/reference/10.4/struct#traffic-view), [IndoorView](/ios/sdk/reference/10.4/struct#indoor-view), [CompassView](/ios/sdk/reference/10.4/struct#compass-view). Все элементы могут быть созданы через фабрику [IMapControlViewFactory](/ios/sdk/reference/10.4/IMapControlViewFactory).
+* [ZoomFollowSettings.speedRangeToStyleZoomFreeRoamSequence](/ios/sdk/reference/10.4/class#zoom-follow-settings) стал сеттером.
+
+### 🛠 Исправления
+
+* Исправлена ошибка, при которой изменение этажа через [IndoorBuilding.activeLevelIndex](/ios/sdk/reference/10.4/class#indoor-building) не влияло на отображение [IndoorControl](/ios/sdk/reference/10.4/class#indoor-control).
+* Обновлён файл `PrivacyInfo.xcprivacy`.
+
+### ❗ Изменения, влияющие на обратную совместимость
+
+* В объект карты [Map](/ios/sdk/reference/10.4/class#map) теперь можно добавить только один источник текущего местоположения [MyLocationMapObjectSource](/ios/sdk/reference/10.4/class#my-location-map-object-source).
+* SDK поддерживает только iOS 13 и выше.
+
+## 10.3.0 (2024-05-06)
+
+### 🌟 Новые возможности
+
+* Теперь информация о пробках в регионах обновляется независимо от обновления конфигурационного файла SDK.
+* Теперь при zoom-уровне выше 2 карту нельзя сдвинуть для отображения пустых полос сверху и снизу.
+* Добавлен арабский голосовой пакет для навигатора.
+
+### 🛠 Исправления
+
+* Исправлена работа кластеризации через [MapObjectManager.withClustering](/ios/sdk/reference/10.3/class#map-object-manager). Теперь иерархия кластеров перестраивается, если позиция одного из маркеров изменилась через [Marker.position](/ios/sdk/reference/10.3/class#marker).
+* Исправлена некорректная обработка тапа в [Marker](/ios/sdk/reference/10.3/class#marker) с Lottie-анимацией.
+* [Map.dataLoadingStateChannel](/ios/sdk/reference/10.3/class#map) больше не зависает в состоянии `loading` при режиме слежения за геопозицией.
+* Добавлен файл `PrivacyInfo.xcprivacy`.
+
+### ❗ Изменения, влияющие на обратную совместимость
+
+* Заканчивается поддержка iOS 12 версии. Со следующей версии SDK работает только для iOS 13 и выше.
+
+## 10.2.0 (2024-03-07)
+
+### 🌟 Новые возможности
+
+* Опции [CircleOptions.dashedStrokeOptions](/ios/sdk/reference/10.2/struct#circle-options) и [Circle.dashedStrokeOptions](/ios/sdk/reference/10.2/class#circle) для создания пунктирной окружности или добавления пунктира для уже созданной окружности.
+* Метод [RoadEventSource.setHighlighted](/ios/sdk/reference/10.2/class#road-event-source) для выделения дорожных событий с идентификаторами из [RoadEventMapObject.id](/ios/sdk/reference/10.2/class#road-event-map-object).
+* Функция [calculateClosestPoint](/ios/sdk/reference/10.2/method#calculate-closest-point-route-geometry-point--) для получения ближайшей точки на маршруте относительно переданной точки.
+
+### 🛠 Исправления
+
+* Исправлена ошибка в работе `layedId`, который задается в [MapObjectManager](/ios/sdk/reference/10.2/class#map-object-manager): теперь он влияет на отображение кластеризованных маркеров.
+* Исправлен отрисовка карты: раньше карта зависала при отображении модального окна над `MapView`.
+* Исправлена работа карты при сворачивании приложения.
+
+### 🗺 Изменения в стилях карты
+
+* Для корректной работы пунктирных окружностей нужно заново выгрузить стили.
+
+## 10.1.0 (2024-01-16)
+
+### 🌟 Новые возможности
+
+* Добавлена структура [DirectoryObject.buildingInfo](/ios/sdk/reference/10.1/class#directory-object) со справочной информацией о здании: `buildingName`, `purposeName`, `purposeCode` и `buildingLevels`. [DirectoryObject.buildingLevels](/ios/sdk/reference/10.1/class#directory-object) помечено `deprecated` и будет удалено в будущих мажорных релизах.
+* Добавлен [DirectoryObject.address.fiasCode](/ios/sdk/reference/10.1/class#directory-object) — ФИАС-код объекта справочника.
+* В [DirectoryObject.address.components](/ios/sdk/reference/10.1/class#directory-object) в структурах [AddressComponent.streetAddress](/ios/sdk/reference/10.1/enumeration#address-component) и [AddressComponent.number](/ios/sdk/reference/10.1/enumeration#address-component) добавлено поле `fiasCode` — ФИАС-код улицы.
+
+## 10.0.0 (2023-12-29)
+
+:::note[Обновление с версии 7.x]
+
+Перед обновлением см. [инструкцию по миграции](/ios/sdk/releases/migration#from-7-to-10).
+
+:::
+
+### 🌟 Новые возможности
+
+* Иммерсивные деревья на карте отображаются по умолчанию.
+* Поддержана новая модель для отображения маркера текущего местоположения. Если необходимо переопределить иконку текущего местоположения, нужно передать [MyLocationMapObjectMarkerType.svgIcon](/ios/sdk/reference/10.0/enumeration#my-location-map-object-marker-type) в конструктор [MyLocationMapObjectSource](/ios/sdk/reference/10.0/class#my-location-map-object-source), а в стилях отредактировать соответствующий слой.
+* Добавлены [MarkerOptions.iconAnimationMode](/ios/sdk/reference/10.0/struct#marker-options) и [Marker.iconAnimationMode](/ios/sdk/reference/10.0/class#marker) для возможности задания режима анимации в маркерах. Режим может быть обычным или зацикленным.
+* Добавлены [SearchResult.actionWidgets](/ios/sdk/reference/10.0/class#search-result) и [SearchResult.mainWidgets](/ios/sdk/reference/10.0/class#search-result) для динамической фильтрации уже полученной поисковой выдачи. [Widget](/ios/sdk/reference/10.0/class#widget) — базовый класс, представляющий виджет для фильтрации поисковой выдачи.
+* В [LocaleManager](/ios/sdk/reference/10.0/class#locale-manager) добавлены методы `locales` и `systemLocales` и соответствующие каналы для получения всех локалей приложения и системных локалей.
+* Добавлен метод [BaseCamera.changePosition](/ios/sdk/reference/10.0/class#base-camera) для изменения только части параметров позиции камеры. Метод принимает новую структуру [CameraPositionChange](/ios/sdk/reference/10.0/struct#camera-position-change).
+* Добавлен метод [Camera.move](/ios/sdk/reference/10.0/class#camera) для запуска анимированного перемещения карты с возможностью сброса слежения за наклоном.
+* Добавлен параметр `styleZoomToTiltRelation` для функций [calcPosition](/ios/sdk/reference/10.0/method#calc-position-camera-geometry-style-zoom-to-tilt-relation-screen-area-tilt-bearing-size--) и [zoomOutToFit](/ios/sdk/reference/10.0/method#zoom-out-to-fit-camera-geometry-style-zoom-to-tilt-relation-size--) — функция зависимости угла наклона камеры от стилевого zoom-уровня.
+* Добавлена новая функция [createDefaultStyleZoomToTiltRelation](/ios/sdk/reference/10.0/method#create-default-style-zoom-to-tilt-relation--) для получения зависимости угла наклона камеры от стилевого zoom-уровня для стандартного контроллера слежения за наклоном.
+* Добавлена функция [createDefaultMaxTiltRestriction](/ios/sdk/reference/10.0/method#create-default-max-tilt-restriction--) для получения дефолтной зависимости ограничения угла наклона от масштаба. По умолчанию эта зависимость устанавливается при создании карты — [BaseCamera.maxTiltRestriction](/ios/sdk/reference/10.0/class#base-camera).
+* Добавлен enum [BearingSource](/ios/sdk/reference/10.0/enumeration#bearing-source) — источник направления.
+* Добавлено поле [PackedMapState.cameraBehaviour](/ios/sdk/reference/10.0/class#packed-map-state) для сериализации режима слежения камеры.
+* В [PackageInfo](/ios/sdk/reference/10.0/struct#package-info) добавлено поле `error` — ошибка, произошедшая при попытке загрузки и/или установки пакета.
+* Добавлен метод [IndoorManager.setIndoorState](/ios/sdk/reference/10.0/class#indoor-manager) для управления отображением этажных планов на карте.
+* Добавлено поле [NavigationManager.alternativeRouteSelector](/ios/sdk/reference/10.0/class#navigation-manager) для выбора альтернативного маршрута.
+* Добавлено поле [Route.bicycleLanes](/ios/sdk/reference/10.0/class#route) — признак наличия выделенной велополосы.
+* Добавлено значение [RoutePointKind.bicycleLane](/ios/sdk/reference/10.0/enumeration#route-point-kind) — начало и конец велополосы.
+* Добавлен флаг [PedestrianRouteSearchOptions.avoidUnderpassesAndOverpasses](/ios/sdk/reference/10.0/struct#pedestrian-route-search-options) — избегать подземных и надземных переходов.
+* Добавлен метод [RouteMapObjectSource.replaceObject](/ios/sdk/reference/10.0/class#route-map-object-source) для замены одного объекта маршрута в источнике на другой.
+* Добавлено поле [NavigationFollowController.mapLocationController](/ios/sdk/reference/10.0/class#navigation-follow-controller). [MapLocationController](/ios/sdk/reference/10.0/class#map-location-controller) — контроллер для управления позиционированием карты в навигаторе.
+* Добавлено поле [NavigationFollowController.cameraBehaviour](/ios/sdk/reference/10.0/class#navigation-follow-controller) для возможности менять режим слежения карты за маркером геопозиции.
+* Добавлено поле [ZoomFollowSettings.speedRangeToStyleZoomFreeRoamSequence](/ios/sdk/reference/10.0/class#zoom-follow-settings) — последовательность интервалов скоростей и соответствующих им масштабов при ведении в режиме FreeRoam.
+
+### ❗ Изменения, влияющие на обратную совместимость
+
+* Изменена работа с [FollowController](/ios/sdk/reference/10.0/class#follow-controller):
+
+  * Удалены методы `createRawMyLocationController()` и `createSmoothMyLocationController()`. Добавлен конструктор [MyLocationController](/ios/sdk/reference/10.0/class#my-location-controller) для создания контроллера перемещения маркера геопозиции.
+  * Удалены значения `FollowBearing.satellite` и `FollowBearing.magnetic`, т. к. теперь не нужно указывать источник направления. Добавлено значение [FollowBearing.on](/ios/sdk/reference/10.0/enumeration#follow-bearing) для включения слежения — источник выбирается автоматически.
+  * Удалено поле [FollowPosition.tilt](/ios/sdk/reference/10.0/struct#follow-position). Добавлен новый конструктор [CameraBehaviour](/ios/sdk/reference/10.0/struct#camera-behaviour) с параметром `tilt` для слежения только за наклоном.
+  * Удалены значения `FollowValue.satelliteBearing`, `FollowValue.magneticBearing` и `FollowValue.accuracy`. Вместо них добавлено значение [FollowValue.bearing](/ios/sdk/reference/10.0/enumeration#follow-value) с автоматическим выбором источника.
+  * Удалены методы `satelliteBearing()`, `magneticBearing()` и `accuracy()` из интерфейса [CustomFollowController](/ios/sdk/reference/10.0/interface#custom-follow-controller). Вместо них добавлен метод [CustomFollowController.bearing()](/ios/sdk/reference/10.0/interface#custom-follow-controller).
+  * Удалены методы `setClock()`, `satelliteBearing()`, `magneticBearing()` и `accuracy()` из [FollowController](/ios/sdk/reference/10.0/class#follow-controller). Вместо них добавлены методы `onAddedToMap()`, `onRemovedFromMap()` и `bearing()`.
+  * Удалён канал `FollowController.nextTimestampChannel`. Вместо него добавлен [FollowController.changedChannel](/ios/sdk/reference/10.0/class#follow-controller).
+  * Изменена сигнатура метода [FollowController.updateValues()](/ios/sdk/reference/10.0/class#follow-controller).
+  * Удалён контроллер `PlatformLocationFollowController`. Вместо него добавлены контроллеры [BearingFollowController](/ios/sdk/reference/10.0/class#bearing-follow-controller) и [CoordinatesFollowController](/ios/sdk/reference/10.0/class#coordinates-follow-controller) для слежения за направлением карты и за координатами позиции карты, соответственно.
+  * Изменён конструктор контроллера [StyleZoomFollowController](/ios/sdk/reference/10.0/class#style-zoom-follow-controller). Удалён метод `StyleZoomFollowController.setAnimationDuration()`.
+  * Изменён конструктор контроллера [TiltFollowController](/ios/sdk/reference/10.0/class#tilt-follow-controller). Удалены методы `TiltFollowController.setTilt()` и `TiltFollowController.setAnimationDuration()`.
+  * Изменены параметры метода [FollowController.setThresholds()](/ios/sdk/reference/10.0/class#follow-controller) на типизированные.
+  * Удалён класс `FollowControllerClock`. Тип параметра в методе [FollowController.setClock](/ios/sdk/reference/10.0/class#follow-controller) заменён на timestamp.
+  * Удалён `TransitionType`. Конструктор [MyLocationControlModel](/ios/sdk/reference/10.0/class#my-location-control-model) теперь не принимает `transitionType`. Удалён параметр `transitionType` из конструктора [CameraBehaviour](/ios/sdk/reference/10.0/struct#camera-behaviour).
+  * Удалён `MyLocationDirectionBehaviour`. Конструктор источника геопозиции [MyLocationMapObjectSource](/ios/sdk/reference/10.0/class#my-location-map-object-source) теперь не принимает `directionBehaviour`. Удалён метод `MyLocationMapObjectSource.setDirectionBehaviour()`.
+
+* Удалено поле `BaseCamera.styleZoomToTiltRelation`.
+
+* Переименован класс `MagneticHeadingProvider` в `HeadingProvider`.
+
+* Конструкторы динамических объектов [Circle](/ios/sdk/reference/10.0/class#circle), [Marker](/ios/sdk/reference/10.0/class#marker), [Polygon](/ios/sdk/reference/10.0/class#polygon) и [Polyline](/ios/sdk/reference/10.0/class#polyline) помечены как `throws`.
+
+* Удалена опция [MapOptions.mapRendererType](/ios/sdk/reference/10.0/struct#map-options) и enum `MapRendererType`. Теперь всегда включён `Metal` для рендеринга карты.
+
+* Удалены `Circle.position` и `Circle.radius`. Вместо них добавлены методы [Circle.setPosition()](/ios/sdk/reference/10.0/class#circle) и [Circle.setRadius()](/ios/sdk/reference/10.0/class#circle), которые могут генерировать исключение.
+
+* Структура [Locale](/ios/sdk/reference/10.0/struct#locale) теперь создаётся на основе отдельных значений языка `language` и региона `region`.
+
+* Из Map-сборки удалены [PackageManager](/ios/sdk/reference/10.0/class#package-manager) и [Package](/ios/sdk/reference/10.0/class#package), что уменьшило размер продукта.
+
+* Метод [Voice.playWelcome()](/ios/sdk/reference/10.0/class#voice) теперь возвращает [Future](/ios/sdk/reference/10.0/class#future), который становится готовым, когда проигрывание сэмпла завершается.
+
+* Удалено поле `RoadSubtype.stairway`. Вместо него добавлены поля [RoadSubtype.stairwayUp](/ios/sdk/reference/10.0/enumeration#road-subtype) и [RoadSubtype.stairwayDown](/ios/sdk/reference/10.0/enumeration#road-subtype) для использования лестниц с явным направлением.
+
+* Удалено поле `NavigationFollowController.mapTiltController`.
+
+* При запуске навигатора в режиме ведения или симуляции с маршрутом на общественном транспорте теперь генерируется исключение.
+
+* Отключено кеширование тайлов `FreeRoam` при навигации.
+
+* [MyLocationMapObjectSource](/ios/sdk/reference/10.0/class#my-location-map-object-source) для навигатора теперь устанавливается внутри [INavigationView](/ios/sdk/reference/10.0/INavigationView).
+
+### ❗ Известные ошибки
+
+* При частом обновлении динамических объектов (около 100 FPS) зависает карта.
+
+### 🛠 Исправления
+
+* Оптимизирована перерисовка кадров карты при любых изменениях.
+
+* Исправлено отображение пробок на карте в зависимости от zoom-уровня.
+
+* Исправлено неплавное обновление маркера геопозиции.
+
+* Оптимизировано и исправлено отображение карты на последних версиях iOS.
+
+* Исправлена работа метода [SimpleClusterObject.setIcon](/ios/sdk/reference/10.0/class#simple-cluster-object) при первом вызове.
+
+* Исправлена работа кластеризации через [MapObjectManager.withClustering](/ios/sdk/reference/10.0/class#map-object-manager), если передать дробные значения `minZoom` и `maxZoom`.
+
+* Обновлен логотип <Brand /> в копирайте на снапшотах карты.
+
+* Теперь бросается корректное исключение, если в карту загрузить битые стили.
+
+* При установке в [MapOptions.appearance](/ios/sdk/reference/10.0/struct#map-options) значения [MapAppearance.default](/ios/sdk/reference/10.0/enumeration#map-appearance) будет устанавливаться дневная тема по умолчанию.
+
+* При расчёте дистанции для проигрывания предварительной инструкции о манёвре учитывается полосность.
+
+* При проигрывании финишной фразы в режиме навигатора учитывается пеший маршрут.
+
+* Исправлена ошибка, при которой баблы полосности не отображают направление маршрута.
+
+* Исправлено формирование баблов полосности, чтобы не учитывалось ограничение по скорости.
+
+* Исправлено отображение баблов автобусной полосы, идущей прямо, со знаком «Въезд запрещен» для остального транспорта.
+
+* Исправлено отображение предложенных маршрутов:
+
+  * Не убирается предложенный маршрут лучше с карты, если пользователь явно отказался переходить на него.
+  * Убираются с карты альтернативные маршруты, от развилки с которыми уже слежение уехало слишком далеко, даже если к ним всё ещё можно притянуться.
+  * Откидываются альтернативные маршруты, ответвляющиеся от основного маршрута в одной и той же точке и идущие в одну и ту же сторону.
+  * Отзыв предложения маршрута лучше в случае, когда после обновления данных о пробках маршрут лучше перестаёт быть таковым.
+
+* Не озвучиваются предупреждения о камерах-муляжах.
+
+* В [INavigationView](/ios/sdk/reference/10.0/INavigationView) при отображении полного маршрута отображается только оставшаяся часть маршрута.
+
+* По умолчанию отключено кэширование тайлов `FreeRoam` при навигации для уменьшения запросов к бэкендам.
+
+### 🗺 Изменения в стилях карты
+
+* Добавлены стили светофоров.
+* Добавлены иммерсивные модели деревьев и зданий.
+* Поддержаны новые ветки Московского метро МЦД-3 и МЦД-4.
+* Оптимизированы модели иммерсивных деревьев.
+* Добавлена новая модель для отображения маркера текущего местоположения.
+
+## 7.4.1 (2023-12-29)
+
+### 🛠 Исправления
+
+* Исправлен рендеринг карты - карта зависала при отображении модального окна над `MapView`.
+
+## 7.4.0 (2023-11-15)
+
+### 🌟 Новые возможности
+
+* Добавлены `MarkerOptions.iconAnimationMode` и `Marker.iconAnimationMode` для возможности задания режима анимации в маркерах. Режим может быть обычным или зацикленным.
+
+### 🛠 Исправления
+
+* Оптимизировано и исправлено отображение карты на последних версиях iOS.
+* Исправлена работа метода `SimpleClusterObject.setIcon` при первом вызове.
+* Исправлена работа кластеризации через `MapObjectManager.withClustering`, если передать дробные значения `minZoom` и `maxZoom`.
+* Обновлен логотип <Brand /> в копирайте на снапшотах карты.
+* В `NavigationView` при отображении полного маршрута отображается только оставшаяся часть маршрута.
+* По умолчанию отключено кэширование тайлов `FreeRoam` при навигации для уменьшения запросов к бэкендам.
+
+## 7.3.1 (2023-08-16)
+
+### 🛠 Исправления
+
+* Теперь при формировании запроса в справочник через `SearchQueryBuilder` для определения локали всегда берется первое значение из метода `LocaleManager.locales`, если не удалось определить локаль по области поиска.
+
+## 7.3.0 (2023-08-07)
+
+### 🛠 Исправления
+
+* Теперь при формировании запроса в справочник через `SearchQueryBuilder` для определения локали не используется текущая геопозиция пользователя, а берется первое значение из метода `LocaleManager.locales`, если в `SearchQueryBuilder` явно не задана область для поиска.
+* Исправлена ошибка, возникающая при обращении к полям `SimpleClusterObject` при формировании кластера в реализации метода `SimpleClusterRenderer.renderCluster`.
+
+## 7.2.1 (2023-07-31)
+
+### 🌟 Новые возможности
+
+* Добавлены два метода `SearchQueryBuilder.fromRubricIds` и `SearchQueryBuilder.fromQueryTextAndRubricIds` для создания поисковых запросов с фильтрацией по идентификаторам рубрик.
+* Добавлено новое поле `DirectoryObject.tradeLicense` с информацией о лицензии организации.
+
+## 7.1.0 (2023-07-20)
+
+### 🛠 Исправления
+
+* Поддержана работа справочника с новым форматом ключей.
+* Исправлено получение snapshot карты методом `IMapSnapshotter.makeImage` при переходе приложения из состояния background в foreground.
+* Исправлен расчет оставшегося рабочего времени организации в `Directory.workStatus` при офлайн поиске.
+* Контрол `TUGC` в режиме `FreeRoam` доступен только при добавлении `RoadEventSource` на карту.
+
+## 5.4.0 (2023-07-20)
+
+### 🛠 Исправления
+
+* Поддержана работа справочника с новым форматом ключей.
+* Исправлено получение snapshot карты методом `IMapSnapshotter.makeImage` при переходе приложения из состояния background в foreground.
+
+## 5.3.0 (2023-06-19)
+
+### 🌟 Новые возможности
+
+* Появилась возможность задавать исключаемые области при поиске маршрутов через `ExcludedArea`.
+* В `INavigationView` добавлено отображение названия организации назначения при Indoor навигации.
+
+### 🛠 Исправления
+
+* Исправлена ошибка при двойном тапе в карту и резком изменении масштаба.
+* Исправлено потенциальное падение при добавлении маркера на карту с подписью через `Marker`.
+* В `INavigationView` исправлено скрывание контролов карты через 10 секунд в случае, если пользователь не взаимодействует с картой.
+* В `INavigationView` исправлена кнопка добавления TUGC на карту на панели ETA.
+
+## 7.0.0 (2023-06-16)
+
+:::note[Обновление с версии 5.x]
+
+Перед обновлением см. [инструкцию по миграции](/ios/sdk/releases/migration#from-5-to-7).
+
+:::
+
+### 🌟 Новые возможности
+
+* Добавлена возможность устанавливать Lottie-анимацию у маркера через `Marker.icon`. В `IImageFactory` добавлен метод для получения `Image` c Lottie-данными.
+* Добавлена UI-модель `IndoorControlModel` для реализации контрола этажных планов `IndoorControl`.
+* В `SearchResult` добавлено поле `dynamicFilters` - динамические фильтры, которые можно дополнительно применить для поисковой выдачи.
+* В `DirectoryFilter` добавлено поле `dynamic` для передачи динамических фильтров.
+* Добавлен метод `BaseCamera.maxTiltRestriction` для задания и получения функции зависимости максимального угла наклона камеры от стилевого zoom-уровня.
+* Добавлена возможность создать `MapObjectManager` с генерализацией объектов через `MapObjectManager.withGeneralization`.
+* Добавлен метод `Projection.screenToMapClipped`, который возвращает ближайшую точку карты к проекции указанной точки экрана.
+* В режиме навигатора теперь отображаются альтернативные маршруты, которые могут быть предложены как маршрут лучше. `Model.betterRouteChannel` — канал для оповещений о появлении альтернативного маршрута. `Model.betterRouteResponse` — метод для подтверждения альтернативного маршрута. Маршруты настраиваются с помощью `NavigationManager.alternativeRoutesProviderSettings`.
+* Добавлен метод `Voice.playWelcome` для воспроизведения образца голоса в навигаторе.
+* В `RoutePointKind` добавлено больше типов для идентификации точечных объектов на маршруте.
+* Появилась возможность задавать исключаемые области при поиске маршрутов через `ExcludedArea`.
+* В `INavigationView` добавлено отображение названия организации назначения при Indoor навигации.
+
+### ❗ Изменения, влияющие на обратную совместимость
+
+* Методы `DgisSource.createOnlineDgisSource` и `DgisSource.createOfflineDgisSource` удалены. Вместо них нужно использовать `DgisSource.createDgisSource` с дополнительным параметром `DgisSourceWorkingMode` - режим работы карты. Сейчас доступно четыре режима работы: `online`, `offline`, `hybridOnlineFirst` и `hybridOfflineFirst`.
+* `FollowController` теперь возвращает `StyleZoom`, а не `Zoom`.
+* `FollowValue.zoom` переименован в `FollowValue.styleZoom`.
+* `ZoomFollowController` переименован в `StyleZoomFollowController`.
+* `ZoomToTiltRelation` переименован в `StyleZoomToTiltRelation`.
+* `SpeedRangeToZoom` переименован в `SpeedRangeToStyleZoom`.
+* Метод `Projection.screenToMap` теперь вместо исключения возвращает пустое значение, если точка находится за пределами карты.
+* Метод `BaseCamera.setPadding` удален. Enum `CameraPositionPointChangeBehaviour` также удален. Поле `BaseCamera.padding` теперь является сеттером.
+* Методы `Camera.animatedMoveStarted` и `Camera.animatedMoveFinished` удалены. Вместо них можно использовать канал `Camera.stateChannel`.
+* Методы `SearchManager.createOnlineManager`, `SearchManager.createOfflineManager` и `SearchManager.createSmartManager` помечены, как throws.
+* Сеттеры `BaseCamera.position` и `BaseCamera.zoomRestrictions` удалены. Методы `BaseCamera.setPosition`, `BaseCamera.setZoomRestrictions` и `BaseCamera.setPositionPoint` помечены, как throws.
+* Сеттер `Map.fontIconSizeMultiplier` удален. Метод `Map.setFontIconSizeMultiplier` помечен, как throws.
+* Конструктор `NavigationManager` и методы `NavigationManager.start` и `NavigationManager.startSimulation` помечены, как throws.
+* Геттер `Container.context` помечен, как throws. Также помечены все остальные методы-фабрики `Container`.
+* Изменены названия в `ZoomFollowSettings`, чтобы лучше соответствовать назначению.
+* Метод `Model.applyBetterRoute` удален. Вместо него появился метод `Model.betterRouteResponse` и enum `BetterRouteResponse` для работы с альтернативными маршрутами.
+* Удалено значение `State.freeRoam`. Теперь для определения, что навигатор в режиме Free Roam, нужно смотреть на значение `RouteInfo.routeBuildOptions` - оно должно быть пустым.
+
+### 🛠 Исправления
+
+* Уменьшен размер Full сборки за счет уменьшения зависимости Offline справочника от других модулей.
+* Исправлены утечки памяти при разрушении карты с активным перелётом.
+* Оптимизировали использование одного источника данных `DgisSource`, добавленного в 2 и более объектов `Map`.
+* Исправили работу канала `Map.dataLoadingStateChannel`, который теперь учитывает любую работу с картой (добавление объектов, изменение темы, добавление источников данных и т.д.).
+* В случаях, когда точка позиции камеры расположена ближе к нижнему краю экрана, значение максимального угла наклона камеры может быть уменьшено.
+* Исправлена ошибка при двойном тапе в карту и резком изменении масштаба.
+* Теперь маршрут не будет отображаться на карте в режиме навигации до появления позиции на нем.
+* Исправлен возврат в режим слежения при работе навигатора по умолчанию.
+* В `INavigationView` исправлено скрывание контролов карты через 10 секунд в случае, если пользователь не взаимодействует с картой.
+* В `INavigationView` исправлена кнопка добавления TUGC на карту на панели ETA.
+
+### 🗺 Изменения в стилях карты
+
+* Добавлена поддержка иконки `автобус + знак "Въезд запрещен"` в баблах полосности.
+* Установлены цвета для градиента линии неактивного маршрута.
+
+## 5.2.2 (2023-04-26)
+
+### 🛠 Исправления
+
+* Исправили падение, когда в ключе указаны ограничения по регионам, у которых нет офлайн-данных.
+
+## 5.2.1 (2023-03-27)
+
+### 🛠 Исправления
+
+* Исправлено потенциальное падение при вращении карты.
+* Исправлено потенциальное падение при анимации появления маркеров с SVG изображением.
+
+## 5.2.0 (2023-03-16)
+
+### 🌟 Новые возможности
+
+* В метод `DgisSource.setHighlighted` теперь можно передавать идентификаторы входов в здание для их выделения/снятия выделения.
+
+### 🛠 Исправления
+
+* Исправлено отображение маркеров с SVG изображением.
+
+### 🗺 Изменения в стилях карты
+
+* У слоёв `Parking lots with unknown price`, `Parking for persons with disabilities`, `Parking for residents`, `Parking for taxi`, `Free parking` и `Covered parking` поменялся размер иконки.
+* В ночной теме в каталоге `POI icons` у слоёв `Airport`, `Railway station`, `Bus terminal` и `Port` поменялся цвет подписи.
+* Изменения для выделенного состояния:
+  * Цвета заливки и обводки: каталог `Flat buildings`.
+  * Цвета заливки верхней плоскости, стены и обводки: каталог `Building 3D`.
+  * Иконка: слои `Entrances, under buildings`, `Entrances, over buildings`, `Small gates`, `Boom gates`, `Parking lots with unknown price`, `Parking for persons with disabilities`, `Parking for residents`, `Parking for taxi`, `Free parking`, `Covered parking`.
+  * Иконка: каталоги `Sights` (кроме слоя `Park` в ночной теме), `POI icons` (только в дневной теме), `Transport landmarks` (только в дневной теме), `Public transport stops icons` (кроме слоёв `Railway station point` и `Stop point`).
+  * Размер иконки: каталоги `Parking lots bubbles` (слои `Paid parking`, `Parking lots with unknown price`, `Parking for residents`, `Parking for persons with disabilities`, `Parking for taxi`, `Free parking`), `POI icons` (только в ночной теме), `Transport landmarks` (только в ночной теме), слой `Park` каталога `Sights` (только в ночной теме).
+  * Иконка и цвет подписи: каталог `Metro stations icons` (кроме слоёв `MCD 1`, `MCD 2`), `Metro exits icons` (кроме слоёв `MCD 1`, `MCD 2`).
+  * Размер иконки и цвет подписи: каталог `Metro stations icons` (слои `MCD 1`, `MCD 2`), `Metro exits icons` (слои `MCD 1`, `MCD 2`).
+  * Цвет заливки и ширина линии: каталог `Roads` в дневной теме (кроме `Walkways`, `Intercity, background`, `Federal, background`).
+  * Цвет заливки: каталог `Roads` в ночной теме, каталог `Roads` в дневной теме (слой `Walkways`).
+* Добавился слой `Entrances, arrows` только с выделенным состоянием.
+
+## 5.1.2 (2023-02-15)
+
+### 🛠 Исправления
+
+* Исправлено падение при уничтожении объекта `Context`.
+* Исправлено падение, когда не удалось закэшировать тайлы карты.
+
+## 5.1.0 (2023-01-11)
+
+### 🌟 Новые возможности
+
+* В метод `calcPosition` добавлен параметр `size` - размер карты.
+
+### 🛠 Исправления
+
+* Исправлена ошибка, при которой настройка `HTTPOptions.timeout` никак не влияла на таймаут запросов через `OnlineSearchManager`/`SmartSearchManager`.
+* Удалено появление `OpenStreetMap` в копирайте.
+* Исправлено падение при навигации в случае, если голосовой инструкции нет в пакете данных.
+* Исправлено определение локали при формировании запросов через `OnlineSearchManager`.
+
+## 5.0.2 (2022-12-26)
+
+### 🛠 Исправления
+
+* Исправлена проблема, когда после удаления `MapView` не удалялся объект `Map`.
+* Исправлено отображение панели ETA в `NavigationView` при переходе в `Indoor` режим.
+
+## 5.0.1 (2022-12-08)
+
+### 🛠 Исправления
+
+* Исправлена проблема, при которой после завершения навигации оставался периодический перелет к текущему местоположению, если камера находилась в состоянии покоя.
+
+## 5.0.0 (2022-12-06)
+
+
+:::note[Обновление с версии 4.x]
+
+Перед обновлением см. [инструкцию по миграции](/ios/sdk/releases/migration#from-4-to-5).
+
+:::
+
+### 🌟 Новые возможности
+
+* Отказались от использования OpenGL в качестве графического API в пользу Apple Metal по причине нестабильной работы OpenGL на устройствах с процессорами M1 и новее.
+* Добавлена пешая навигация в здании. Включается, когда маршрут построен с учетом этажей (с флагом `PedestrianRouteSearchOptions.useIndoor`) при входе в здание. UI навигатора меняется - отображается контрол переключения этажей с пометками, через какие этажи проходит маршрут, в нижней панели отображается номер этажа точки назначения. В `NavigationManager` добавлен `IndoorDetector` для определения нахождения пользователя в помещении в режиме навигации.
+* Добавлена возможность поиска и отображения пешеходных маршрутов в зданиях с этажными планами.
+  * При поиске должно быть включено `PedestrianRouteSearchOptions.useIndoor` (по умолчанию включено).
+  * Маршрут в здании отображается пунктиром на активном этаже, а при включенном `RouteMapObjectDisplayFlag.inactiveFloors` - на всех этажах.
+  * На переходах между этажами отображаются иконки с инструкциями, их видимостью управляет `RouteMapObjectDisplayFlag.indoorInstructions`.
+  * Получить информацию об этажах, через которые проходит маршрут, можно с помощью `Route.levels`.
+* Добавлен класс `BaseCamera` для хранения основных настроек камеры. Класс `Camera` является наследником `BaseCamera`. В `BaseCamera` также добавлен метод `clone` для копирования камеры.
+* Добавлены перегрузки для методов `zoomOutToFit` и `calcPosition`, принимающие вместо геометрий массив объектов карты `SimpleMapObject`.
+* Добавлен метод быстрого получения базовой информации о маршрутах (время в пути, длина и др.) без их построения - `TrafficRouter.findBriefRouteInfos`.
+* Добавлен поиск проезда на самокатах. Для этого необходимо задать `ScooterRouteSearchOptions` в `TrafficRouter.findRoute`.
+* Добавлена информация об уровне высот на маршруте - `Route.altitudes`.
+* Добавлена информация о запретах перемещения по маршруту - `Route.truckRestrictedAreas`, `Route.vehicleRestrictedAreas`.
+* Добавлена возможность "съедать" маршрут с любого конца - `RouteMapObject.passedDistanceVisualization`.
+* Добавлен метод для одновременного задания нескольких отображаемых маршрутов `RouteMapObject.replaceAllObjects`.
+* Добавлены настройки отображения баблов на маршруте `RouteMapObject.calloutLabelFlags`, `RouteMapObject.calloutLabelDisplayMode`.
+* Появилась возможность не скрывать некоторые элементы маршрута по мере его "съедания" - `RouteMapObject.permanentDisplayFlags`.
+* Добавлен класс для управления слежением карты за маркером геопозиции в навигаторе - `NavigationFollowController`.
+* Добавлена возможность получить бабл маршрута через `Map.getRenderedObject`, возвращаемый объект имеет тип `RouteInfoCalloutMapObject`.
+* Улучшена работа `SmartSearchManager` - теперь при любых исключениях в `OnlineSearchManager` происходит переключение на `OfflineSearchManager`.
+* В `MapGestureViewOptions` появился параметр `pinchScalingCenter` для задания точки на экране, относительно которой происходит масштабирование карты при жесте изменения масштаба.
+* Появилась возможность задавать идентификатор для запросов в WebAPI для On-Premise ключей.
+* Обновлен логотип <Brand /> в копирайте на карте.
+* В `NavigationViewOptions` появился флаг `roadEventCreationEnabled` для отключения контрола дорожных событий.
+* Поддержка PPI всех моделей iPhone 14 и iPad.
+* В `DGis.Container` добавлено свойство `locationService` - реализация протокола `ILocationService` для получения последнего известного местоположения пользователя.
+* Реализованы методы `IMapView.addObjectTappedCallback`, `IMapView.addObjectLongPressCallback`, `IMapView.removeObjectTappedCallback`, `IMapView.removeLongPressCallback` для добавления и удаления `MapObjectTappedCallback` - обработчиков тапа и долгого нажатия на карту.
+* В `INavigationViewFactory` добавлен метод `makeNavigationView` с дополнительными параметрами `INavigationViewControlsFactory` и `INavigationMapControlsFactory` для переопределения контролов навигатора и контролов карты в навигаторе. Все контролы теперь публичные.
+* В `INavigationViewFactory` добавлены методы `makeNavigationViewControlsFactory` и `makeNavigationMapControlsFactory` для получения фабрик контролов навигатора и контролов карты в навигаторе, соответственно.
+
+### ❗ Изменения, влияющие на обратную совместимость
+
+* Изменена сигнатура методов `zoomOutToFit` и `calcPosition`. `zoomOutToFit` теперь принимает только камеру и геометрию. В `calcPosition` теперь помимо камеры и геометрии можно передать активную область, угол наклона и поворота карты, поэтому теперь необязательно предварительно настраивать камеру для расчета позиции.
+* Удален `RoutePosition` - избыточный класс, вместо него используется `RoutePoint`.
+* Удалено `Model.cameraProgressChannel`, вместо него необходимо использовать класс `CameraNotifier`.
+* `Traffic.durations` теперь имеет тип `MillisecondsRouteAttribute` вместо `SecondsRouteLongAttribute` и большую точность значений.
+* `Route.obstacles` теперь имеет тип `ObstacleInfoRouteAttribute` и помимо типа препятствия содержит дополнительную информацию.
+* Конструктор `ZoomFollowController` теперь принимает параметром `Map`.
+* В `MapView` были удалены методы `osmCopyrightAnimationDuration` и `showOSMCopyright`.
+
+### 🛠 Исправления
+
+* Увеличена точность отображения оставшегося времени в пути в навигаторе.
+* В случае пустого результата `OfflineSearchManager` не кидает исключение, а возвращает пустой список.
+* У `INavigationView` при старте навигатора изменили zoom-уровень камеры, приближенный к основному приложению <Brand />.
+* В `INavigationView` исправлена работа контрола ограничения скорости - теперь нулевое ограничение не отображается.
+* После завершения навигации в `INavigationView` камера возвращается к исходным настройкам.
+* Более корректное вычисление точки расхождения между основным маршрутом и маршрутом лучше.
+* Исправлена работа контрола компаса `CompassControl`.
+* Исправлено определение локали в поисковых запросах. Теперь регион определяется через область интереса или текущее местоположение пользователя.
+* Добавлена проверка на добавление пользовательских маркеров с пустым изображением.
+* Исправлена проблема, при которой маршрут лучше исчезал вместе с панелью выбора маршрута по истечению таймаута.
+
+### 🗺 Изменения в стилях карты
+
+* У пешего маршрута (группа Pedestrian route line) и объектов на маршруте (Point A, Point B, Route joints, Intermediate route points в группе Dynamic objects) добавлена логика отображения на этажах.
+* Добавлены инструкции навигации в здании - группа Indoor instructions.
+* Cлой "Point A" теперь не отображается в режиме навигации.
+* Выключено отображение слоёв "Region border" и "Regions".
+* Установлены цвета для градиента линии неактивного маршрута.
+* Исправлен селектор для платных парковок.
+* Слои "Intermediate route points", "Route joints", "Point A", "Point B" теперь сразу после слоя "Location precision radius".
+
+## v4.6.1
+
+**Release Date:** 11.01.2023
+
+### 🛠 Исправления
+
+* Исправлено падение при навигации в случае, если голосовой инструкции нет в пакете данных.
+
+## v4.6.0
+
+**Release Date:** 30.12.2022
+
+### 🛠 Исправления
+
+* Исправлена ошибка, при которой настройка `HTTPOptions.timeout` никак не влияла на таймаут запросов через `OnlineSearchManager`/`SmartSearchManager`.
+* Удалено появление `OpenStreetMap` в копирайте.
+
+## v4.5.0
+
+**Release Date:** 16.11.2022
+
+### 🌟 Новые возможности
+
+* Улучшена работа `SmartSearchManager` - теперь при любых исключениях в `OnlineSearchManager` происходит переключение на `OfflineSearchManager`.
+* В `MapGestureViewOptions` появился параметр `pinchScalingCenter` для задания точки на экране, относительно которой происходит масштабирование карты при жесте изменения масштаба.
+* Появилась возможность задавать идентификатор для запросов в WebAPI для On-Premise ключей.
+
+### 🛠 Исправления
+
+* В случае пустого результата `OfflineSearchManager` не кидает исключение, а возвращает пустой список.
+* У `NavigationView` при старте навигатора изменили zoom-уровень камеры, приближенный к основному приложению <Brand />.
+
+## v5.0.0-beta.4
+
+**Release Date:** 08.11.2022
+
+### 🌟 Новые возможности
+
+* Поддержка PPI всех моделей iPad.
+* Реализованы методы `IMapView.addObjectTappedCallback`, `IMapView.addObjectLongPressCallback`, `IMapView.removeObjectTappedCallback`, `IMapView.removeLongPressCallback` для добавления и удаления `MapObjectTappedCallback` - обработчиков тапа и долгого нажатия на карту.
+* В `MapGestureViewOptions` появилась возможность через `pinchScalingCenter` задавать точку, относительно которой будет происходить изменение масштабов карты.
+
+### 🛠 Исправления
+
+* Более корректное вычисление точки расхождения между основным маршрутом и маршрутом лучше.
+* Исправлена работа контрола компаса `CompassControl`.
+* Исправлено определение локали в поисковых запросах. Теперь регион определяется через область интереса или текущее местоположение пользователя.
+
+## v5.0.0-beta.3
+
+**Release Date:** 31.10.2022
+
+### 🌟 Новые возможности
+
+* Поддержка PPI всех моделей iPhone 14.
+* В `DGis.Container` добавлено свойство `locationService` - реализация протокола `ILocationService` для получения последнего известного местоположения пользователя.
+
+### 🛠 Исправления
+
+* Исправлена проблема, при которой маршрут лучше исчезал вместе с панелью выбора маршрута по истечению таймаута.
+
+## v4.4.1
+
+**Release Date:** 31.10.2022
+
+### 🌟 Новые возможности
+
+* Поддержка PPI всех моделей iPhone 14.
+
+### 🛠 Исправления
+
+* Исправлена проблема, при которой маршрут лучше исчезал вместе с панелью выбора маршрута по истечению таймаута.
+
+## v2.8.3
+
+**Release Date:** 31.10.2022
+
+### 🌟 Новые возможности
+
+* Поддержка PPI всех моделей iPhone 14.
+
+## v5.0.0-beta.2
+
+**Release Date:** 13.10.2022
+
+### 🌟 Новые возможности
+
+* Обновлен логотип <Brand /> в копирайте на карте.
+* В `NavigationViewOptions` появился флаг `roadEventCreationEnabled` для отключения контрола дорожных событий.
+
+### 🛠 Исправления
+
+* В `INavigationView` исправлена работа контрола ограничения скорости - теперь нулевое ограничение не отображается.
+
+## v4.4.0
+
+**Release Date:** 13.10.2022
+
+### 🌟 Новые возможности
+
+* Обновлен логотип <Brand /> в копирайте на карте.
+
+## v2.8.2
+
+**Release Date:** 13.10.2022
+
+### 🌟 Новые возможности
+
+* Обновлен логотип <Brand /> в копирайте на карте.
+
+## v5.0.0-beta.1
+
+**Release Date:** 29.09.2022
+
+### 🌟 Новые возможности
+
+* Отказались от использования OpenGL в качестве графического API в пользу Apple Metal по причине нестабильной работы OpenGL на устройствах с процессорами M1 и новее.
+* Добавлена возможность поиска и отображения пешеходных маршрутов в зданиях с этажными планами.
+  * При поиске должно быть включено `PedestrianRouteSearchOptions.useIndoor` (по умолчанию включено).
+  * Маршрут в здании отображается пунктиром на активном этаже, а при включенном `RouteMapObjectDisplayFlag.inactiveFloors` - на всех этажах.
+  * На переходах между этажами отображаются иконки с инструкциями, их видимостью управляет `RouteMapObjectDisplayFlag.indoorInstructions`.
+  * Получить информацию об этажах, через которые проходит маршрут, можно с помощью `Route.levels`.
+* Добавлена пешая навигация в здании (возможность экспериментальная и будет дорабатываться). Включается, когда маршрут построен с учетом этажей (с флагом `PedestrianRouteSearchOptions.useIndoor`) при входе в здание. UI навигатора меняется - отображается контрол переключения этажей с пометками, через какие этажи проходит маршрут, в нижней панели отображается номер этажа точки назначения.
+* Добавлен метод быстрого получения базовой информации о маршрутах (время в пути, длина и др.) без их построения - `TrafficRouter.findBriefRouteInfos`.
+* Добавлен поиск проезда на самокатах. Для этого необходимо задать `ScooterRouteSearchOptions` в `TrafficRouter.findRoute`.
+* Добавлена информация об уровне высот на маршруте - `Route.altitudes`.
+* Добавлена информация о запретах перемещения по маршруту - `Route.truckRestrictedAreas`, `Route.vehicleRestrictedAreas`.
+* Добавлена возможность "съедать" маршрут с любого конца - `RouteMapObject.passedDistanceVisualization`.
+* Добавлен метод для одновременного задания нескольких отображаемых маршрутов `RouteMapObject.replaceAllObjects`.
+* Добавлены настройки отображения баблов на маршруте `RouteMapObject.calloutLabelFlags`, `RouteMapObject.calloutLabelDisplayMode`.
+* Появилась возможность не скрывать некоторые элементы маршрута по мере его "съедания" - `RouteMapObject.permanentDisplayFlags`.
+* Добавлен класс для управления слежением карты за маркером геопозиции в навигаторе - `NavigationFollowController`.
+* Добавлена возможность получить бабл маршрута через `Map.getRenderedObject`, возвращаемый объект имеет тип `RouteInfoCalloutMapObject`.
+
+### 🛠 Исправления
+
+* Увеличена точность отображения оставшегося времени в пути в навигаторе.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Удален `RoutePosition` - избыточный класс, вместо него используется `RoutePoint`.
+* Удалено `Model.cameraProgressChannel`, вместо него необходимо использовать класс `CameraNotifier`.
+* `Traffic.durations` теперь имеет тип `MillisecondsRouteAttribute` вместо `SecondsRouteLongAttribute` и большую точность значений.
+* `Route.obstacles` теперь имеет тип `ObstacleInfoRouteAttribute` и помимо типа препятствия содержит дополнительную информацию.
+* Конструктор `ZoomFollowController` теперь принимает параметром `Map`.
+
+### 🗺 Изменения в стилях карты
+
+* У пешего маршрута (группа Pedestrian route line) и объектов на маршруте (Point A, Point B, Route joints, Intermediate route points в группе Dynamic objects) добавлена логика отображения на этажах.
+* Добавлены инструкции навигации в здании - группа Indoor instructions.
+
+## v4.3.0
+
+**Release Date:** 26.08.2022
+
+### 🌟 Новые возможности
+
+* Возможность задать шрифт надписей маркеров, указав `TextStyle.fontName` - название шрифта из редактора стилей.
+* Новое значение enum-a `CameraState.followPosition` - камера находится в режиме слежения за позицией.
+
+### 🛠 Исправления
+
+* Оптимизирован офлайн поиск проезда - не грузим лишние данные регионов.
+* Исправлены рывки камеры во время навигации при близкорасположенных манёврах.
+* Исправлено "съедание" маршрута при повторном запуске навигации.
+* Исправлено падение при удалении источника пробок.
+* Исправлено отображение манёвров навигатора при левостороннем движении.
+* Улучшена работа `MyLocationControl` - призумливание к геопозиции, переключение между тремя режимами слежения, отображение текущего режима.
+* Уменьшено количество сетевых запросов данных о пробках при быстром перемещении карты.
+* Ошибки таймаута при скачивании пробочного балла не логируются как ошибка.
+
+## v4.2.0
+
+**Release Date:** 04.08.2022
+
+### 🛠 Исправления
+
+* Исправлено исключение в `Map.visibleArea`.
+* Для локализации надписей на карте теперь используются все заданные в системе языки.
+* Локализация надписей дорожных событий.
+* Исправлено перестроение маршрута во время навигации.
+* Изменено значение по умолчанию параметра `radius` в `Map.getRenderedObjects`.
+
+## v4.1.0
+
+**Release Date:** 15.07.2022
+
+### 🛠 Исправления
+
+* Исправлено мерцание пробок при масштабировании карты.
+* Исправление отображения остановок и точек соединения на маршрутах.
+* Исправлено обновление карты при изменении локали.
+* `DirectoryObject.markerPosition.elevation` теперь может иметь ненулевое значение - высота над поверхностью.
+* Увеличен таймаут сетевых запросов поиска проезда (предыдущего не хватало для дальних маршрутов).
+* Теперь в ключе не обязательно задавать `deactivation_time`, если не используются offline-возможности.
+* Исправлено падение при проверке пересечения геометрий методом `Geometry.intersects`.
+* Исправлены потенциальные падения при работе карты.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Значение enum-а `RouteMapObjectDisplayFlag.tranportConnectionPoints` переименовано в `transportConnectionPoints` - исправлена опечатка.
+
+## v2.8.1
+
+**Release Date:** 13.07.2022
+
+### 🛠 Исправления
+
+* Исправлено падение при проверке пересечения геометрий методом `Geometry.intersects`.
+* Исправлены потенциальные падения при работе карты.
+
+## v4.0.0
+
+**Release Date:** 17.06.2022
+
+:::note[Обновление с версии 2.x]
+
+Перед обновлением см. [инструкцию по миграции](/ios/sdk/releases/migration#from-2-to-4).
+
+:::
+
+### 🌟 Новые возможности
+
+* Гибридный режим работы.
+  * Добавлена возможность скачать данные для работы карты, справочника и поиска проезда, которые в дальнейшем будут использоваться при отсутствии Интернет-соединения. Для скачивания данных о территориях и получении информации о них служит `TerritoryManager`.
+  * Чтобы карта работала в гибридном режиме, необходимо задать в `MapOptions.sources` гибридный источник - `[.dgisHybridSource]`.
+  * Гибридный поисковик по справочнику - `SearchManager.createSmartManager` (но есть так же отдельные `createOnlineManager` и `createOfflineManager`).
+  * Поиск проезда (`TrafficRouter`) всегда гибридный - использует online/offline данные в зависимости от их доступности.
+  * С помощью `TerritoriesAlongRouteProvider` можно получить список территорий, через которые проходит маршрут.
+* Отображение этажных планов.
+  * Происходит автоматически при приближении карты к крупным зданиям (торговым центрам, аэропортам и т. д.).
+  * Для получения информации об этажных планах и их переключения служит `IndoorManager`.
+  * Есть готовый UI контрол для управления этажами - `IndoorControl`.
+  * Динамические объекты (`SimpleMapObject`) можно разместить на конкретном этажном плане с помощью параметра `levelId`.
+* Отображения всплывающих подсказок с полосностью над маршрутом навигатора.
+  * По умолчанию `RouteMapObjectDisplayFlag.lanesBubbles` задан.
+  * Позиции подсказок на маршруте можно получить с помощью `RouteMapObject.lanesCalloutPositions`.
+* Информация о событиях и пробках на маршруте в навигаторе - `Model.dynamicRouteInfo`. Для настройки параметров её обновления служит `NavigationManager.dynamicRouteInfoSettings`.
+* Настройка параметров отображения маршрута в навигаторе - `NavigationManager.routeMapSettings`.
+* Автоматический переход в режим Free Roam при сходе с маршрута.
+* Добавлены настройки поиска маршрута лучше - `NavigationManager.betterRouteProviderSettings`.
+* Добавлены поля с границами зоны действия знака полосности - `RouteLaneSign.signStartPoint`, `signPoint`, `signEndPoint`.
+* Добавлена опция "избегать лестниц" на пешеходных маршрутах - `PedestrianRouteSearchOptions.avoidStairways`.
+* Изменена логика работы с ключами. Теперь при инициализации MobileSDK нужно передать путь до файла `dgissdk.key`, который содержит информацию о ключе.
+* Новый дизайн UI навигатора `NavigationView` вместе со всеми контролами. Теперь дизайн совпадает с новым навигатором приложения <Brand />.
+* Помимо обновленного дизайна контролов в новом навигаторе:
+  * Появилась возможность задавать цветовые схемы всех контролов.
+  * Появилась возможность задавать функцию обратного вызова на кнопку завершения поездки. Если callback не задан, то кнопка не будет отображаться в нижней всплывающей панели.
+  * По умолчанию включено отображение баблов полосности.
+* Для велосипедных маршрутов добавляются специфичные для них атрибуты, такие как:
+  * `Route.badRoads` - плохой ли участок дороги.
+  * `ExtraInstructionInfo.bicycleCrossroad` - велосипедные инструкции `BicycleInstructionCrossroad`, `BicycleInstructionCrossroadManeuver`, `BicycleInstructionCrossroadManeuverDirection`, `BicycleInstructionCrossroadLandmark`.
+* По умолчанию включено кэширование `Free roam` тайлов в режиме движения по маршруту. Для настройки кэширования используются `FreeRoamSettings.onRoutePrefetchLength`, `FreeRoamSettings.onRoutePrefetchRadiusMeters` и `FreeRoamSettings.cachePrefetchRadiusMeters`.
+* Добавлен флаг `TruckRouteSearchOptions.fallbackOnCar`, который позволяет искать автомобильный маршрут при невозможности найти грузовой маршрут.
+* Обработка кликов по входам в здания. Добавлено поле `DgisObjectId.entranceId` - идентификатор входа. Оно заполняется для входов, полученных через `Map.getRenderedObjects`. Поддержка входов в справочнике будет добавлена в следующих релизах.
+* Контрол навигатора "Градусник", отображающий пробки на маршруте - `ThermometerControlView`.
+* Обзор маршрута в навигаторе. Включается при выборе соответствующего действия на Dashboard или нажатии на "Градусник".
+* Добавлены протоколы `IMarkerView` и `IMarkerViewFactory` для создания UI View маркеров. Для добавления этих маркеров на карту нужно использовать протокол `IMarkerViewOverlay`.
+* В баблах полосности появились указатели съездов.
+* Добавлена информация о подъездах в `DirectoryObject` - `EntranceInfo`.
+* Доработан `SearchManager.suggest` для отображения подъездов и квартир.
+* Доработаны `SearchManager.searchByDirectoryObjectId` и `SearchManager.searchById` для поиска подъезда по идентификатору.
+* Добавлена возможность настраивать отображение активного и неактивного маршрутов через `RouteEditorSource.activeDisplayFlags` и `RouteEditorSource.inactiveDisplayFlags`.
+* Добавлен флаг `RouteMapObjectDisplayFlag.bubbles` для управление видимостью баблов на маршрутах.
+* Добавлены приоритеты для сетевых запросов, чтобы загружались в первую очередь более приоритетные данные.
+* Добавлен канал `Map.dataLoadingStateChannel` для отслеживания состояния загруженности карты.
+
+### 🛠 Исправления
+
+* Уменьшен размер map сборки Mobile SDK.
+* Кэширование данных Free Roam. Настроить параметры кеширования можно с помощью `NavigationManager.freeRoamSettings`.
+* Исправлена проблема, при которой камера, озвученная при прохождении на маршруте один раз, больше не озвучивалась при повторном проезде через неё.
+* Исправлен поиск в офлайн и гибридном режимах.
+* Оптимизировано обновление пробок.
+* Отключение отображения этажных планов в режиме навигации.
+* Оптимизирована отправка статистики в режиме навигации.
+* Исправлена ситуация, когда при отображении дорожных событий в логах появлялись ошибки `can’t load from network`.
+* Оптимизирована логика перезапроса маршрутов.
+* Исправлена проблема, когда при завершении поездки построенный маршрут оставался на карте.
+* Исправлен порядок отрисовки маршрутов.
+
+### 🗺 Изменения в стилях карты
+
+* Отображение этажных планов.
+  * Появились новые каталоги со слоями: "Площади этажей", "Площадники организаций", "Стены этажей", "Якоря организаций", "Достопримечательности этажей", "Подписи этажей".
+  * У всех слоёв в каталоге "3D дома", а также у слоя "3D модели" поменялось условие выбора данных.
+* Требуется перевыгрузка стилей из редактора для того, чтобы появились подсказки полосности.
+* Названия слоев переведены на английский язык.
+* Слой "Driveways above houses" стал интерактивным - доступным для получения через `Map.getRenderedObjects`.
+* Удалены слои "Пробки обводка уровень \[-3..3]".
+* Изменена ширина линий у "Traffic jams, background", "Traffic jams fill color level \[-3..3]".
+* Добавились параметры стрелок в каталоке "Car route line" у слоев "Maneuver arrows, large scale, tracking mode", "Maneuver arrows, fine scale, tracking mode".
+* В ночной теме поменялся цвет текста, цвет halo и размер halo в каталогах "Traffic alerts along the route" и "Traffic alerts along the route, tracking mode" у слоев "Small gates", "Stairs up", "End of pedestrian underpass", "Beginning of pedestrian underpass", "Stairs down", "Boom gate", "Speed hump".
+* Изменения для нового навигатора: цвета/размеры пробок, маршрута, манёвров, новая модель стрелки.
+* Поддержка размещения объектов `SimpleMapObject` на этажах.
+
+## v2.8.0
+
+**Release Date:** 09.06.2022
+
+### 🌟 Новые возможности
+
+* Свойство `MapObjectManager.isVisible` - включение/выключение отображения всех объектов одновременно.
+
+### 🛠 Исправления
+
+* Статическое содержимое карты теперь загружается с большим приоритетом, чем динамическое.
+* Исправлена потенциальная блокировка UI-потока на длительное время при работе с сетью.
+
+## v4.0.0-beta.2
+
+**Release Date:** 25.05.2022
+
+### 🌟 Новые возможности
+
+* Свойство `MapObjectManager.isVisible` - включение/выключение отображения всех объектов одновременно.
+* Обработка кликов по входам в здания. Добавлено поле `DgisObjectId.entranceId` - идентификатор входа. Оно заполняется для входов, полученных через `Map.getRenderedObjects`. Поддержка входов в справочнике будет добавлена в следующих релизах.
+* Контрол навигатора "Градусник", отображающий пробки на маршруте - `ThermometerControlView`.
+* Обзор маршрута в навигаторе. Включается при выборе соответствующего действия на Dashboard или нажатии на "Градусник".
+
+### 🛠 Исправления
+
+* Исправлено отображение пробок во время слежения.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Удалены `Model.durationChannel`, `Model.routeDurationChannel`, вместо них необходимо использовать `Model.dynamicRouteInfo.traffic.durations.calculateDuration(routePoint)`.
+* Изменен набор значений enum-a `RoadSurface`.
+* Удалены `Model.navigationActiveChannel`, `NavigationManager.uiSettings`, вместо них для получения активности навигатора служит новый класс `ActivityTracker`.
+
+### 🗺 Изменения в стилях карты
+
+* Названия слоев переведены на английский язык.
+* Слой "Driveways above houses" стал интерактивным - доступным для получения через `Map.getRenderedObjects`.
+* Удалены слои "Пробки обводка уровень \[-3..3]".
+* Изменена ширина линий у "Traffic jams, background", "Traffic jams fill color level \[-3..3]".
+* Добавились параметры стрелок в каталоке "Car route line" у слоев "Maneuver arrows, large scale, tracking mode", "Maneuver arrows, fine scale, tracking mode".
+* В ночной теме поменялся цвет текста, цвет halo и размер halo в каталогах "Traffic alerts along the route" и "Traffic alerts along the route, tracking mode" у слоев "Small gates", "Stairs up", "End of pedestrian underpass", "Beginning of pedestrian underpass", "Stairs down", "Boom gate", "Speed hump".
+
+## v2.7.0
+
+**Release Date:** 18.05.2022
+
+### 🌟 Новые возможности
+
+* Добавлена возможность задания слоя отрисовки `SimpleObject` при создании `MapObjectManager`. Добавлен параметр - `layerId` - ID слоя нового типа `Динамический объект`. Когда он задан, объекты размещаются на этом слое, что позволяет задать их порядок относительно других слоев.
+* Теперь учитывается ситуация, когда `DGis.Container` инициализируется не из главного потока.
+
+### 🛠 Исправления
+
+* Исправлены зависания карты при больших значениях zoom и угла наклона.
+* Исправлена проблема, когда при загрузке карты в гибридном режиме на какое-то время все заполнял полигон воды.
+* Исправлена проблема, когда на разных zoom изменялась толщина добавленного объекта `Polygon`.
+* Оптимизировано обновление пробок - теперь они кэшируются в зависимости от style zoom.
+
+## v4.0.0-beta.1
+
+**Release Date:** 04.05.2022
+
+### 🌟 Новые возможности
+
+* Изменена логика работы с ключами. Теперь при инициализации MobileSDK нужно передать путь до файла `dgissdk.key`, который содержит информацию о ключе.
+* Новый дизайн UI навигатора `NavigationView` вместе со всеми контролами. Теперь дизайн совпадает с новым навигатором приложения <Brand />.
+* Помимо обновленного дизайна контролов в новом навигаторе:
+  * Появилась возможность задавать цветовые схемы всех контролов.
+  * Появилась возможность задавать функцию обратного вызова на кнопку завершения поездки. Если callback не задан, то кнопка не будет отображаться в нижней всплывающей панели.
+  * По умолчанию включено отображение баблов полосности.
+* Добавлена возможность задания слоя отрисовки `SimpleObject` при создании `MapObjectManager`. Добавлен параметр - `layerId` - ID слоя нового типа `Динамический объект`. Когда он задан, объекты размещаются на этом слое, что позволяет задать их порядок относительно других слоев.
+* В `MapOptions.sources` добавлена возможность задавать гибридный источник карты через `MapOptions.SourceDescriptor.dgisHybridSource`.
+* Для велосипедных маршрутов добавляются специфичные для них атрибуты, такие как:
+  * `Route.badRoads` - плохой ли участок дороги.
+  * `ExtraInstructionInfo.bicycleCrossroad` - велосипедные инструкции `BicycleInstructionCrossroad`, `BicycleInstructionCrossroadManeuver`, `BicycleInstructionCrossroadManeuverDirection`, `BicycleInstructionCrossroadLandmark`.
+* По умолчанию включено кэширование `Free roam` тайлов в режиме движения по маршруту. Для настройки кэширования используются `FreeRoamSettings.onRoutePrefetchLength`, `FreeRoamSettings.onRoutePrefetchRadiusMeters` и `FreeRoamSettings.cachePrefetchRadiusMeters`.
+* Добавлен флаг `TruckRouteSearchOptions.fallbackOnCar`, который позволяет искать автомобильный маршрут при невозможности найти грузовой маршрут.
+* Отправка нового поля passedDistance в событиях статистики навигатора.
+* Поддержка iPhone SE 3 и iPad Air 5.
+
+### 🛠 Исправления
+
+* Ускорено добавление сложных полигонов на карту.
+* Исправлена проблема, при которой камера, озвученная при прохождении на маршруте один раз, больше не озвучивалась при повторном проезде через неё.
+* Исправлен поиск в офлайн и гибридном режимах.
+* Оптимизировано обновление пробок.
+* Отключение отображения этажных планов в режиме навигации.
+* Оптимизирована отправка статистики в режиме навигации.
+* Исправлена ситуация, когда при отображении дорожных событий в логах появлялись ошибки `can’t load from network`.
+* Оптимизирована логика перезапроса маршрутов.
+* Исправлена проблема, когда при завершении поездки построенный маршрут оставался на карте.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Структура `APIKeys` была удалена. Вместо нее в `Container.init` первым параметров нужно передавать объект структуры `ApiKeyOptions`, который содержит путь до файла `dgissdk.key`. Объект по умолчанию `ApiKeyOptions.default` пытается получить файл из корня приложения.
+* Удалены методы `SearchQueryBuilder.setLocation` и `SuggestQueryBuilder.setLocation` - значение автоматически берется из источника геопозиции.
+* Удален метод `PackedSearchQuery.location`.
+* Удалены `SearchResultMarkerObject` и `SearchResultMarkerSource` для генерализации маркеров поисковой выдачи по причине отсутствия возможности динамически добавлять или удалять объекты. В качестве альтернативы пользователю предлагается самому реализовать генерализацию маркеров или воспользоваться кластеризацией.
+* При создании `MyLocationMapObjectSource` по умолчанию используется `SmoothMyLocationController` вместо `RawMyLocationController`.
+
+### 🗺 Изменения в стилях карты
+
+* Изменения для нового навигатора: цвета/размеры пробок, маршрута, манёвров, новая модель стрелки.
+* Поддержка размещения объектов `SimpleMapObject` на этажах.
+
+## v2.6.0
+
+**Release Date:** 19.04.2022
+
+### 🌟 Новые возможности
+
+* Отправка нового поля passedDistance в событиях статистики навигатора.
+* Поддержка iPhone SE 3 и iPad Air 5.
+
+### 🛠 Исправления
+
+* Ускорено добавление сложных полигонов на карту.
+* Исправлено обновление пробок на маршруте.
+* Кэширование дорожных событий.
+* Улучшен алгоритм обновления ETA на маршруте.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Методы `SearchQueryBuilder.setLocation` и `SuggestQueryBuilder.setLocation` помечены как устаревшие - значение автоматически берется из источника геопозиции.
+
+## v4.0.0-alpha.1
+
+**Release Date:** 04.04.2022
+
+### 🌟 Новые возможности
+
+* Гибридный режим работы.
+  * Добавлена возможность скачать данные для работы карты, справочника и поиска проезда, которые в дальнейшем будут использоваться при отсутствии Интернет-соединения. Для скачивания данных о территориях и получении информации о них служит `TerritoryManager`.
+  * Чтобы карта работала в гибридном режиме, необходимо задать в `MapOptions.sources` сразу оба источника - online и offline - `[.dgisOnlineSource, .dgisOfflineSource]`.
+  * Гибридный поисковик по справочнику - `SearchManager.createSmartManager` (но есть так же отдельные `createOnlineManager` и `createOfflineManager`).
+  * Поиск проезда (`TrafficRouter`) всегда гибридный - использует online/offline данные в зависимости от их доступности.
+  * С помощью `TerritoriesAlongRouteProvider` можно получить список территорий, через которые проходит маршрут.
+* Отображение этажных планов.
+  * Происходит автоматически при приближении карты к крупным зданиям (торговым центрам, аэропортам и т. д.).
+  * Для получения информации об этажных планах и их переключения служит `IndoorManager`.
+  * Есть готовый UI контрол для управления этажами - `IndoorControl`.
+  * Динамические объекты (`SimpleMapObject`) можно разместить на конкретном этажном плане с помощью параметра `levelId`.
+* Отображения всплывающих подсказок с полосностью над маршрутом навигатора.
+  * По умолчанию выключено. Включить можно, задав `RouteMapObjectDisplayFlag.lanesBubbles` в `RouteMapObject.displayFlags`, `RouteMapSettings.onRouteDisplayFlags` или `RouteMapSettings.freeRoamDisplayFlags`.
+  * Позиции подсказок на маршруте можно получить с помощью `RouteMapObject.lanesCalloutPositions`.
+* Информация о событиях и пробках на маршруте в навигаторе - `Model.dynamicRouteInfo`. Для настройки параметров её обновления служит `NavigationManager.dynamicRouteInfoSettings`.
+* Настройка параметров отображения маршрута в навигаторе - `NavigationManager.routeMapSettings`.
+* Автоматический переход в режим Free Roam при сходе с маршрута.
+* Добавлены настройки поиска маршрута лучше - `NavigationManager.betterRouteProviderSettings`.
+* Добавлены поля с границами зоны действия знака полосности - `RouteLaneSign.signStartPoint`, `signPoint`, `signEndPoint`.
+* Добавлена опция "избегать лестниц" на пешеходных маршрутах - `PedestrianRouteSearchOptions.avoidStairways`.
+
+### 🛠 Исправления
+
+* Исправлено обновление пробок на маршруте.
+* Кэширование данных Free Roam. Настроить параметры кеширования можно с помощью `NavigationManager.freeRoamSettings`.
+* Кэширование дорожных событий.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+Map-версия:
+
+* Класс `DirectoryObjectId` переименован в `DgisObjectId`.
+* Удалены функции `serialize`, `deserialize` для `CameraPosition` вместо них нужно использовать новый механизм сериализации - `PackedMapState`.
+
+Full-версия:
+
+* Удалены списки с информацией о маршруте в `RouteInfo` - `cameras`, `instructions`, `laneSigns` и т. д. и индексы текущих элементов - `Model.cameraIndexChannel`, `Model.instructionIndexChannel`. Вместо этого информацию необходимо получать непосредственно из маршрута и текущей позиции, например, получение ближайшей камеры - `Model.route.route.cameras.findNearForward(position)`.
+* Переименованы параметры поиска маршрута:
+  * `BicycleRouteSearchOptions.avoidUnderpasses` -> `avoidUnderpassesAndOverpasses`.
+  * `CarRouteSearchOptions.avoidFerry` -> `avoidFerries`.
+  * `TruckRouteSearchOptions actualWeight`, `maxPermissibleWeight` -> `actualMass`, `maxPermittedMass`.
+* Значение enum-a `RoadType.road` разделено на подтипы `RoadType.highway`, `RoadType.federalRoad` и др.
+* Метод `VoiceSelector.setVoice` заменен на свойство `voice`.
+
+## v2.5.0
+
+**Release Date:** 23.03.2022
+
+### 🌟 Новые возможности
+
+* Событие в статистике об изменение настроек навигатора во время ведения.
+* События в статистике навигатора о сходе с маршрута и возврате на него.
+
+### 🛠 Исправления
+
+* Исправлена работа `Map.getRenderedObjects` с прозрачными полигонами.
+* Исправлено обновление пробочных данных в UI-модели навигатора (`RouteInfo.trafficRoute.traffic`).
+* Исправлен порядок наложения стрелок манёвров в навигаторе.
+* Велосипедные маршруты теперь проходят по тротуару, а не проезжей части.
+* Обработка нулевого идентификатора в методах `SearchManager.searchById`, `searchByDirectoryObjectId`.
+
+### 🗺 Изменения в стилях карты
+
+<details>
+<summary>Список изменений</summary>
+
+<pre>
+"Океан"
+Для дневной и ночной темы размер шрифта на [z2:9.15 .. z4:12.5]
+отступы лейблинга для текста в ночной теме изменены с 10.1 до 20, теперь как в дневной теме
+
+"Крупное море"
+Для дневной и ночной темы размер шрифта на [z3:9.15 .. z5:10.85]
+
+"Малое море и крупное озеро"
+Для дневной и ночной темы размер шрифта на [z3.5:9.5 .. z6:11.65]
+отступы лейблинга для текста в дневной теме изменены с 40.1 до 20, теперь как в ночной теме
+
+"Малое озеро"
+Для дневной и ночной темы размер шрифта изменён на 9.15
+отступы лейблинга для текста в ночной теме изменены с 20 до 0, теперь как в дневной теме
+
+"Страны <Brand />"
+Для дневной и ночной темы размер шрифта на [z2:10 .. z5:15]
+Для дневной и ночной темы отступы лейблинга изменены на 5
+
+"Крупные страны"
+Для дневной и ночной темы размер шрифта на [z2:10 .. z5:15]
+
+"Средние страны"
+Для дневной и ночной темы размер шрифта на [z2:10 .. z4:12.5]
+Для дневной и ночной темы отступы лейблинга изменены на 10
+
+"Малые страны"
+Для дневной и ночной темы размер шрифта изменён на 10.85
+Для дневной и ночной темы отступы лейблинга изменены на 5
+
+"Области"
+Для дневной и ночной темы размер шрифта на [z6:10.85 .. z9:16.65]
+
+"Средние города"
+Для дневной и ночной темы размер шрифта на [z6:10 .. z9:13.75]
+
+"Малые города"
+Для дневной и ночной темы размер шрифта на [z6:9.15 .. z9:12.9]
+Для ночной темы фильтр sublayer изменён на "City_small", теперь как в дневной теме
+Для ночной и дневной темы фильтр object_class изменён на "universe_city"
+
+"Региональные центры"
+Для дневной и ночной темы размер шрифта на [z4.5:9.15 .. z9:13.75]
+
+"Малые города <Brand />"
+Для дневной и ночной темы размер шрифта на [z6:10 .. z9:13.75]
+
+"Крупные города"
+Для дневной и ночной темы размер шрифта на [z5:10 .. z9:15]
+Для дневной и ночной темы изменен размер иконки на 5.85
+Для ночной темы изменены отступы лейблинга на 20
+
+"Средние города <Brand />"
+Для дневной и ночной темы размер шрифта на [z4:8.35 .. z9:15]
+Для дневной и ночной темы изменен размер иконки на 5.85
+
+"Крупные города <Brand />"
+Для дневной и ночной темы изменен размер иконки на 5.85
+Для дневной и ночной темы изменён размер шрифта на [z3:8.35 .. z9:15]
+Для дневной и ночной темы изменены отступы лейблинга на 5
+Для ночной темы изменены фильтры выборки: sublayer = City_2gis_big, objectClass = universe_city_2gis, universe_city_2gis_rc, теперь как в дневной теме
+
+"Малые столицы"
+Для дневной и ночной темы изменен размер иконки на 7.5
+Для дневной и ночной темы изменен размер шрифта на [z6:11.65 .. z11:18.35]
+Для дневной темы изменены фильтры выборки, приведены в соответствие ночной теме
+Для дневной и ночной темы изменены отступы лейблинга на 4
+
+"Столицы"
+Для ночной темы изменены фильтры выборки, приведены в соответствие дневной теме
+Для дневной и ночной темы изменены размеры шрифта на [z3:9.15 .. z11:18.35]
+Для дневной и ночной темы изменен размер иконки на 7.5
+
+"Столицы <Brand />"
+Для дневной и ночной темы диапазон изменены размеры шрифта на [z3:9.15 .. z11:18.35]
+Для дневной и ночной темы изменен размер иконки на 7.5
+Для дневной и ночной темы отступы лейблинга изменены на 4
+
+"Магистрали"
+Для ночной темы основание для логарифма интерполяции ширины изменено на 2, теперь как в дневной теме
+
+"Пешеходные дорожки"
+Для ночной темы изменена ширина на [z16.5:1.1 .. z19:3], также изменена интерполяция на линейную, теперь как в дневной теме
+Для ночной и дневной темы изменен фильтр по db_sublayer, добавлены "Pedestrian_road_park_footpath", "Pedestrian_road_park_path" и "Pedestrian_street"
+
+"Стрелки внутриквартальные"
+Для дневной темы изменён отступ от краев линии для размещения стрелок на 2, теперь как в ночной теме
+Для ночной темы изменён фильтр sublayer на Oneway_internal_road
+
+"Стрелки прочие"
+Для дневной темы изменён отступ от краев линии для размещения стрелок на 2, теперь как в ночной теме
+Для ночной темы фильтр sublayer приведён в соответствие дневной теме.
+
+"Стрелки магистралей"
+Для дневной темы отступ от краев линии для размещения стрелок изменен на 2, теперь как в ночной теме
+
+"Пробки подложка", "Пробки заливка уровень -3", "Пробки заливка уровень -2", "Пробки заливка уровень -1", "Пробки заливка уровень 0", "Пробки заливка уровень 1", "Пробки заливка уровень 2", "Пробки заливка уровень 3"
+Для ночной темы изменён тип анимации у сдвига линии, теперь линейная как в дневной теме.
+
+"Водный транспорт"
+Для ночной темы длина штриха изменена на [z14:2.3 .. z20:4.1], теперь как в дневной теме
+
+"Трамвай пунктир"
+Для ночной темы длина промежутка между штрихами изменена на [z15:8 .. z19:40.1], теперь как в дневной теме
+
+"Подъезды под домами"
+Для ночной темы размер иконки изменен на [z17:6 .. z18.5:11], теперь как в дневной теме
+
+"Подъезды над домами"
+Для ночной темы размер иконки изменен на [z17:6 .. z18.5:11], теперь как в дневной теме
+
+"Линия маршрута на метро подложка", "Линия маршрута на метро контур"
+В дневной теме из фильтров убран s_dvg_public_pedestrian_route_mobile
+
+"Смотровая площадка", "Памятник природы", "Водопад", "Вертолетная площадка", "Пляж", "Лыжная база", "Информация", "Сад", "Мост", "Лодочная станция", "Скейт-парк", "Спасатель", "Раздевалка", "Вода", "Каток", "Прокат зимнего инвентаря", "Деревья", "Аттракционы", "Руины", "Пейнтбол", "Сцена", "Танцпол", "Душевая кабина", "Ёлочный базар", "Вольер", "Усадьба", "Переезд", "Памятник", "Декоративное сооружение", "Беседка", "Буккроссинг", "Граффити", "Фонтан", "Место для выгула собак", "Тир", "Прокат инвентаря", "Детская площадка", "Картинг", "Туалет", "Спортивный инвентарь"
+Для дневной темы размер иконки изменен на [z14:12 .. z16:14], теперь как в ночной теме
+
+"Смотровая площадка", "Памятник природы", "Водопад", "Парк", "Пляж"
+Размеров шрифта изменён на 16
+
+"Парк"
+Для ночной темы размер иконки изменен на [z14:18 .. z18:24], теперь как в дневной теме
+
+"Вода" (POI)
+В дневной теме в фильтры добавлен "springs" в objectClass
+
+"Тир"
+В ночной теме заменена иконка на "poi_shootingrange", теперь как в дневной теме
+
+"Спортивный инвентарь"
+Для ночной и дневной темы изменены отступы лейблинга на 5
+Для дневной темы размер иконки изменен на [z14:12 .. z16:14], теперь как в ночной теме
+
+"Прочие подписи"
+Для ночной темы фильтр sublayer изменён на "Other_caption_point", теперь как в дневной теме
+Для ночной темы изменён минимальный зум на 15, теперь как в дневной теме
+
+"Прочие подписи вдоль линии"
+Для ночной и дневной темы изменён отступ от краев линии для размещения надписи на 5
+Для ночной и дневной темы изменено расстояние между дубликатами надписи вдоль линии на 1000
+Для ночной и дневной темы изменены дополнительные отступы лейблинга по краям на 5
+Для ночной и дневной темы изменён размер шрифта, теперь [z15.5:10 .. z18:14]
+
+"Специальные подписи вдоль линии"
+Для дневной темы явно указан шрифт Noto_Sans, теперь как в ночной теме
+Для ночной и дневной темы изменён отступ от краев линии для размещения надписи на 0
+Для ночной и дневной темы изменены дополнительные отступы лейблинга по краям на 8
+Для ночной темы изменено расстояние между дубликатами надписи вдоль линии на 200, как в дневной теме
+
+"Подписи рек"
+Для ночной темы изменён отступ от краев линии для размещения надписи на 0, теперь как в дневной теме
+Для ночной и дневной темы textDuplicationSpacing изменен на [z12:500 .. z18:1000]
+
+"Номера домов"
+Для ночной темы изменён минимальный зум на 15.3, теперь как в дневной теме
+
+"Банкомат"
+Для ночной темы изменён фильтр для sublayer, теперь "Low_zoom_poi_navigator", как в дневной теме
+
+"Магазин одежды", "Красота", "Кофейня", "Картинг", "Фитнес-клуб", "Бар", "Часовня", "Авиаклуб", "Автосервис", "Обувной магазин"
+Для ночной темы изменён фильтр sublayer, теперь "Low_zoom_poi", как в дневной теме
+
+"Детский сад", "Билетная касса", "Теннисный клуб", "Бассейн", "Каток", "Почта", "Образование", "Библиотека", "Церковь", "Синагога", "Дацан", "Мечеть", "Медицинское учреждение", "Санаторий", "Гостиница"
+Для ночной темы изменён фильтр sublayer, теперь "Medium_zoom_poi", как в дневной теме
+
+"Торговый центр", "Администрация", "Аптека", "Полиция"
+Для ночной темы изменён фильтр sublayer, теперь "Medium_zoom_poi_navigator", как в дневной теме
+Для ночной и дневной темы размер иконки изменён на [z14:18 .. z18:24]
+
+"Театр", "Кинотеатр", "Гольфклуб", "Ипподром", "Стадион", "Бизнес-центр"
+Для ночной темы изменён фильтр sublayer, теперь "High_zoom_poi", как в дневной теме
+
+"ТРЦ", "Заправочная станция", "Зарядная станция"
+Для ночной темы изменён фильтр sublayer, теперь "High_zoom_poi_navigator", как в дневной теме
+
+"Аэропорт"
+В каталоге "Иконки POI" для ночной темы размер шрифтов изменен на [z14.5:10.1 .. z18:12], теперь как в дневной теме
+В каталоге "Транспортные достопримечательности" для ночной и дневной темы изменён минимальный зум на 7.5
+
+"Ж/Д вокзал"
+В каталоге "Иконки POI" для ночной темы размер шрифтов изменен на [z14.5:10.1 .. z18:12], теперь как в дневной теме
+В каталоге "Транспортные достопримечательности" для дневной темы изменён на минимальный зум стал 7.5
+
+"Автовокзал"
+В каталоге "Иконки POI" для ночной темы изменён фильтр object_class, теперь "bus_station", как в дневной теме
+В каталоге "Транспортные достопримечательности"  для ночной и дневной темы изменён минимальный зум на 11
+
+"Порт"
+В каталоге "Иконки POI" для ночной темы размер иконок изменен на [z14:18 .. z18:24], теперь как в дневной теме
+В каталоге "Транспортные достопримечательности" для ночной и дневной темы изменён минимальный зум на 11
+
+"Ж/Д станции точка"
+Для дневной темы размер иконки изменен на 6, теперь как в ночной теме
+
+"Кресельный подъемник"
+Для ночной темы иконка заменена на "chairlift", теперь как в дневной теме
+
+"Бугельный подъемник"
+Для ночной темы иконка заменена на "bugel", теперь как в дневной теме
+
+"Тёмно-зелёная" из каталога "Иконки станций метро"
+Для ночной темы ширина иконки заменена на 12, теперь как в дневной теме
+
+"МЦД 1", "МЦД 2" из каталога "Иконки станций метро"
+Для ночной темы минимальный зум заменён на 12, теперь как в дневной теме
+
+"МЦД 1", "МЦД 2" из каталога "Иконки выходов метро"
+Для дневной темы ширина иконки из метро заменена на 22, теперь как в ночной теме
+
+"Бирюзовая", "Голубая", "Жёлтая", "Зелёная", "Коричневая", "Красная", "Оранжевая", "Серая", "Синяя", "Тёмно-зелёная", "Фиолетовая", "Серо-голубая", "МЦК", "Розовая" из каталога "Иконки выходов метро"
+Для дневной темы ширина иконки заменена на 15, теперь как в ночной теме
+
+"Салатовая" из каталога "Иконки выходов метро"
+Для ночной и дневной темы ширина иконки заменена на 15
+
+"Подписи городов с точками"
+Для ночной и дневной темы размер шрифтов заменён на [z6:11.5 .. z15:20]
+Для ночной и дневной темы отступы лейблинга заменены на 16
+
+"Подпись главного города"
+Для ночной темы размер шрифта изменён на [z0:10.1 .. z11:22 .. z11.9:22 .. z12:24], теперь как в дневной теме
+для ночной темы изменены отступы лейблинга на 30, теперь как в дневной теме.
+
+"Камера неизвестного назначения", "Камера контроля скорости" и другие в каталогах "Транспортные события на маршруте" и "Транспортные события на маршруте в режиме ведения"
+Для ночной темы изменены приоритет текста и приоритет иконок для лейблинга на 160, теперь как в дневной теме
+
+"Камера неизвестного назначения"
+В каталоге "Транспортные события на маршруте" для дневной темы изменены приоритеты текста и иконок для лейблинга на 160
+
+"Камера контроля скорости_80"
+В каталоге "Транспортные события на маршруте" для дневной темы фильтр sublayer изменён на "s_dvg_route_camera_80", теперь как в ночной теме
+
+"Камера контроля скорости" из каталога "Транспортные события на маршруте в режиме ведения"
+Для ночной темы размер иконки заменен на 28, теперь как в дневной теме
+Для ночной темы в фильтре условие для navigatorOn теперь как в дневной теме
+
+"Камера контроля скорости_100"
+В каталоге "Транспортные события на маршруте в режиме ведения" для дневной темы изменена точка привязки иконки на [0.4, 1], теперь как в ночной теме
+
+Изменён порядок отрисовок пробок, теперь они рисуются перед домами.
+
+В ночной теме слои (их два) "Линия активного подземного пешего маршрута копия" переименованы в "Линия активного подземного пешего маршрута"
+
+В ночной теме слой "Линия активного пешего маршрута копия" переименован в "Линия активного пешего маршрута"
+
+В ночной теме слой "Прочие подписи линия" переименован в "Прочие подписи вдоль линии"
+
+В ночной теме слой "Специальные подписи линия" переименован в "Специальные подписи вдоль линии"
+
+В ночной теме слой "Промышленная территорияя" переименован в "Промышленная территория"
+
+В ночной теме слой "Начало и конец платных дорог копия" переименован в "Начало и конец платных дорог"
+
+Добавлен слой "Автостанция" в дневной и ночной теме.
+
+У слоёв "Обувной магазин" и "Кинотеатр" в дневной теме изменился фильтр выборки данных
+
+У слоя "Камера контроля скорости" в каталоге “Транспортные события на маршруте” в дневной теме приоритет иконки изменён на 160
+
+У слоя "Камера неизвестного назначения" в каталоге "Транспортные события на маршруте в режиме ведения" в дневной теме приоритет иконки изменён на 160
+
+У слоя "Граффити" в ночной теме изменился размер иконки на z14:12 .. z16:14
+
+У всех слоёв в каталоге "Иконки POI" в ночной теме теперь размер иконки z14:18 .. z18:24
+
+У слоёв "Аэропорт", "Ж/Д вокзал", "Автовокзал", "Порт" в каталоге "Иконки POI" в ночной теме теперь цвет обводки rgba(255,255,255,0.5)
+
+Слои "Линия неактивного маршрута на авто" и "Линия неактивного маршрута на авто подложка" выделены в отдельный каталог "Линия неактивного маршрута на авто".
+
+У слоя "Камера контроля скорости" в каталоге "Транспортные события на маршруте в режиме ведения" приоритет иконки изменён на 160.
+
+Максимальный масштаб в редакторе — это строгая граница. Поскольку в Mobile SDK можно выставить z 20, и на некоторых широтах ему соответствует и style z 20, то объекты с проставленным максимальным масштабом 20 могут в такой ситуации скрыться. В связи с этим в редакторе теперь можно выставить максимальный масштаб больше 20, в шаблонах стилей для Mobile SDK во всех таких слоях проставлен максимальный масштаб 21.
+
+В ночной теме у всех слоёв в каталоге "Иконки POI" цвет обводки изменён на rgba(0,0,0,0.19).
+</pre>
+
+</details>
+
+## v2.4.2
+
+**Release Date:** 16.03.2022
+
+### 🛠 Исправления
+
+* Отключен `accessibility` в контроле копирайта.
+
+## v2.4.1
+
+**Release Date:** 11.03.2022
+
+### 🛠 Исправления
+
+* Исправлено обновление пробок вдоль маршрута.
+* Поправлена ошибка при отправке статистики поиска проезда.
+
+## v2.4.0
+
+**Release Date:** 04.03.2022
+
+### 🌟 Новые возможности
+
+* Добавлены предупреждения и ошибки в лог в случае, если заканчивается или закончился срок поддержки конкретной версии MobileSDK.
+* Поддержан фильтр `CarRouteSearchOptions.avoidFerry` на запрет паромных переправ.
+* У обработчиков жестов `IMapGestureInputController.didDoubleTap` и `IMapGestureInputController.didTwoFingerTap` появилась возможность задавать позицию работы жестов.
+* При отправке статистики обрабатываются события:
+  * завершения запроса альтернативных маршрутов;
+  * изменения индекса следующей промежуточной точки маршрута;
+  * обновления динамической информации о маршруте.
+
+### 🛠 Исправления
+
+* Исправлена ошибка, при которой на маршрутах на общественном транспорте при отсутствии информации о вагонах было невалидное описание посадки в вагон.
+* Теперь при вызове `Camera.setPadding` и `Camera.setPositionPoint` с параметром `CameraPositionPointChangeBehaviour.keepCamera` сбрасывается слежение за позицией.
+* Исправлена проблема отрисовки некоторых регионов.
+* Исправлена ошибка при отправке статистики, связанная с генерацией события после достижения конечной точки.
+* В `NavigationView` исправлена проблема, при которой второй и последующие маршруты строятся не до указанной точки.
+* Теперь если отправили запрос на поиск нового маршрута, но до его получения вернулись на текущий маршрут, то отправляются запросы на маршрут лучше.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Теперь метод `TrafficRouter.findRoute` не кидает исключение, если маршруты не найдены, а возвращает пустой список.
+
+## v2.3.3
+
+**Release Date:** 25.02.2022
+
+### 🌟 Новые возможности
+
+* Добавлено логирование сетевых запросов при уровне логов info и verbose.
+
+### 🛠 Исправления
+
+* Исправлена отправка статистики с поколением мобильной сети. Раньше отправлялись невалидные нулевые значения.
+
+## v1.6.18
+
+**Release Date:** 25.02.2022
+
+### 🌟 Новые возможности
+
+* Добавлено логирование сетевых запросов при уровне логов info и verbose.
+
+### 🛠 Исправления
+
+* Исправлена отправка статистики с поколением мобильной сети. Раньше отправлялись невалидные нулевые значения.
+
+## v2.3.2
+
+**Release Date:** 21.02.2022
+
+### 🛠 Исправления
+
+* Исправлена отправка статистики о старте навигации.
+
+## v2.3.0
+
+**Release Date:** 10.02.2022
+
+### 🌟 Новые возможности
+
+* Плавный перелет при активации слежения за геопозицией - `CameraBehaviour.transitionType` (по умолчанию `TransitionType.SMOOTH` - включено).
+* Возможность задания настроек, недоступных через API (например, URL-ов web-сервисов) - параметр `vendorConfig` в конструкторе `Container` - json-файл с настройками. Набор настроек на данный момент не документирован.
+* Автоматическое переключение на маршрут лучше, если пользователь продолжил движение по нему.
+* Отправка статистики о работе поиска проезда и навигации.
+* Текстовое описание вагонов, рекомендуемых для посадки - `PublicTransportInfo.boardingSuggest`. Например, "садитесь в первый вагон".
+* Отображение вагонов, рекомендуемых для посадки, в карточке маршрута (`PublicTransportCard`).
+* Информация о расписании действия дорожного события - `RoadEvent.schedule`.
+* Отображения расписания дорожного события в карточке события (`RoadEventCard`).
+* Вспомогательные методы `GeoPoint.isValid`, `GeoRect.isValid`, `GeoRect.contains`, `GeoRect.intersects`, `GeoRect.expand`.
+* Получение ограничивающего прямоугольника геометрии - `Geometry.bounds`, `GeometryMapObject.bounds`, `SimpleMapObject.bounds`.
+* Возможность получить текущий голос навигатора - `VoiceSelector.voice`.
+
+### 🛠 Исправления
+
+* Использование системного HTTP-клиента вместо CURL.
+* Возможность задать собственную реализацию HTTP-клиента - `IHTTPClient`.
+* Оптимизация отображения пробок на карте.
+* Оптимизация добавления маршрута на карту.
+* Исправлено определение маршрута лучше после схода с маршрута и возврата обратно.
+* Убрано ошибочное оповещение о плохом сигнале GPS при старте симуляции навигации (`NavigationManager.startSimulation`).
+
+## v1.6.16
+
+**Release Date:** 26.01.2022
+
+### 🌟 Новые возможности
+
+* Вся работа с сетевыми запросами переведена с `libcurl` на системный сетевой клиент.
+
+### 🛠 Исправления
+
+* Добавлено логирование позиции камеры в случае, если в методы `Camera.move`, `Camera.position` и `MapOptions.position` передать некорректное значение позиции.
+
+## v1.6.14
+
+**Release Date:** 10.01.2022
+
+### 🛠 Исправления
+
+* Исправили проблему, когда не загружались тайлы при включённом AdGuard VPN.
+* Убрали запись ошибок в логи, когда объект карты разрушается сразу после создания.
+* Исправили падения в сетевом кэше.
+* Добавили логирование запроса при ошибках работы с сетью.
+* Убрали ошибки в логах при обработке тайлов карты.
+* Исправлены редкие падения при создании карты в разных потоках.
+* Исправлены ошибки в логах при добавлении маркера на карту.
+
+## v2.2.0
+
+**Release Date:** 29.12.2021
+
+### 🌟 Новые возможности
+
+* Сохранение и восстановление маршрута и состояния навигатора - `PackedNavigationState`, `TrafficRoute.fromNavigationState`.
+* Добавлено свойство `PublicTransportTransfer.startPointName` - название точки начала участка маршрута.
+* Отображение номеров и цвета линий метро в карточке общественного транспорта (`PublicTransportCard`).
+
+### 🛠 Исправления
+
+* Исправлено падение при изменении настроек масштабирование карты в навигаторе (`NavigationManager.zoomFollowSettings`).
+* Исправлена работа `PublicTransportInfo.color` для типов транспорта отличных от метро.
+* Период обновления данных о пробках ограничен снизу 30-ю секундами.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Свойство `PublicTransportTransfer.waypointName` переименовано в `finishPointName`.
+
+### 🗺 Изменения в стилях карты
+
+* Изменения для поиска проезда на общественном транспорте.
+
+  * В каталоге "Линия пешего маршрута" добавлены слои "Линия неактивного подземного пешего маршрута" (два слоя с одинаковым названием), "Линия неактивного пешего маршрута", "Линия активного подземного пешего маршрута" (два слоя), "Линия активного пешего маршрута", удалены слои "Линия подземного пешего маршрута" (два слоя) и "Линия пешего маршрута".
+  * В каталоге "Линия пешего маршрута в ведении" добавлены слои "Линия неактивного подземного пешего маршрута", "Линия неактивного пешего маршрута", "Линия активного подземного пешего маршрута", "Линия активного пешего маршрута", удалены слои "Линия подземного пешего маршрута", "Линия пешего маршрута".
+  * Слой "Стрелки манёвров мелкий масштаб в режиме ведения копия" переименован в "Стрелки манёвров мелкий масштаб в режиме ведения".
+  * Добавлен каталог со слоями "Линия маршрута на общественном транспорте".
+
+* Чтобы модели и здания не закрывали маршруты, каталоги "Пробки", "Линия пешего маршрута", "Линия пешего маршрута в ведении", "Линия маршрута на авто" перемещены выше. Теперь они находятся над слоем "3D модели".
+
+* Поправлено отображение стрелок — у слоёв "Стрелки прочие", "Стрелки магистралей" изменено условие выбора объектов (выберите JSON, чтобы посмотреть текущее условие и сравнить с условием в ваших стилях).
+
+* Для слоя "Остановка высадки Желтой ветки метро в активном состоянии" отключен лейбелинг (в шаблонах через добавление новой группы лейбелинга, но проще включить галочку "Оставить видимым при наложении на другие объекты").
+
+* У слоя "Генерализованный маркер" добавилась группа лейбелинга изображения "search\_marker\_icon", чтобы он не скрывался другими объектами.
+
+* Изменены несоответствия дневной и ночной тем.
+  * В дневной теме:
+    * Убран шрифт у слоёв "Смотровая площадка", "Памятник природы", "Водопад", "Парк", "Пляж".
+    * У слоёв "Детская площадка", "Спортивный инвентарь" minzoom изменён с 18 на 17.
+    * У слоёв "Сад", "Лыжная база" minzoom изменён с 12 на 14.
+    * У слоя "Трамвай пунктир" minzoom изменён с 16.5 на 15.5, чтобы соответствовало слою "Трамвай".
+    * У слоя "Камера контроля скорости\_100" отображение текста изменено с 17 на 16 zoom.
+  * В ночной теме:
+    * У слоя "Ж/Д линия" maxzoom изменён с 13.5 до 13, чтобы стыковалось с "Ж/Д пунктир".
+    * У слоёв "Лестницы", "Зебры" minzoom изменён с 16.5 на 16.
+    * У всех слоёв каталога "Плоские дома" maxzoom изменён с 20 на 16, чтобы не отображались одновременно с трёхмерными домами.
+    * У слоёв "Сады" и "Школы" в каталоге "Плоские дома" minzoom изменён с 15 на 14.
+    * У слоя "Территория парковки" minzoom изменён с 17.5 на 17.
+    * У слоя "Крупные города <Brand />" minzoom изменён с 4 на 3.
+    * У слоя "Средние города <Brand />" minzoom изменён с 6 на 4.
+    * У слоя "Малые города" minzoom изменён с 7 на 6.
+    * У слоёв "Крупные страны" и "Страны <Brand />" maxzoom изменён с 8 на 6.
+    * Значение zoom'а в interpolate ширины линии слоя "Стрелки манёвров мелкий масштаб в режиме ведения" изменён с 19 на 20.
+    * Добавлены группы лейбелинга search\_marker\_icon и search\_marker\_text, и эти группы указаны в слое "Поисковой маркер".
+    * В слое "Поисковой маркер выделение" указаны группы лейбелинга "selection\_marker" и "selection\_marker\_text".
+  * Некоторые несоответствия тем возникли из-за использования диапазона из данных. Чтобы такого не случилось в будущем, все масштабы в шаблонах теперь заданы явно.
+
+## v2.1.0
+
+**Release Date:** 24.12.2021
+
+### 🌟 Новые возможности
+
+* Добавлены перешеходные и велосипедные маршруты, а также маршруты на общественном траспорте.
+* Добавлена возможность отключения инструкций о завершении маршрута и о потере сигнала GPS.
+* В структуре `Location` появились 2 поля - название источника геопозиции `source` и временная точка, в которой была определена геопозиция, `timestamp`.
+* Класс `PackedMapState` для сериализации и десериализации состояния карты. Старые методы `serialize(cameraPosition:)` и `deserialize(positionString:)` помечены, как deprecated.
+* Класс `PackedSearchQuery` для сериализации и десериализации поискового запроса.
+* Добавлен метод `mapToScreen(geoPointWithElevation:)` в структуру `Projection`.
+* Реализован контрол отображения маршрутов на общественном транспорте.
+* Реализована отправка статистики для навигатора.
+
+### 🛠 Исправления
+
+* Исправлена ошибка, когда при переходе из режима `FreeRoam` в режим навигации проигрывалась инструкция о перестроении маршрута.
+* Исправлено пропадание промежуточных точек при перестроении маршрута.
+* Добавлен таймер в 30 секунд на озвучивание инструкции о перестроении маршрута.
+* Исправлена работа с дорожными событиями для анонимных пользователей.
+* Убрано отображение контрола скорости для пешеходного и велосипедного маршрутов.
+* Убрано оповещение о плохом сигнале GPS при старте симуляции навигации.
+* Исправлена проблема появления черного экрана при инициализации карты до подгрузки цвета фона из стилей. Для задания начального цвета фона было добавлено поле `MapOptions.backgroundColor`.
+* Исправлена ошибка, при которой не загружались тайлы карты при включенном AdGuard VPN.
+* Оптимизировано отображение пробок на карте.
+
+## v1.6.12
+
+**Release Date:** 08.12.2021
+
+### 🛠 Исправления
+
+* Исправили падения, связанные с системным сигналом SIGABRT.
+
+## v2.0.0
+
+**Release Date:** 02.12.2021
+
+:::note[Обновление с версии 1.x]
+
+Перед обновлением см. [инструкцию по миграции](/ios/sdk/releases/migration#from-1-to-2).
+
+:::
+
+### 🌟 Новые возможности
+
+* В результат поиска `SearchResult` добавлено поле `SearchResultType` - информация о типе результата.
+* В `SearchQueryBuilder` появилась возможность задавать фильтрацию через `SearchQueryBuilder.setDirectoryFilter(directoryFilter:)` и сортировку через `SearchQueryBuilder.setSortingType(sortingType:)`. На данный момент реализованы фильтрация по времени открытия (`открыто сейчас` и `открыто на конкретное время`) и сортировки по релевантности, по рейтингу и по расстоянию от текущего местоположения пользователя.
+* В `SearchQueryBuilder` появилась возможность задавать текущее положение пользователя для поискового запроса через `SearchQueryBuilder.setLocation(locationPoint:)`.
+* У классов `GeoPoint` и `GeoPointWithElevation` добавлены методы `bearing(point:)`, `distance(point:)` и `move(bearing:, meter:)`.
+
+### 🛠 Исправления
+
+* Исправлено отображение камер на маршруте. Теперь камеры, которые ближе к началу маршрута, всегда отображаются приоритетнее, чем камеры, которые дальше.
+* Убрали уведомление о том, что необходимо предоставить разрешение на поиск устройств в локальной сети и подключение к ним. Данное уведомление появлялось при первой установке приложения с нашим MobileSDK и последующей инициализации карты.
+* Исправлено падение при работе `MyLocationController`.
+* Исправлена ошибка, при которой камеры в режиме `free roam` иногда отображались без учета просчета на 2 км вперед по направлению движения.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Изменена сигнатура методов `NavigationManager.start` и `NavigationManager.startSimulation`. Теперь они вместе с маршрутом принимают `RouteBuildOptions`.
+* Метод `Geometry.hasIntersection` переименован в `Geometry.intersects`.
+* В `ParkingPurpose` удалено состояние `truck`. Вместо этого был добавлен флаг `ParkingInfo.forTruck`.
+* Функция `toMapGeometry(route: TrafficRoute)` заменена на функцию `toMapGeometry(geometry: GeoPointRouteAttribute)`.
+* Удалено поле `BetterRouteInfo.duration`. Вместо него добавлены `BetterRouteInfo.trafficRoute` и `BetterRouteInfo.startPoint`.
+* Добавлены классы `Route` и `Traffic`. У `TrafficRoute` вместо прошлого набора свойств теперь лишь `route` и `traffic`, через которые можно получить полную информацию о маршруте.
+* Удалены `BicycleRouteSearchOptions` и `PedestrianRouteSearchOptions` - перенесены на будущие релизы.
+* `RouteParams` переименован в `RouteEditorRouteParams`.
+
+### 🗺 Изменения в стилях карты
+
+* В редакторе стилей на вкладке `Динамические объекты` у объекта `Радиус точности геопозиции` должен использоваться подслой `s_dvg_accuracy_circle` (если есть ещё 2 - это нормально, они оставлены для совместимости с первой версией).
+* У слоёв `Камера контроля скорости` в каталогах `Слой транспортных событий в режиме ведения`, `Слой транспортных событий`, `Транспортные события на маршруте в режиме ведения` и `Транспортные события на маршруте` поменялся масштаб отображения на 13-14.
+* Добавился слой `Территория парковки автосгенеренная для режима парковок`.
+* Удалён слой `Парковки`.
+* Добавились слои `Парковки с неизвестной ценой`, `Парковки для инвалидов`, `Парковки для резидентов`, `Парковки такси`, `Парковки бесплатные`.
+* В каталогах `Транспортные события на маршруте в режиме ведения` и `Транспортные события на маршруте` появились новые слои. Добавьте их в свои стили, чтобы продолжали отображаться камеры на маршруте, а также появились новые события.
+* Добавились каталоги со слоями `Слой транспортных событий в режиме ведения` и `Слой транспортных событий` для нового слоя дорожных событий.
+* Добавился каталог слоёв `Пузырьки парковок`, а также слои `Зона запрета парковки для включенного слоя парковки` и `Территория парковки для режима парковок`. Эти данные отображаются только в случае, когда у карты задан атрибут `parkingOn` со значением true.
+* Слой `Территория парковки` теперь отображается, когда у карты атрибут `parkingOn` отсутствует или выставлен в false.
+
+## v1.6.10
+
+**Release Date:** 25.11.2021
+
+### 🛠 Исправления
+
+* Убрали уведомление о том, что необходимо предоставить разрешение на поиск устройств в локальной сети и подключение к ним. Данное уведомление появлялось при первой установке приложения с нашим MobileSDK и последующей инициализации карты.
+* Теперь создание карты с размером 0x0 валидно.
+* Исправлено падение при работе `MyLocationController`.
+
+## v2.0.0-beta.8
+
+**Release Date:** 22.11.2021
+
+### 🌟 Новые возможности
+
+* Добавлены сбор и отправка данных о пробках во время навигации. По умолчанию включено, выключить можно с помощью `TrafficCollector.trafficCollectingAllowed`.
+* Данные о парковках в справочнике - `DirectoryObject.parkingInfo`.
+* Данные об отзывах в справочнике - `DirectoryObject.reviews`.
+* Данные о статусе работы в справочнике - `DirectoryObject.workStatus`.
+* События в статистике о создании и удалении источников карты.
+
+### 🛠 Исправления
+
+* Обновили библиотеку libcurl. Перешли на асинхронное разрешение DNS имен.
+* Отображение дорожных событий в навигаторе.
+* Убрана задержка старта навигации.
+* Неправильное значение `Model.state` при переключении с режима free-roam на движение по маршруту.
+* Неправильный статус обновления макрографа - `RoadMacroGraph.info.updateStatus`.
+* Поведение в случае изменения размера карты во время перелета.
+* Поведение `Camera.padding` при маленьком размере карты.
+* Теперь создание карты с размером 0x0 валидно.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Метод `LocaleManager.setOverridedLocales` переименован в `overrideLocales`.
+
+### ❗️ Прочее
+
+* Требуется перевыгрузить стили из редактора. Исправляет отображение железных дорог, а также исправляет падение в одном из сценариев.
+
+## v1.6.8
+
+**Release Date:** 19.11.2021
+
+### 🌟 Новые возможности
+
+* Обновили библиотеку libcurl. Перешли на асинхронное разрешение DNS имен.
+
+### 🛠 Исправления
+
+* Исправлено падение в загрузке тайлов карты.
+* Круг(`Circle`) мерцал при перемещении.
+
+### ❗️ Прочее
+
+* Требуется перевыгрузить стили из редактора. Исправляет отображение железных дорог, а также исправляет падение в одном из сценариев.
+
+## v2.0.0-beta.7
+
+**Release Date:** 10.11.2021
+
+### 🌟 Новые возможности
+
+* Добавлены подписи у маркеров дорожных событий.
+* Карточка добавления дорожного события (`CreateRoadEventView`).
+* Отображение фотографии в карточке дорожного события.
+* Кнопка удаления дорожного события в карточке.
+* Возможность включения/выключения озвучки инструкций, препятствий и подтипа дороги - `SoundCategory.instructions`, `SoundCategory.obstacles`, `SoundCategory.roadSubtypes`.
+* Отправляем статистику о параметрах используемых карт - размер, DPI и т. д.
+
+### 🛠 Исправления
+
+* Не озвучивались дорожные события, у которых не указана полоса.
+* Не позволяем масштабировать карту двойным нажатием, когда масштабирование отключено в настройках.
+* Круг(`Circle`) мерцал при перемещении.
+* Убрана озвучка лежачих полицейских (она и раньше не работала - нет таких звуков, вместо них была пустота).
+
+## v2.0.0-beta.6
+
+**Release Date:** 29.10.2021
+
+### 🛠 Изменения
+
+* Получение фотографий дорожных событий - `RoadEvent.photos`.
+* Возможность создания дорожных событий - `RoadEventManager` с методами `createAccident`, `createCamera` и др.
+* Возможность удалить дорожное событие - `RoadEvent.remover`.
+* Возможность совершать действия с дорожными событиями (подтвердить, опровергнуть, лайкнуть и т. д.) - `RoadEvent.availableActions`.
+* Улучшено описание дорожных событий-камер.
+* Исправлено отображение иконок двусторонних перекрытий - раньше отображалось лишь с одной стороны.
+* Возможность задать размер карты у функций вычисления позиции камеры - параметр `size` у `calcPosition` и `zoomOutToFit`.
+* Настройки маршрута `RouteMapObjectSource.routeSourceSettings`, `NavigationManager.routeSourceSettings`, с помощью которых можно задать параметры отображения стрелок манёвров.
+* Озвучивание перестроения маршрута в навигаторе.
+* Исправлено озвучивание сгруппированных камер - озвучивается лишь самая приоритетная.
+* Индикатор загрузки при перестроении маршрута в UI навигатора.
+* Исправлена ошибка при отправке статистики, при которой было мало событий `MapSource` с типом `2gis.online`.
+* Исправлены потенциальные падения в обработке сетевых запросов.
+* Подробное логирование информации о сетевых запросах при уровне `LogLevel.verbose`.
+* Поправили отображение логотипа <Brand />, чтобы Xcode не выдавал предупреждения.
+* Исправлено падение в `IBatteryInfoProvider`.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Исправлено падение, когда при создании карты `GLContext` не создавался. Теперь в случае ошибки возникает исключение `GLContextError`.
+
+## v1.6.4
+
+**Release Date:** 29.10.2021
+
+* Исправлены потенциальные падения в обработке сетевых запросов.
+
+## v1.6.3
+
+**Release Date:** 26.10.2021
+
+* Определение PPI экрана новых устройств.
+* Исправлен размер логотипа <Brand /> на карте.
+* Исправлена ошибка при отправке статистики, при которой было мало событий `MapSource` с типом `2gis.online`.
+* Исправлено падение при работе `MyLocationController`.
+* Исправлено падение, когда при создании карты `GLContext` не создавался. Теперь просто пишем ошибки в лог.
+* Поправили отображение логотипа <Brand />, чтобы Xcode не выдавал предупреждения.
+* Исправлено падение в `IBatteryInfoProvider`.
+
+## v2.0.0-beta.5
+
+**Release Date:** 21.10.2021
+
+### 🛠 Изменения
+
+* Исправлено некорректное поведение кнопки закрытия карточки дорожного события.
+* Исправлена проблема, при которой появлялись артефакты при скрытии контрола полосности в режиме `FreeRoam`.
+* Теперь при достижении финишной точки маршрута скрываются контролы навигатора.
+* Исправлена ошибка при скачивании территорий.
+* Добавлена возможность обработки клика по дорожному событию на маршруте.
+* Поддержана отрисовка камер в режиме `FreeRoam` при использовании офлайн источника дорожного графа.
+* Исправлена ошибка, при которой не отображались камеры при первом построении маршрута.
+* Исправлено падение при работе `MyLocationController`.
+* Исправлены ошибки при отображении дорожных событий.
+* Исправлена ошибка, при которой не отображались иконки камеры контроля перекрестка.
+* Добавлена возможность отключать озвучку по типу через `NavigationManager.soundNotificationSettings.enabledSoundCategories`.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Удалено получение очереди позиционирования через `IPositioningServicesFactory.positioningQueue`. Теперь внутри реализации протокола `ILocationProvider` не нужно вызывать callback через очередь.
+
+## v2.0.0-beta.4
+
+**Release Date:** 14.10.2021
+
+### 🛠 Изменения
+
+* Исправления в источнике дорожных событий `RoadEventSource`.
+* Исправлена работа suggest-ов для некоторых запросов.
+* Добавлено отображение дорожных событий на маршруте.
+* Добавлен протокол `IRoadEventCardView` для отображения карточки события.
+* Все контролы навигатора при показе уведомлений становятся неактивными.
+* Для текущего манёвра теперь отображаются именованные съезды, номера съездов, следующий манёвр, если он ближе, чем 50 метров к основному манёвру.
+* Появилась возможность задавать цвет контролов навигатора через `NavigationViewOptions.theme`.
+* Повторный поиск маршрута в навигаторе, если предыдущая попытка была неуспешной.
+* Возможность получить из модели навигатора текущую геопозицию, с которой работает навигатор - `Model.location`.
+* Исправление в озвучивании камер в навигаторе - теперь сообщается расстояние до камеры, а не до начала ее действия.
+* Дополнительное описание типа дороги - `RouteInfo.roadSubtypes`.
+* Дабавлены значения по умолчанию для параметров поиска маршрута на грузовом транспорте в `TruckRouteSearchOptions`.
+
+### ❗️ Изменения, влияющие на обратную совместимость
+
+* Исправления и изменение API пользовательских контроллеров камеры - теперь контроллер может быть лишь один, добавляется/удаляется методами `Camera.setCustomFollowController`/`Camera.removeCustomFollowController`.
+* `Model.routeInfo` переименовано в `Model.route`, `Model.currentRoutePosition` в `Model.routePosition`, вместо `Model.badLocation` теперь противоположное `Model.locationAvailable`, вместо `Model.currentSpeedChannel` теперь `Model.locationChannel.groundSpeed`.
+
+### 🗺 Изменения в стилях карты
+
+* У слоёв "Камера контроля скорости" в каталогах "Слой транспортных событий в режиме ведения", "Слой транспортных событий", "Транспортные события на маршруте в режиме ведения" и "Транспортные события на маршруте" поменялся масштаб отображения на 13-14.
+* У слоёв "Территория парковки" и "Территория парковки для режима парковок" задан цвет для выделенного состояния
+* Добавился слой "Территория парковки автосгенеренная для режима парковок".
+* У слоёв в каталоге "Пузырьки парковок" приоритет иконки поднят до 1, чтобы они вытесняли обычные значки парковок
+* Удалён слой "Парковки".
+* Добавились слои "Парковки с неизвестной ценой", "Парковки для инвалидов", "Парковки для резидентов", "Парковки такси", "Парковки бесплатные".
+
+## v2.0.0-beta.3
+
+**Release Date:** 07.10.2021
+
+* Отображение дорожных событий на карте (не привязанных к конкретному маршруту) - `RoadEventSource`, `RoadEvent`.
+* Возможность задать пользовательский контроллер слежения камерой - `CustomFollowController`.
+* Исправлена регрессия: не работало перетаскивание маркеров без текста.
+* Отображение на карте начала и конца платных дорог.
+* Поддержка межрегионального офлайн поиска проезда.
+* Поддержка такси как отдельного вида транспорта - `TaxiRouteSearchOptions`.
+* Поддержка пропусков для грузового транспорта - `TruckRouteSearchOptions.passId`, `TrafficRoute.truckPassZoneIds`.
+* Исправлено озвучивание дополнительного манёвра в навигаторе.
+* Озвучивание аварий и дорожных работ в навигаторе.
+* Голосовое оповещение о промежуточных точках в навигаторе.
+* Исправление в притяжке к дорожному графу в навигаторе при нулевой скорости.
+* Отображение следующего манёвра и номера съезда в UI навигатора.
+* UI навигатора локализован на русский и английский.
+* *Ломающие изменения в API навигатора.* Информация о маршруте - `RoadTypeInfo`, `TransportTypeInfo`, `RoadSurfaceInfo`, `SpeedLimitInfo`, `RoadNameInfo`, `TollInfo` - теперь расположена в `RouteInfo` в виде списков, текущее зачение можно получить из них, обратившись по соответствующему индексу в `Model` - `Model.roadTypeIndex`, `Model.transportTypeIndex` и т. д.
+* Определение PPI экрана новых устройств.
+* Изменения в стилях карты:
+  * *Ломающее изменение.* В каталогах "Транспортные события на маршруте в режиме ведения” и "Транспортные события на маршруте” появились новые слои. Добавьте их в свои стили, чтобы продолжали отображаться камеры на маршруте, а также появились новые события.
+  * Добавились каталоги со слоями "Слой транспортных событий в режиме ведения” и "Слой транспортных событий” для нового слоя дорожных событий
+  * Добавился каталог слоёв "Пузырьки парковок", а также слои "зона запрета парковки для включенного слоя парковки” и "Территория парковки для режима парковок". Эти данные отображаются только в случае, когда у карты задан атрибут parkingOn со значением true.
+  * Слой "Территория парковки". теперь отображается, когда у карты атрибут parkingOn отсутствует или выставлен в false.
+
+## v2.0.0-beta.2
+
+**Release Date:** 28.09.2021
+
+* Исправлена гонка в `RouteMapObject`, что могло приводить к его неправильному отображению.
+* Добавлено отображение на карте и озвучка новых типов камер.
+* Добавлено свойство `Camera.size` - размер области просмотра в пикселях.
+* *Ломающие изменения* в API навигатора:
+  * свойство `Model.maneuverInstructionIndex` переименовано в `instructionIndex`;
+  * Для получения информации о инструкциях навигатора служит `RouteInfo.instructions`, получить название манёвра из которых можно с помощью функции `getInstructionManeuver`
+* Исправлено слежение за геопозицией при использовании навигатора с несколькими картами одновременно.
+* Убран лишний переход `Model` в состояние `State.DISABLED` при перепоиске маршрута.
+
+## v1.6.2
+
+**Release Date:** 23.09.2021
+
+* Исправлены проблемы, которые возникли после доработки перемещения маркеров без текста - медленно работали статичные маркеры без текста и для маркеров без текста не устанавливалась прозрачность.
+* Обновлен размер логотипа <Brand /> на карте.
+* Исправлена проблема, когда при задании угла наклона при создании карты, угол наклона сбрасывался при любом изменении карты.
+
+## v2.0.0-beta.1.2
+
+**Release Date:** 23.09.2021
+
+* Исправлены проблемы, которые возникли после доработки перемещения маркеров без текста - медленно работали статичные маркеры без текста и для маркеров без текста не устанавливалась прозрачность.
+* Обновлен размер логотипа <Brand /> на карте.
+* Исправлена проблема, когда при задании угла наклона при создании карты, угол наклона сбрасывался при любом изменении карты.
+
+## v1.6.0
+
+**Release Date:** 21.09.2021
+
+* Существенно ускорено перемещение маркеров без текста.<br />
+  **Важно:** необходимо переэкспортировать стиль из редактора стилей, без этого маркеры не будут отображаться.
+* Изменена логика кластеризации - в качестве центра кластера берется центр масс подкластеров предыдущего уровня.
+* Исправлена ошибка, когда в режиме кластеризации при удалении маркера удалялись соседние близко расположенные маркеры.
+* Исправлена работа `SuggestQueryBuilder.setSuggestorType` - ранее эта опция не влияла на результат.
+
+## v2.0.0-beta.1
+
+**Release Date:** 21.09.2021
+
+* Существенно ускорено перемещение маркеров без текста.<br />
+  **Важно:** необходимо переэкспортировать стиль из редактора стилей, без этого маркеры не будут отображаться.
+* Изменена логика кластеризации - в качестве центра кластера берется центр масс подкластеров предыдущего уровня.
+* Исправлена ошибка, когда в режиме кластеризации при удалении маркера удалялись соседние близко расположенные маркеры.
+* Исправлена работа `SuggestQueryBuilder.setSuggestorType` - ранее эта опция не влияла на результат.
+* Добавлены свойства `TrafficRoute.startPoint`, `TrafficRoute.finishPoint` - начальная и конечная точка маршрута.
+* Добавлены настройки управления масштабированием в навигаторе - `NavigationManager.zoomFollowSettings`.
+* Добавлены настройки обновления пробочных данных в навигаторе - `NavigationManager.trafficSettings`.
+* Для настройки звука были добавлены `AudioOptions` и `IAudioSettings`. Настроить можно приглушение звуков сторонних приложений в навигаторе и уровень громкости при воспроизведении.
+* Контрол слежения в навигаторе - `NavigatorFollowingControl`.
+* `BetterRouteControlView` при отсутствии с ним взаимодействия переходит в свернутое состояние.
+
+## v1.5.0
+
+**Release Date:** 06.09.2021
+
+* Исправлена проблема с освобождением памяти после удаления `MapView`.
+* Исправлена проблема смены иконки у маркера через `Marker.icon`, при которой до появления нового загруженного изображения отрисовывалась пустая иконка. Теперь до загрузки нового изображения отображается старое.
+* Доработана отрисовка перекрытий на дороге поверх пробок.
+* Реализован контрол пробок `TrafficControl` для включения отрисовки пробок на карте и отображения пробочного балла. Получить объект контрола можно с помощью `IMapControlFactory.makeTrafficControl`.
+* Исправлено падение `Mobile SDK` на `iOS 15 beta`, когда приложение находилось в свернутом состоянии.
+
+## v2.0.0-alpha.8
+
+**Release Date:** 03.09.2021
+
+* Навигатор автоматически меняет zoom-уровень карты в зависимости от скорости (пока что без возможности настройки).
+* Исправлено отображение пробок на карте при максимальных значениях zoom-уровня.
+* Исправлена проблема смены иконки у маркера через `Marker.icon`, при которой до появления нового загруженного изображения отрисовывалась пустая иконка. Теперь до загрузки нового изображения отображается старое.
+* Переделан расчет зоны действия камеры на маршруте.
+* Сделано исправление ошибки, при которой слежение за позицией включается не сразу при старте навигации.
+* В базовых UI контрола навигатора поддержаны различные режимы работы навигатора, такие как `RouteSearch`, `Finished`, `Disabled`.
+* Доработана отрисовка перекрытий на дороге поверх пробок.
+* Реализован контрол пробок `TrafficControl` для включения отрисовки пробок на карте и отображения пробочного балла. Получить объект контрола можно с помощью `IMapControlFactory.makeTrafficControl`.
+* *Ломающее изменение*. Класс `RouteSearchOptions` был заменён на variant, который может содержать один из конкретных классов - `CarRouteSearchOptions`, `PedestrianRouteSearchOptions`, `BicycleRouteSearchOptions`, `PublicTransportRouteSearchOptions` или `TruckRouteSearchOptions`.
+* *Ломающее изменение*. Был удален enum `RoutingType`. Вместо него стоит использовать `RouteSearchOptions`.
+* *Ломающее изменение*. У класса `NavigationManager.uiModel` удален канал `distanceCountersChannel`. Вместо него теперь нужно использовать `currentRoutePositionChannel` для расчета оставшегося расстояния до ближайшего манёвра или до конца маршрута. Классы `DistanceCounters` и `HumpPoint` были удалены. Добавлен класс `IntermediatePoint`, описывающий промежуточную точку на маршруте. Информацию о текущей позиции на маршруте содержит новый класс `RoutePosition`.
+* *Ломающее изменение*. Удален класс `TrafficManager`. Класс `TrafficScore` переименован в `TrafficScoreProvider` и становится основным классом для работы с пробками. Класс `TrafficScoreValue` переименован в `TrafficScore`.
+* *Ломающее изменение*. Поменялись базовые стили. В редакторе стилей на вкладке `Динамические объекты` у объекта `Радиус точности геопозиции` должен использоваться подслой `s_dvg_accuracy_circle` (если есть ещё 2 - это нормально, они оставлены для совместимости с первой версией).
+
+## v2.0.0-alpha.7
+
+**Release Date:** 26.08.2021
+
+* Исправлена проблема, при которой `MapObjectManager.removeObject` не отрабатывал, если параллельно у удаляемого объекта изменять атрибуты.
+* Доработана кластеризация, формируемая через `MapObjectManager.withClustering`. Теперь при удалении маркеров из `MapObjectManager` позиция кластеров корректируется в случае, если был удален кластерообразующий маркер.
+* Теперь `CameraPositionPoint` учитывается при расчете позиции камеры `CameraPosition` с помощью функции `calcPosition`.
+* *Ломающее изменение*. Доработано отображение маркера текущего местоположения - теперь иконку с направлением можно рисовать всегда, независимо от режима навигации.
+  В случае использования кастомных стилей, в редакторе стилей нужно поправить динамические объекты текущего местоположения следующим образом:
+  1. У `Маркер на авто` и `Маркер на авто, устаревшая позиция` в пункте `Видимость` перевести тумблер `Режим навигатора` и выбрать пункт `Включен`.
+  2. У `Маркер с направлением`, `Маркер без направления` и `Маркер без направления, устаревшая позиция` в пункте `Видимость` перевести тумблер `Режим навигатора` и выбрать пункт `Выключен`.
+* Исправлено зависание в `TrafficSource`
+* Исправления в притяжке к маршруту в режиме Free Roam
+
+## v1.4.0
+
+**Release Date:** 24.08.2021
+
+* Исправлена проблема, при которой `MapObjectManager.removeObject` не отрабатывал, если параллельно у удаляемого объекта изменять атрибуты.
+* Доработана кластеризация, формируемая через `MapObjectManager.withClustering`. Теперь при удалении маркеров из `MapObjectManager` позиция кластеров корректируется в случае, если был удален кластерообразующий маркер.
+* Теперь `CameraPositionPoint` учитывается при расчете позиции камеры `CameraPosition` с помощью функции `calcPosition`.
+* *Ломающее изменение*. Доработано отображение маркера текущего местоположения - теперь иконку с направлением можно рисовать всегда, независимо от режима навигации.
+  В случае использования кастомных стилей, в редакторе стилей нужно поправить динамические объекты текущего местоположения следующим образом:
+  1. У `Маркер на авто` и `Маркер на авто, устаревшая позиция` в пункте `Видимость` перевести тумблер `Режим навигатора` и выбрать пункт `Включен`.
+  2. У `Маркер с направлением`, `Маркер без направления` и `Маркер без направления, устаревшая позиция` в пункте `Видимость` перевести тумблер `Режим навигатора` и выбрать пункт `Выключен`.
+
+## v2.0.0-alpha.6
+
+**Release Date:** 13.08.2021
+
+* Добавлена возможность настройки пешеходной озвучки маршрута при навигации.
+* В `NavigationManager.uiModel` добавлен канал `navigationActiveChannel`, который возвращает два состояния - `active` и `inactive`. Второе состояние выставляется, когда пользователь закончил движение на автомобиле, и навигатор можно выключить.
+* Исправлено падение при параллельном изменении позиции маркера и переинициализации `MapObjectManager`.
+* Исправлена ошибка, при которой переставала работать кластеризация при малых значениях zoom-уровня (0 или 1).
+* Исправлено некорректное поведение при клике в кластер при отображении кластеризации.
+* Добавлена поддержка `Map.interactive` для жестов карты и копирайта.
+* Исправлена ошибка, при которой появлялась утечка памяти, если карта становилась невидимой, но с ней продолжал работать прикладной код (изменять текущие объекты на карте, добавлять новые и т. д.).
+
+## v1.3.0
+
+**Release Date:** 12.08.2021
+
+* Исправлено падение при параллельном изменении позиции маркера и переинициализации `MapObjectManager`.
+* Исправлена ошибка, при которой переставала работать кластеризация при малых значениях zoom-уровня (0 или 1).
+* Исправлено некорректное поведение при клике в кластер при отображении кластеризации.
+* Добавлена поддержка `Map.interactive` для жестов карты и копирайта.
+* Исправлена ошибка, при которой появлялась утечка памяти, если карта становилась невидимой, но с ней продолжал работать прикладной код (изменять текущие объекты на карте, добавлять новые и т. д.).
+
+## v2.0.0-alpha.5
+
+**Release Date:** 06.08.2021
+
+* Исправлена проблема в навигаторе, при которой в режиме навигации происходили продолжительные фризы, а маркер позиции имел некорректное направление и смещался в случайное положение.
+* В `MapObjectManager` появился метод `clusteringObjects(сameraPosition:)` для получения объектов кластеризации для заданной позиции камеры. Метод возвращает как кластеры `SimpleClusterObject`, так и маркеры `Marker`.
+* С помощью объекта `SimpleClusterObject` теперь можно изменять атрибуты кластера также, как и атрибуты маркеров `Marker`, за исключением позиции кластера.
+* Исправлена ошибка, при которой `IMapView` не работал, если был уничтожен создавший ее `IMapFactory`. Теперь нет необходимости всегда хранить объект `IMapFactory`.
+* Исправлена проблема, при которой невозможно было выбрать маршрут при максимальных значениях zoom-уровня.
+* Убрали подвисание слежения за текущей позицией при смене длительности анимации в навигаторе.
+
+## v1.2.0
+
+**Release Date:** 05.08.2021
+
+* В `MapObjectManager` появился метод `clusteringObjects(сameraPosition:)` для получения объектов кластеризации для заданной позиции камеры. Метод возвращает как кластеры `SimpleClusterObject`, так и маркеры `Marker`.
+* С помощью объекта `SimpleClusterObject` теперь можно изменять атрибуты кластера также, как и атрибуты маркеров `Marker`, за исключением позиции кластера.
+* Исправлена ошибка, при которой `IMapView` не работал, если был уничтожен создавший ее `IMapFactory`. Теперь нет необходимости всегда хранить объект `IMapFactory`.
+
+## v2.0.0-alpha.4
+
+**Release Date:** 28.07.2021
+
+* В классе `RouteMapObject` добавлен канал `calloutPositionChannel` с позицией баблика над маршрутом.
+* В структуру `Camera`, которую возвращает `NavigationManager`, добавлено поле `range` - информация о радиусе действия камеры.
+* Была разделена озвучка навигатора в зависимости от типа маршрута - пешеходный/велосипедный/автомобильный.
+
+## v1.1.0
+
+**Release Date:** 28.07.2021
+
+* Исправлена ошибка, когда через `MapObjectManager` добавляется на карту маркер до полной загрузки изображения.
+* Добавлен новый протокол `IEnergyConsumption` для установки максимального fps в обычном режиме и в режиме энергосбережения.
+* Исправлена ошибка, при которой карта не обновлялась, когда удалялись маркера при кластеризации через `MapObjectManager`.
+* Исправлена ошибка, при которой маркер моего местоположения поворачивался в противоположную сторону.
+* Частично исправлена проблема утечки памяти при частом обновлении геометрии у объектов карты (например, раз в 10 мс менять точки у полилинии). Полное исправление будет в следующих релизах.
+* Обновлены общие стили:
+
+  1. В редактор перенесены:
+
+     A. Стрелки манёвров (Линия маршрута на авто => 4 слоя `Стрелки манёвров*`).
+
+     B. Начальная, конечная, промежуточная точка маршрута, а также точка соединения разных частей маршрутов (слои `Точка Б`, `Точка А`, `Соединительные точки`, `Промежуточные точки` в каталоге `Динамические объекты`).
+
+     C. Маркеры поисковой выдачи (слои `Поисковой маркер выделение`, `Поисковой маркер`, `Генерализованный маркер` в каталоге `Динамические объекты`).
+
+     D. Объекты на маршруте (слои в каталогах `TUGC на маршруте в режиме ведения` и `TUGC на маршруте`).
+
+     E. Пешеходные части маршрутов (слои в каталогах `Линия пешего маршрута в ведении` и `Линия пешего маршрута`).
+
+     F. Маркер геопозиции для пешеходного режима (слои `Маркер с направлением`, `Маркер без направления`, `Устаревший маркер без направления` в каталоге `Динамические объекты`).
+
+     Теперь эти объекты настраиваются из редактора и не отображаются безусловно поверх всего.
+     Слои нужно скопировать в свои стили и расположить в аналогичном порядке, чтобы все объекты отображались с новой версией SDK корректно.
+     Для копирования слоя можно выделить нужные слои, нажать `Ctrl+C/Cmd+C` и открыть *в том же окне* другой стиль.
+
+  2. Удалён слой `Маркер пешком`. Его также нужно удалить в собственных стилях.
+
+  3. Изменены слои для отображения подъездов (слои `Подъезды над домами` и `Подъезды под домами`). Теперь данные задаются не через JSON, а выбраны правильные слои во вкладке `Данные`.
+     Также в ночной теме у подъездов под домами убран шрифт, чтобы они отображались без подписей. Нужно внести аналогичные изменения в собственных стилях.
+
+  4. В ночную тему в каталог `Подписи гео объектов` добавлены слои `Подписи горных хребтов` и `Подписи платформ`, а в каталог `Достопримечательности` — слой `Граффити`.
+
+  5. В дневную тему в каталог `Достопримечательности` добавлены слои `Ёлочный базар`, `Полиция`, `Душевая кабина`, `Танцпол`.
+
+  6. Изменены слои в каталоге `Дороги`, требуется их обновить в собственных стилях.
+
+## v2.0.0-alpha.3
+
+**Release Date:** 23.07.2021
+
+* Исправлена проблема с ведением по длинному маршруту: обновление маркера геопозиции и всей карты происходило не плавно, а рывками.
+* Исправлена ошибка, когда через `MapObjectManager` добавляется на карту маркер до полной загрузки изображения.
+* Добавлен новый протокол `IEnergyConsumption` для установки максимального fps в обычном режиме и в режиме энергосбережения.
+* Исправлена ошибка, при которой карта не обновлялась, когда удалялись маркера при кластеризации через `MapObjectManager`.
+* Исправлена ошибка, при которой маркер моего местоположения поворачивался в противоположную сторону.
+* Обновлены общие стили:
+
+  1. В редактор перенесены:
+
+     A. Стрелки манёвров (Линия маршрута на авто => 4 слоя `Стрелки манёвров*`).
+
+     B. Начальная, конечная, промежуточная точка маршрута, а также точка соединения разных частей маршрутов (слои `Точка Б`, `Точка А`, `Соединительные точки`, `Промежуточные точки` в каталоге `Динамические объекты`).
+
+     C. Маркеры поисковой выдачи (слои `Поисковой маркер выделение`, `Поисковой маркер`, `Генерализованный маркер` в каталоге `Динамические объекты`).
+
+     D. Объекты на маршруте (слои в каталогах `TUGC на маршруте в режиме ведения` и `TUGC на маршруте`).
+
+     E. Пешеходные части маршрутов (слои в каталогах `Линия пешего маршрута в ведении` и `Линия пешего маршрута`).
+
+     F. Маркер геопозиции для пешеходного режима (слои `Маркер с направлением`, `Маркер без направления`, `Устаревший маркер без направления` в каталоге `Динамические объекты`).
+
+     Теперь эти объекты настраиваются из редактора и не отображаются безусловно поверх всего.
+     Слои нужно скопировать в свои стили и расположить в аналогичном порядке, чтобы все объекты отображались с новой версией SDK корректно.
+     Для копирования слоя можно выделить нужные слои, нажать `Ctrl+C/Cmd+C` и открыть *в том же окне* другой стиль.
+
+  2. Удалён слой `Маркер пешком`. Его также нужно удалить в собственных стилях.
+
+  3. Изменены слои для отображения подъездов (слои `Подъезды над домами` и `Подъезды под домами`). Теперь данные задаются не через JSON, а выбраны правильные слои во вкладке `Данные`.
+     Также в ночной теме у подъездов под домами убран шрифт, чтобы они отображались без подписей. Нужно внести аналогичные изменения в собственных стилях.
+
+  4. В ночную тему в каталог `Подписи гео объектов` добавлены слои `Подписи горных хребтов` и `Подписи платформ`, а в каталог `Достопримечательности` — слой `Граффити`.
+
+  5. В дневную тему в каталог `Достопримечательности` добавлены слои `Ёлочный базар`, `Полиция`, `Душевая кабина`, `Танцпол`.
+
+  6. Изменены слои в каталоге `Дороги`, требуется их обновить в собственных стилях.
+
+## v2.0.0-alpha.2
+
+**Release Date:** 13.07.2021
+
+* Добавлена поддержка пешеходных маршрутов с типом `RoutingType.Pedestrian`. В классе `RouteInfo` есть массив с описанием всех препятствий на пешеходном маршруте `RouteInfo.pedestrianObstacles`.
+* Добавлена поддержка маршрутов на общественном транспорте с типом `RoutingType.Public`.
+* Реализован интерфейс `TerritoryManager` для скачивания offline-территорий.
+* Добавлены `NavigationVoice` и `VoiceSelector` для выбора озвучки и голоса навигатора.
+* Реализован `VoiceManager` для взаимодействия со списком голосовых пакетов навигатора.
+* Реализован основной функционал управления этажными планами через `Map.indoorManager`.
+* Добавлена возможность получения и установки `zIndex` у `SimpleMapObject` объектов.
+* Добавлена возможность указать, какие части маршрута отображаются на карте через `RouteMapObject.displayFlags`.
+* Стала доступна функция `getLanesControlImages` для получения списка иконок полос, поставляемых вместе с SDK.
+* Обновлен логотип copyright на карте.
+* Обновление маркера местоположения в навигаторе при сходе с маршрута.
+* *Ломающее изменение*. В классе `RouteInfo` для описания маршрута вместо длины маршрута теперь добавлен маршрут TrafficRoute целиком.
+
+## v1.0.1
+
+**Release Date:** 08.07.2021
+
+🎉 Первый публичный релиз!🎉
+
+* *Ломающее изменение*. Изменены названия пакетов - `PlatformSDK` и `PlatformMapSDK` переименованы в `DGis` независимо от типа сборки.
+
+* Уменьшен размер Map-версии SDK - убрали работу с offline справочником и источником данных карты.
+
+  Для Map-версии в `ISearchManagerFactory` остался только метод `makeOnlineManager` для создания online справочника, а `makeOfflineManager` и `makeSmartManager` теперь доступны только в Full-версии.
+
+  Для Map-версии в `ISourceFactory` удален метод `createOfflineDGISSource` для создания offline источника данных карты.
+
+* В `MapObjectManager` теперь можно включать режим кластеризации для `Marker` объектов.
+
+  Для инициализации кластеризации необходимо создать объект `MapObjectManager` с помощью `MapObjectManager.withClustering(map:logicalPixel:maxZoom:clusterRenderer:)`.
+
+  Четвертый параметр - это пользовательская реализация протокола `ISimpleClusterRenderer` для кастомизации рендеринга кластеров на карте. Сама кастомизация происходит на основе объекта `SimpleClusterOptions`, который возвращается в результате вызова функции `ISimpleClusterRenderer.renderCluster`.
+
+* С помощью `TextStyle.textPlacement` и `TextStyle.textOffset` теперь можно задавать расположение надписи относительно маркера.
+
+* Добавлена возможность задания угла наклона камеры в зависимости от масштаба - `ZoomToTiltRelation`, `Camera.zoomToTiltRelation`.
+
+* В `LogOptions` появилась возможность задать пользовательский обработчик логирования. Для этого необходимо реализовать протокол `ILogSink` и передать объект в `LogOptions.customSink`.
+
+* *Ломающее изменение:* Функция `toMapGeometry(trafficRoute:currentRoutePoint:)` для получения геометрии оставшейся части маршрута переименована в `remainingRouteGeometry(trafficRoute:currentRoutePoint:)`.
+
+* Оптимизация работы с сетевыми соединениями.
+
+## v0.16.1
+
+**Release Date:** 07.06.2021
+
+* Обновлены стандартные стили карты - исправлены размеры надписей и иконок.
+
+## v0.16.0
+
+**Release Date:** 02.06.2021
+
+* При создании объектов карты появилась возможность задавать порядок их отрисовки через `MarkerOptions.zIndex`, `PolygonOptions.zIndex` и т. д. Значение индекса влияет на приоритет объекта при наложении элементов на карте.
+
+* Упрощение создания простых типов данных: `Arcdegree`, `Color`, `Elevation`, `GeoPoint`, `GeoPointWithElevation`, `LogicalPixel`, `Meter`, `Tilt` и `Zoom`.
+
+  Например, раньше при создании объекта типа `GeoPoint` необходимо было конструировать объекты типа `Arcdegree`.
+
+  `let geoPoint = GeoPoint(latitude: Arcdegree(value: 54.0), longitude: Arcdegree(value: 32.0))`
+
+  Теперь доступна инициализация `GeoPoint` из пары значений `CLLocationDegrees`.
+
+  `let geoPoint = GeoPoint(latitude: 54.0, longitude: 32.0)`.
+
+* Добавлена возможность задавать список локалей в обход системных настроек с помощью `LocaleManager.setOverridedLocales`. Для возврата к системным локалям необходимо передать пустой список в метод `LocaleManager.setOverridedLocales`.
+
+* Добавлена функция `toMapGeometry(trafficRoute:currentRoutePoint:)` для получения геометрии оставшейся части маршрута.
+
+* Исправлено отображение карты при нулевом z-уровне.
+
+* Добавлена возможность отключения анимации при появлении или исчезновении объектов на карте через `MarkerOptions.animatedAppearance` и `Marker.setAnimatedAppearance`.
+
+* Поддержана установка корректного DPI при создании карты. Теперь помимо установки DPI через `MapOptions.devicePPI` можно задать `MapOptions.deviceDensity` - множитель, равный числу физических пикселей устройства в одной логической точке экранной системы координат. Из-за того, что deviceDensity не устанавливался, объекты на карте на различных z-уровнях имели некорректные размеры.
+
+  Например, для заданного экрана (`UIScreen`) этот множитель равен значению `nativeScale`. По умолчанию берется `nativeScale` главного экрана.
+
+* *Ломающее изменение*. Удален устаревший класс `MarkerBuilder` для создания объектов карты. Вместо него нужно использовать класс `MapObjectManager` для добавления объектов; конструкторы `Marker`, `Polygon` и т. д. для их создания.
+
+## v0.15.0
+
+**Release Date:** 25.05.2021
+
+* Добавлена возможность проверки пересечения геометрий - `Geometry.hasIntersection`.
+
+* В `SearchResult` добавлен признак `autoUseFirstResult`, который обозначает, что первый элемент поисковой выдачи наиболее подходит для перелета или построения маршрута к нему.
+
+* Исправлена ошибка в механизме сетевого кеширования, приводящая к медленной записи сетевых ответов на файловую систему устройства.
+
+* *Ломающее изменение*. Изменение интерфейса `MapObjectManager`.
+
+  Теперь объекты карты создаются через конструкторы `Marker`, `Polygon` и т. д. вместо `MapObjectManager.addMarker` или `MapObjectManager.addPolygon`.
+
+  Для добавления или удаления объектов карты теперь нужно использовать методы `MapObjectManager.addObject/addObjects/removeObject` и т. д. При добавлении нескольких объектов эффективнее всего использовать `MapObjectManager.addObjects`.
+
+* *Ломающее изменение*. Изменён порядок параметров функций `calcPosition` и `zoomOutToFit`.
+
+* *Ломающее изменение*. Настройка сервиса сбора данных `DataCollectStatus` переименована в `PersonalDataCollectionConsent`.
+
+* *Ломающее изменение*. В конструкторе `Container` параметр `dataCollectStatus` также переименован в `personalDataCollectionConsent`.
+
+## v0.14.0
+
+**Release Date:** 05.05.2021
+
+* Исправлена ошибка при добавлении маркера на карту через `MapObjectManager`.
+
+  По умолчанию маркер был направлен на север. Это приводило к тому, что его угол поворота зависел от угла поворота карты.
+
+  Теперь маркер направлен к верху экрана устройства независимо от поворота карты.
+
+* *Ломающее изменение*. Изначальный поворот маркера (`MarkerOptions.iconMapDirection`) и поворот существующего маркера (`Marker.iconMapDirection`) теперь имеют зануляемый тип `MapDirection?`.
+
+  Нулевое значение означает, что маркер будет направлен к верху экрана устройства независимо от поворота карты.
+
+## v0.13.0
+
+**Release Date:** 30.04.2021
+
+* Добавлена возможность задать поворот маркера. Изначальный поворот — `MarkerOptions.iconMapDirection`; поворот существующего маркера — `Marker.iconMapDirection`.
+* В копирайте на карте по умолчанию не отображается версия SDK. Чтобы включить, нужно установить `MapView.showsAPIVersion` в `true`.
+* Добавлена возможность получения местоположения и направления камер в навигаторе: `Camera.geoPoint`, `Camera.bearing`.
+* Добавлена возможность задать точку местоположения (`positionPoint`) в функциях `calcPosition` и `zoomOutToFit`.
+* *Ломающее изменение*. Многие функции создания объектов заменены на инициализаторы соответствующего типа.
+  Например: `createMapObjectManager` → `MapObjectManager.init`; `Geometry.createPoint` → `PointGeometry.init` и т. д.
+
+## v0.12.2
+
+**Release Date:** 24.04.2021
+
+* Исправлены параметры при сборе статистики.
+
+## v0.12.1
+
+**Release Date:** 23.04.2021
+
+* Исправлено отображение карты на разных масштабах.
+* Исправлен механизм сбора статистики.
+* Исправлена проблема с маркерами, при которой они вытесняли друг друга на разных масштабах.
+* Установлено минимальное значение zoom-левела равное 2.
+
+## v0.12
+
+**Release Date:** 22.04.2021
+
+* Исправлено потенциальное падение при передаче `MapOptions` с ненулевым `styleFuture`
+  в `Container.makeMapFactory(options:)`.
+
+* Исправлено потенциальное падение при уничтожении объектов карты (`IMapFactory`).
+
+* Устранена утечка одного объекта при полном уничтожении контейнера SDK.
+
+* Улучшена обработка объектов `CLLocation` в реализациях протокола `ILocationProvider`.
+
+  Прежде, если местоположение содержало одновременно корректные и некорректные компоненты
+  (например, имеются геокоординаты, но отсутствует значение скорости), объект
+  не учитывался целиком. Это сопровождалось сообщением `Platform sent an invalid location` в журнале.
+
+  Теперь в таком случае учитываются верные компоненты. Сообщение пишется тогда,
+  когда в SDK передаётся полностью некорректное местоположение.
+
+* Добавлено автоопределение PPI карты на основании модели головного устройства. См. `DevicePpi.autodetected`.
+  Настройки карты по умолчанию (`MapOptions.default`) используют этот PPI; а в случае неподдерживаемого устройства
+  проставляется `DevicePpi.defaultForFailedAutodetection`.
+
+* Тип `DevicePpi` теперь реализует протокол `ExpressibleByFloatLiteral`.
+
+* Добавлена возможность задавать тему карты и включать автопереключение темы на iOS 13.
+
+  Новый тип `Theme` соответствует теме в рамках стиля. Новый тип `MapAppearance` указывает
+  набор тем и способ их применения: `.universal` для фиксированной темы; `.automatic`
+  для автопереключения между светлой и тёмной темой на iOS 13.
+
+  Настройку тем можно задать в `MapOptions.appearance` при создании объектов
+  карты вызовом `Container.makeMapFactory(options:)`. Последующее
+  переключение доступно установкой свойства `IMapView.appearance`.
+
+* *Ломающее изменение*. Тип `MapOptions.devicePpi` изменился c `CGFloat?` на `DevicePpi?` в целях улучшения документации.
+
+* Добавлен сбор анонимной статистики использования. По умолчанию включён.
+  См. параметр `dataCollectionOptions` у `Container.init`.
+  Отключать рекомендуется только в случае явного выбора пользователем (например, отказ GDPR).
+
+## v0.11
+
+**Release Date:** 15.04.2021
+
+* Управление и получение информации о HTTP-кеше — `HttpCacheManager`.
+* Нестатические свойства большинства структур сделаны изменяемыми (т.е. `let` → `var`).
+* Информация о полосах движения маршрута - `RouteInfo.laneSigns`.
+* Убрана тонкая черная граница у объектов карты, когда она не задана.
+* Типы `ScreenPoint`, `ScreenSize`, `ScreenShift` реализуют `Equatable` и `Hashable`.
+* Добавлены конструкторы `ScreenPoint(_: CGPoint)`, `ScreenSize(_: CGSize)`, `ScreenShift(_: CGVector)`.
+* *Ломающиее изменение:* `TextStyle.fontSize`, `TextStyle.strokeWidth` имеют тип `LogicalPixel`, а не `Float`.
+* *Ломающиее изменение:* В модели навигатора: вместо `Model.laneSign` теперь `Model.laneSignIndex`.
+  `LaneSign` можно получить по этому индексу из `RouteInfo.laneSigns`.
+* *Ломающее изменение:* Метод для создания пользовательского слоя обработки жестов принимает меньшее число парамтеров: `IMapGestureViewFactory.makeGestureView(map:coordinateSpace:)`. Убран параметр `eventProcessor`: вместо него нужно использовать метод `Map.processEvent`.
+
+## v0.10
+
+**Release Date:** 07.04.2021
+
+* добавили инструмент для получения последнего отрисованного кадра карты в виде изображения — `IMapFactory.snapshotter.makeImage()`
+* removeSource больше не бросает исключение. Даже если источник не был добавлен на карту
+* добавили полилинию с градиентом
+* cоздание пользовательского слоя распознавания жестов теперь возможно при инициализации карты, см. `gestureViewFactory` у `MapOptions`
+* *Ломающее изменение:* изменили устройство типов, связанных с картой. Теперь карту нужно создавать вызовом `Container.makeMapFactory(options:) -> IMapFactory`. Из него доступен контроллер карты — `map`, вид карты `mapView` и прочие вещи.
+* *Ломающее изменение:* обновили класс GeoRect
+* *Ломающее изменение:* мы изменили формат работы с подписками на изменения свойств. Раньше такие поля как `Map.camera.position` имели тип `StatefulChannel`. Прежде получали уведомления об изменениях значений свойств с помощью `camera.position.sink(receiveValue:)`, а текущее значение через `camera.position.value`. Такой API вызывал трудности и был менее эффективен, поэтому в новой версии, например, `camera.position` — это просто свойство типа `CameraPosition`; а `camera.positionChannel` — `StatefulChannel<CameraPosition>. Это изменение в силе для всех свойств, ранее имевших тип `StatefulChannel\`.
+
+## v0.9
+
+**Release Date:** 24.03.2021
+
+* добавили возможность рисовать пунктирную линию
+* `opacity` для Marker
+* функции конверторы для работы со Style Zoom (`projectionZToStyleZ`, `styleZToProjectionZ`)
+* для работы с атрибутами карты добавлен новый тип `AttributeValue`
+* из `DgisMapObject` больше нельзя получить Future на объект справочника. Для этого нужно использовать `SearchManager`
+* `настройки HTTP-клиента`: время ожидания, наличие и размер дискового кеша
+* возможность задавать собственные реализации сервисов геопозиционироваания или отключать их (например, для симулятора)
+
+## v0.8
+
+**Release Date:** 17.03.2021
+
+* добавили кэш для тайлов на карте. Возможность конфигурировать размер кэша появится в следующем релизе
+* `Padding` на карте
+* для объектов Polygon/Polyline добавилась возможность изменить текущую геометрию
+* добавили источник для растровых тайлов (см. `createRasterTileData`, `createRasterTileDataSource`)
+* поддержали атрибут `theme` для стилей карты выгруженных из редактора

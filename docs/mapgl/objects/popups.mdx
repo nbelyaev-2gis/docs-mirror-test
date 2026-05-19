@@ -1,0 +1,383 @@
+---
+sidebar: mapgljsapi
+---
+# Попапы
+
+## Простой попап
+
+Попап — это HTML-элемент, привязанный к определённым координатам на карте. Чтобы его добавить, вызовите метод [HtmlMarker()](/mapgl/reference/class#html-marker), укажите координаты для него и HTML-разметку:
+
+```js
+const popup = new mapgl.HtmlMarker(map, {
+    coordinates: [37.615655, 55.768005],
+    html: `<div class="popup">
+        <div class="popup-content">
+            Текст попапа
+        </div>
+        <div class="popup-tip"></div>
+    </div>`,
+});
+```
+
+К HTML-элементам внутри метки CSS будет применяться как к обычным HTML-элементам на странице.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Простой попап" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            .popup {
+                position: absolute;
+                transform: translate(-50%, -100%);
+                display: flex;
+                flex-direction: column;
+                min-width: 200px;
+            }
+            .popup-content {
+                padding: 5px;
+                border-radius: 4px;
+                background: #fff;
+                box-shadow: 0 1px 2px 0 rgba(38, 38, 38, 0.2);
+            }
+            .popup-tip {
+                width: 0;
+                height: 0;
+                align-self: center;
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                border-top: 10px solid #fff;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const popup = new mapgl.HtmlMarker(map, {
+                coordinates: [37.615655, 55.768005],
+                html: \`<div class="popup">
+                    <div class="popup-content">
+                        Текст попапа
+                    </div>
+                    <div class="popup-tip"></div>
+                </div>\`,
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## События
+
+Попапы могут содержать интерактивные элементы. Чтобы добавить обработчик событий для этих элементов, нужно сперва вызвать метод `getContent()`, который вернет HTML-содержимое попапа, и затем добавить обработчик для нужного элемента:
+
+```js
+const popup = new mapgl.HtmlMarker(map, {
+    coordinates: [37.615655, 55.768005],
+    html: `<div class="popup">
+        <div class="popup-content">
+            Текст попапа
+            <button>Нажмите здесь</button>
+        </div>
+        <div class="popup-tip"></div>
+    </div>`,
+});
+
+popup
+    .getContent()
+    .querySelector('button')
+    .addEventListener('click', () => alert('Вы нажали кнопку'));
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Попап с кнопкой" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <style>
+            .popup {
+                position: absolute;
+                transform: translate(-50%, -100%);
+                display: flex;
+                flex-direction: column;
+                min-width: 200px;
+            }
+            .popup-content {
+                padding: 5px;
+                border-radius: 4px;
+                background: #fff;
+                box-shadow: 0 1px 2px 0 rgba(38, 38, 38, 0.2);
+            }
+            .popup-tip {
+                width: 0;
+                height: 0;
+                align-self: center;
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                border-top: 10px solid #fff;
+            }
+        </style>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const popup = new mapgl.HtmlMarker(map, {
+                coordinates: [37.615655, 55.768005],
+                html: \`<div class="popup">
+                    <div class="popup-content">
+                        Текст попапа
+                        <button>Нажмите здесь</button>
+                    </div>
+                    <div class="popup-tip"></div>
+                </div> \`,
+            });
+
+            popup
+                .getContent()
+                .querySelector('button')
+                .addEventListener('click', () => alert('Вы нажали кнопку'));
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Взаимодействие с другими компонентами
+
+Попапы можно использовать, чтобы сделать всплывающую подсказку. Например, чтобы сделать подсказку, которая будет появляться при нажатии на маркер, можно добавить три обработчика событий: один для маркера (чтобы показать описание) и по одному для карты и самого попапа (чтобы скрыть описание).
+
+```js
+const marker = new mapgl.Marker(map, {
+    coordinates: [37.615655, 55.768005],
+});
+
+const popupHtml = popup.getContent();
+hidePopup();
+
+marker.on('click', () => (popupHtml.style.display = 'block'));
+
+popupHtml.querySelector('.popup-close').addEventListener('click', hidePopup);
+map.on('click', hidePopup);
+
+function hidePopup() {
+    popupHtml.style.display = 'none';
+}
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Маркер с попапом" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+        <style>
+            .popup {
+                position: absolute;
+                transform: translate(-50%, -150%);
+                display: flex;
+                flex-direction: column;
+                min-width: 200px;
+            }
+            .popup-content {
+                padding: 10px;
+                border-radius: 4px;
+                background: #fff;
+                box-shadow: 0 1px 2px 0 rgba(38, 38, 38, 0.2);
+            }
+            .popup-close {
+                position: absolute;
+                top: 0;
+                right: 0;
+                padding: 0 5px;
+                font-size: 12px;
+                cursor: pointer;
+            }
+            .popup-tip {
+                width: 0;
+                height: 0;
+                align-self: center;
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                border-top: 10px solid #fff;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const marker = new mapgl.Marker(map, {
+                coordinates: [37.615655, 55.768005],
+            });
+
+            const popup = new mapgl.HtmlMarker(map, {
+                coordinates: marker.getCoordinates(),
+                html: \`<div class="popup">
+                    <div class="popup-content">
+                        Нажмите на маркер, чтобы открыть этот попап снова
+                    </div>
+                    <div class="popup-close">x</div>
+                    <div class="popup-tip"></div>
+                </div>\`,
+            });
+
+            const popupHtml = popup.getContent();
+            hidePopup();
+
+            marker.on('click', () => (popupHtml.style.display = 'block'));
+
+            popupHtml.querySelector('.popup-close').addEventListener('click', hidePopup);
+            map.on('click', hidePopup);
+
+            function hidePopup() {
+                popupHtml.style.display = 'none';
+            }
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Сложные HTML-элементы
+
+В качестве значения параметра `html` можно использовать как строку, так и сам элемент. Например, можно сделать метку с анимированным canvas:
+
+```js
+const canvas = document.createElement('canvas');
+canvas.width = 70;
+canvas.height = 70;
+canvas.style.position = 'absolute';
+canvas.style.transform = 'translate(-50%, -50%)';
+canvas.style.border = '1px solid';
+canvas.style.background = '#fff';
+const ctx = canvas.getContext('2d');
+
+function render() {
+    requestAnimationFrame(render);
+    ctx.clearRect(0, 0, 70, 70);
+    ctx.beginPath();
+    const radius = (Date.now() / 70) % 35;
+    ctx.arc(35, 35, radius, 0, Math.PI * 2);
+    ctx.stroke();
+}
+requestAnimationFrame(render);
+
+const popup = new mapgl.HtmlMarker(map, {
+    coordinates: [37.615655, 55.768005],
+    html: canvas,
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Сложный HTML-элемент" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 70;
+            canvas.height = 70;
+            canvas.style.position = 'absolute';
+            canvas.style.transform = 'translate(-50%, -50%)';
+            canvas.style.border = '1px solid';
+            canvas.style.background = '#fff';
+            const ctx = canvas.getContext('2d');
+            function render() {
+                requestAnimationFrame(render);
+                ctx.clearRect(0, 0, 70, 70);
+                ctx.beginPath();
+                const radius = (Date.now() / 70) % 35;
+                ctx.arc(35, 35, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            requestAnimationFrame(render);
+
+            const popup = new mapgl.HtmlMarker(map, {
+                coordinates: [37.615655, 55.768005],
+                html: canvas,
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

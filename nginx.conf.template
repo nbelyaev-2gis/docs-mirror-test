@@ -1,0 +1,189 @@
+user  nginx;
+worker_processes  1;
+
+error_log /dev/stderr warn;
+pid /var/run/nginx.pid;
+
+worker_rlimit_nofile    20480;
+events {
+    use                 epoll;
+    worker_connections  1024;
+}
+
+http {
+
+    ##
+    # Basic Settings
+    ##
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    map_hash_bucket_size       128;
+
+    map $http_x_request_id $x_request_id {
+        default $http_x_request_id;
+        '' $request_id;
+    }
+
+    server_tokens     off;
+    sendfile          on;
+    directio          4m;
+
+    tcp_nodelay       on;
+    tcp_nopush        off;
+
+    log_not_found     off;
+    keepalive_timeout 65;
+
+    reset_timedout_connection  on;
+    variables_hash_max_size    2048;
+
+    client_max_body_size       64m;
+
+    ##
+    # Logs
+    ##
+    log_format json escape=json '{ '
+        '"time_local": "$time_local", '
+        '"remote_addr": "$remote_addr", '
+        '"host": "$host", '
+        '"type": "access", '
+        '"server_protocol": "$http_x_forwarded_proto", '
+        '"request_method": "$request_method", '
+        '"request_uri": "$request_uri", '
+        '"args": "$args", '
+        '"status": $status, '
+        '"request_time": $request_time, '
+        '"upstream_addr": "$upstream_addr", '
+        '"upstream_connect_time": "$upstream_connect_time", '
+        '"upstream_response_time": "$upstream_response_time", '
+        '"upstream_status": "$upstream_status", '
+        '"body_bytes_sent": $body_bytes_sent, '
+        '"http_referer": "$http_referer", '
+        '"http_origin": "$http_origin", '
+        '"http_user_agent": "$http_user_agent", '
+        '"city": "$http_x_geo_ip_city_name", '
+        '"country": "$http_x_geo_ip_country_name", '
+        '"request_id": "$x_request_id" '
+        '}';
+
+    log_format client_log escape=none $request_body;
+    access_log /dev/stdout json if=0; # access logs disabled by default
+
+    ##
+    # Gzip Settings
+    ##
+
+    gzip               on;
+    gzip_disable       msie6;
+    gzip_vary          on;
+    gzip_proxied       any;
+    gzip_comp_level    6;
+    gzip_buffers       16 8k;
+    gzip_http_version  1.1;
+    gzip_types         text/plain text/css application/javascript text/javascript;
+    gzip_static        on;
+
+    server {
+        listen       80;
+        server_name  localhost;
+        root         /opt/static;
+
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'X-Content-Type-Options' 'nosniff' always;
+        add_header 'X-XSS-Protection' '1' always;
+
+        # По умолчанию кеш выключен на все, чтобы не попасть в непредсказуемую ситуацию.
+        # Главное не кешировать html, потому что он ссылается на хэшированные js-файлы.
+        add_header 'Cache-Control' 'no-transform, no-store, no-cache, must-revalidate, max-age=0';
+        add_header 'Pragma' 'no-cache' always;
+
+        error_page 403 404 /404.html;
+
+        location / {
+            # Убираем trailing slash. /overview/features/ -> /overview/features
+            if ($request_uri ~* ^(.+)/$) {
+                return 307 $1;
+            }
+
+            try_files $uri $uri.html $uri/index.html =404;
+        }
+
+        location ~* "\.[a-f0-9]{8,}\.(js|css|map)$" {
+            expires 30d;
+            add_header Cache-Control "public, immutable" always;
+        }
+
+
+        # Прокси картинок и видео на CDN
+        location ~ ^/(img|video)/(.*)$ {
+            set $s3_path "${S3_BUCKET_NAME}/static/$1/$2";
+
+            resolver coredns.kube-system.svc valid=10s;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $remote_addr;
+            proxy_hide_header Cache-Control;
+            proxy_hide_header Expires;
+
+            proxy_pass https://disk.2gis.com/$s3_path;
+
+            add_header Cache-Control "public, max-age=86400, stale-while-revalidate=3600" always;
+        }
+
+        location ~* \.(woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp|mp4|webm|json|csv)$ {
+            expires 5d;
+            add_header Cache-Control "public" always;
+        }
+
+        # Редирект старой доки. В url новой доки нет префикса для ru-локали, потому что это локаль по умолчанию для 2гис.
+        location ~ ^/ru/(.*)$ {
+            set $redirect_scheme $scheme;
+
+            if ($http_x_forwarded_proto) {
+                set $redirect_scheme $http_x_forwarded_proto;
+            }
+
+            return 307 $redirect_scheme://$host/$1;
+        }
+
+        # Что ищем? `/mapgl/reference/Map`, `/ios/sdk/reference/stable/Container`.
+        # Что пропускаем? `/mapgl/reference/class`.
+        location ~ ^(.*/(mapgl|ios|android).*/reference(?:/[^/]+)*)/(?!(class|struct|enumeration|interface|typeAlias|extension|method)$)[^/]+$ {
+            return 307 $1/class;
+        }
+
+        location /_/api/search {
+            # Резолвер нужен, потому что в SEARCH_API_URL приходит внутренний fqdn в k8s.
+            resolver coredns.kube-system.svc valid=10s;
+            proxy_pass "${SEARCH_API_URL}/collections/${SEARCH_API_COLLECTION}/documents/search$is_args$args";
+            proxy_set_header X-Typesense-Api-Key "${APIKEY_DOCS_SEARCH}";
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $remote_addr;
+        }
+
+        location /_/api/chat-bot {
+            rewrite ^/_/api/chat-bot/(.*)$ /$1 break;
+
+            # Резолвер нужен, потому что в CHAT_BOT_API_URL приходит внутренний fqdn в k8s.
+            resolver coredns.kube-system.svc valid=10s;
+            proxy_pass ${CHAT_BOT_API_URL};
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $remote_addr;
+        }
+
+        location /_/api/log {
+           if ($request_method != POST) {
+                return 400;
+            }
+            access_log /dev/stdout client_log;
+            # nginx по-умолчанию не разбирает request_body
+            # один из способов его заставить - спроксировать запрос
+            # На эндпоинте куда проксируем запрос просто всегда 200
+            proxy_pass $scheme://127.0.0.1/_/api/logsink;
+        }
+
+        location /_/api/logsink {
+            access_log off;
+            return 200;
+        }
+    }
+}

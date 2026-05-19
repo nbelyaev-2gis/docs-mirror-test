@@ -1,0 +1,65 @@
+.inputWrapper {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  border: 1px solid var(--shape-level-3);
+  border-radius: var(--border-radius-md);
+  background-color: var(--shape-level-1);
+}
+
+[data-theme='dark'] .inputWrapper {
+  border-color: var(--shape-level-3-16);
+  background-color: var(--shape-level-1-16);
+}
+
+.inputWrapper:hover {
+  border-color: var(--shape-level-4);
+}
+
+[data-theme='dark'] .inputWrapper:hover {
+  border-color: var(--shape-level-4-48);
+}
+
+.inputWrapper:focus-within {
+  border-color: var(--shape-level-4);
+}
+
+[data-theme='dark'] .inputWrapper:focus-within {
+  border-color: var(--shape-level-4-48);
+}
+
+.inputWrapper.error {
+  border-color: var(--ifm-color-danger);
+}
+
+.inputField {
+  all: unset;
+  color: var(--text-main);
+  padding: var(--gap-2m) var(--gap-3m);
+}
+
+[data-theme='dark'] .inputField {
+  color: var(--text-main-87);
+}
+
+.inputField::placeholder {
+  color: var(--text-disabled);
+}
+
+[data-theme='dark'] .inputField::placeholder {
+  color: var(--text-disabled-32);
+}
+
+.inputWrapper.hasStartIcon .inputField {
+  padding-left: 4px;
+}
+
+.inputWrapper.hasRequiredTextOrEndIcon .inputField {
+  padding-right: 4px;
+}
+
+.requiredMessage.error {
+  color: var(--ifm-color-danger) !important;
+}

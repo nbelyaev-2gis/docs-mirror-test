@@ -1,0 +1,378 @@
+---
+sidebar: rasterjsapi
+---
+# Маркеры
+
+## Описание
+
+Ниже приведены примеры использования маркеров. Вы можете добавить маркер на карту с помощью метода `addTo()`. Чтобы работать с группой маркеров, используйте `FeatureGroup`: см. разделы [Обработка событий группы маркеров](#processing-marker-group-events) и [Отображение нескольких маркеров и подстройка границ](#displaying-multiple-markers). Для получения подробной информации о маркерах см. раздел [Маркеры](/maps/others/rasterjs/reference/markers).
+`
+## Маркер с попапом
+
+Чтобы добавить маркер, при клике на который открывается попап с информацией:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Маркер с попапом" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+   </head>
+
+   <body>
+      <div id="map" style="width: 100%; height: 400px;"></div>
+      <script>
+         DG.then(function () {
+               var map = DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 15,
+                  key: 'Your API access key'
+               });
+
+               DG.marker([54.98, 82.89]).addTo(map).bindPopup('Попап');
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Перетаскиваемый маркер
+
+Чтобы добавить маркер, который пользователи могут перетаскивать:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Перетаскиваемый маркер" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+   </head>
+
+   <body>
+      Координаты маркера: <div id="location">LatLng(54.98, 82.89)</div>
+      <div id="map" style="width: 100%; height: 400px;"></div>
+      <script type="text/javascript">
+         var locationInfo = document.getElementById('location');
+
+         DG.then(function () {
+               var map,
+                  marker;
+
+               map = DG.map('map', {
+                  center: [54.981, 82.891],
+                  zoom: 15,
+                  key: 'Your API access key'
+               });
+
+               marker = DG.marker([54.981, 82.891], {
+                  draggable: true
+               }).addTo(map);
+
+               marker.on('drag', function (e) {
+                  var lat = e.target._latlng.lat.toFixed(3),
+                     lng = e.target._latlng.lng.toFixed(3);
+
+                  locationInfo.innerHTML = lat + ', ' + lng;
+               });
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Маркер с пользовательской иконкой
+
+Вы можете задать маркеру собственную иконку или простой элемент div вместо изображения:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Маркер с пользовательской иконкой" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+   </head>
+
+   <body>
+      <div id="map" style="width: 100%; height: 400px;"></div>
+      <script>
+         DG.then(function () {
+               var map,
+                  myIcon,
+                  myDivIcon;
+
+               map = DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 13,
+                  key: 'Your API access key'
+               });
+
+               myIcon = DG.icon({
+                  iconUrl: 'https://maps.api.2gis.ru/2.0/example_logo.png',
+                  iconSize: [48, 48]
+               });
+               DG.marker([54.98, 82.89], {
+                  icon: myIcon
+               }).addTo(map);
+
+               myDivIcon = DG.divIcon({
+                  iconSize: [70, 20],
+                  html: '<b style="color:blue;">HTML-код</b>'
+               });
+               DG.marker([54.98, 82.87], {
+                  icon: myDivIcon
+               }).addTo(map);
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Программное открытие маркера
+
+Чтобы открыть попап по клику на ссылку или нажатию на кнопку:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Программное открытие маркера" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+   </head>
+
+   <body>
+      <button id='open-popup'>Открыть попап</button>
+      <div id="map" style="width: 100%; height: 400px;"></div>
+      <script>
+         var openPopupBtn = document.getElementById('open-popup');
+
+         DG.then(function () {
+               var map,
+                  marker;
+
+               map = DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 15,
+                  key: 'Your API access key'
+               });
+
+               marker = DG.marker([54.98, 82.89]).addTo(map);
+               marker.bindPopup('Попап');
+
+               openPopupBtn.onclick = function () {
+                  marker.openPopup();
+               }
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Маркер с подсказкой
+
+У маркера есть два типа подсказок: обычная и статическая. Пример использования обоих типов подсказок:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Маркер с подсказкой" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+   </head>
+
+   <body>
+      <div id="map" style="width: 100%; height: 400px;"></div>
+      <script>
+         DG.then(function () {
+               var map = DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 15,
+                  key: 'Your API access key'
+               });
+
+               DG.marker([54.98, 82.89])
+                  .addTo(map)
+                  .bindLabel('Статическая подсказка', {
+                     static: true
+                  });
+
+               DG.marker([54.98, 82.88])
+                  .addTo(map)
+                  .bindLabel('Обычная подсказка');
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Обработка событий группы маркеров {#handling-marker-group-events}
+
+При клике на маркер карта будет центрироваться по его позиции:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Обработка событий группы маркеров" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+   </head>
+
+   <body>
+      <div id="map" style="width: 100%; height: 400px;"></div>
+      <script>
+         DG.then(function () {
+               var map,
+                  marker1,
+                  marker2,
+                  marker3,
+                  group;
+
+               map = DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 13,
+                  key: 'Your API access key'
+               });
+
+               marker1 = DG.marker([54.96, 82.889]).addTo(map);
+               marker2 = DG.marker([54.98, 82.893]).addTo(map);
+               marker3 = DG.marker([54.99, 82.896]).addTo(map);
+
+               group = DG.featureGroup([marker1, marker2, marker3]);
+               group.addTo(map);
+               group.on('click', function (e) {
+                  map.setView([e.latlng.lat, e.latlng.lng]);
+               });
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Анимированное движение маркера
+
+Пример маркера, который двигается по заданой траектории:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Анимированное движение маркера" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+   </head>
+
+   <body>
+      <div id="map" style="width: 100%; height: 400px;"></div>
+      <script>
+         DG.then(function () {
+               var map,
+                  marker;
+
+               map = DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 13,
+                  key: 'Your API access key'
+               });
+
+               marker = DG.marker([54.98, 82.89]).addTo(map);
+
+               var increment = 0.001;
+
+               function move() {
+                  if (!map.getBounds().contains(marker.getLatLng())) {
+                     increment *= -1;
+                  }
+
+                  var newLat = marker.getLatLng().lat + increment,
+                     newLng = marker.getLatLng().lng + increment;
+
+                  marker.setLatLng([newLat, newLng]);
+               }
+
+               setInterval(move, 60);
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Отображение нескольких маркеров и подстройка границ {#displaying-multiple-markers}
+
+Пример отображения и скрытия группы маркеров с автоматическим определением рамок карты:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+
+   <head>
+      <title>RasterJS API</title>
+      <meta name="description" content="Отображение нескольких маркеров и подстройка границ" />
+      <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+   </head>
+
+   <body>
+      <input id="hide" type="button" value="Скрыть маркеры" />
+      <input id="show" type="button" value="Показать маркеры" />
+      <div id="map" style="width: 100%; height: 400px;"></div>
+      <script>
+         DG.then(function () {
+               var map,
+                  markers = DG.featureGroup(),
+                  coordinates = [];
+
+               map = DG.map('map', {
+                  center: [54.98, 82.89],
+                  zoom: 13,
+                  key: 'Your API access key'
+               });
+
+               for (var i = 0; i < 100; i++) {
+                  coordinates[0] = 54.98 + Math.random();
+                  coordinates[1] = 82.89 + Math.random();
+                  DG.marker(coordinates).addTo(markers);
+               }
+
+               document.getElementById('hide').onclick = hideMarkers;
+               document.getElementById('show').onclick = showMarkers;
+
+               function showMarkers() {
+                  markers.addTo(map);
+                  map.fitBounds(markers.getBounds());
+               };
+
+               function hideMarkers() {
+                  markers.removeFrom(map);
+               };
+         });
+      </script>
+   </body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>

@@ -1,0 +1,254 @@
+---
+sidebar: mapgljsapi
+---
+# Глобальные переменные стиля карты
+
+Глобальные переменные стиля карты (глобальные стилевые переменные) — это переменные с типом `global`, которые задаются в объекте [StyleState](/mapgl/reference/interface#style-state) и используются в стилевых выражениях ([Expressions](/mapgl/styles-specification#expressions)). С помощью глобальных стилевых переменных вы можете динамически включать и выключать отображение стилевых слоёв на карте, а также стилизовать отображение объектов (см. инструкцию [Раскрашивание объектов](/mapgl/objects/coloring)).
+
+Вы можете как инициализировать собственные глобальные переменные стиля и указывать их в настройках стилевого слоя, так и использовать зарезервированные глобальные переменные. Примеры зарезервированных переменных:
+
+* `trafficOn` — отображение пробок;
+* `parkingOn` — отображение парковок;
+* `navigatorOn` — включение режима навигации;
+* `immersiveRoadsOn` — отображение иммерсивных дорог;
+* `terrainEnabled` — отображение 3D-рельефа.
+
+При инициализации карты используются глобальные переменные стиля, указанные в объекте [StyleState](/mapgl/reference/interface#style-state). С помощью метода [map.patchStyleState()](/mapgl/reference/class#map/patch-style-state) вы можете устанавливать значения глобальных переменных (например, `true` или `false`).
+
+## Создание глобальных переменных
+
+В этом примере создаётся переменная `showFoodPoi` для стилевого слоя с иконками ресторанов в Редакторе стилей (слой **Eateries** в папке **POI icons New**). Вы можете добавлять зависимость от глобальных переменных для любых стилевых слоёв.
+
+Чтобы создать глобальную стилевую переменную и с помощью неё управлять отображением стилевого слоя:
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+2. Откройте нужный стиль.
+
+3. Откройте нужный слой. Перейдите на вкладку **Данные** и нажмите **JSON — добавить вручную**:
+
+   <img src="/img/mapgl/globalstylevariables/edit-layer-data.png" alt="Изменение данных в стилевом слое" width="700"  />
+
+4. Добавьте к фильтру слоя зависимость от глобальной переменной стиля. Для этого вместо значения `true` укажите `["global", "showFoodPoi"]`:
+
+   ```json
+   [
+       "all",
+       ["match", ["get", "sublayer"], ["Low_zoom_poi"], true, false],
+       ["match", ["get", "objectClass"], ["poi_food_service"], ["global", "showFoodPoi"], false]
+   ]
+   ```
+
+   При инициализации переменных вы можете использовать любые названия, но нельзя начинать название с символа нижнего подчёркивания (`_`).
+
+5. При инициализации карты укажите в поле [styleState](/mapgl/reference/interface#style-state) глобальную стилевую переменную `showFoodPoi`. В поле `style` укажите ID стиля, в котором находится слой с заданной переменной:
+
+   ```js
+   const map = new mapgl.Map('container', {
+       center: [37.603014, 55.730826],
+       zoom: 17,
+       key: 'Your API access key',
+       style: 'Your map style identifier',
+       styleState: {
+           showFoodPoi: true,
+       },
+   });
+   ```
+
+6. Чтобы включить или отключить отображение слоя, используйте метод [map.patchStyleState()](/mapgl/reference/class#map/patch-style-state):
+
+   ```js
+   // Показать слой
+   map.patchStyleState({ showFoodPoi: true });
+   ```
+
+   <br  />
+
+   ```js
+   // Скрыть слой
+   map.patchStyleState({ showFoodPoi: false });
+   ```
+
+Пример использования:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Создание глобальных переменных стиля" />
+        <link rel="stylesheet" type="text/css" href="/css/switch.css" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            #buttons {
+                position: absolute;
+                z-index: 2;
+
+                top: 0;
+                left: 0;
+                margin: 8px;
+                padding: 2px 4px;
+
+                display: flex;
+                align-items: center;
+                background-color: white;
+                border-radius: 8px;
+                font: 13px sans-serif;
+            }
+
+            #buttons label {
+                padding: 0 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div id="buttons">
+            <label>Иконки ресторанов</label>
+            <input type="checkbox" role="switch" onclick="toggleRelief(event)" checked="true"/>
+            <label id="stateCaption">Включено</label>
+        </div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {                
+                center: [37.603014, 55.730826],
+                zoom: 17,
+                key: 'Your API access key',
+                style: 'de22a8b8-59e8-4d04-8711-b2c19e100072',
+                styleState: {
+                    showFoodPoi: true,
+                }
+            });
+
+            const stateCaption = document.getElementById('stateCaption');
+
+            function toggleRelief(ev) {
+                const enabled = ev.target.checked;
+                map.patchStyleState({ showFoodPoi: enabled })
+                stateCaption.innerText = enabled ? 'Включено' : 'Отключено';
+            }
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Использование зарезервированных глобальных переменных
+
+В этом примере для отображения 3D-рельефа на карте используется зарезервированная переменная `terrainEnabled`.
+
+Чтобы управлять 3D-рельефом на карте:
+
+1. При инициализации карты укажите в поле [styleState](/mapgl/reference/interface#style-state) глобальную стилевую переменную `terrainEnabled`:
+
+   ```js
+   const map = new mapgl.Map('container', {
+       center: [160.544426, 54.746603],
+       zoom: 12.1,
+       key: 'Your API access key',
+       styleState: {
+           terrainEnabled: true,
+       },
+   });
+   ```
+
+2. Чтобы включить или отключить 3D-рельеф, используйте метод [map.patchStyleState()](/mapgl/reference/class#map/patch-style-state):
+
+   ```js
+   // Включить 3D-рельеф
+   map.patchStyleState({ terrainEnabled: true });
+   ```
+
+   <br  />
+
+   ```js
+   // Отключить 3D-рельеф
+   map.patchStyleState({ terrainEnabled: false });
+   ```
+
+Пример использования:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Использование зарезервированных глобальных переменных стиля" />
+        <link rel="stylesheet" type="text/css" href="/css/switch.css" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            #buttons {
+                position: absolute;
+                z-index: 2;
+
+                top: 0;
+                left: 0;
+                margin: 8px;
+                padding: 2px 4px;
+
+                display: flex;
+                align-items: center;
+                background-color: white;
+                border-radius: 8px;
+                font: 13px sans-serif;
+            }
+
+            #buttons label {
+                padding: 0 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div id="buttons">
+            <label>3D-рельеф</label>
+            <input type="checkbox" role="switch" onclick="toggleRelief(event)" checked="true"/>
+            <label id="stateCaption">Включено</label>
+        </div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {                
+                center: [160.544426, 54.746603],
+                zoom: 12.1,
+                pitch: 42,
+                rotation: 45,
+                key: 'Your API access key',
+                style: '8500c08c-0d73-4147-bb73-e6dcba21fa47',
+                styleState: {
+                    hillshade: true,
+                    terrainEnabled: true,
+                }
+            });
+
+            const stateCaption = document.getElementById('stateCaption');
+
+            function toggleRelief(ev) {
+                const enabled = ev.target.checked;
+                map.patchStyleState({ terrainEnabled: enabled })
+                stateCaption.innerText = enabled ? 'Включено' : 'Отключено';
+            }
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

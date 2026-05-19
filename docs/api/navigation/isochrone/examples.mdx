@@ -1,0 +1,1423 @@
+---
+sidebar: isochroneapi
+---
+# Примеры
+
+Ниже приведены основные сценарии работы и примеры запросов к Isochrone API. В примерах запросов используется [cURL](https://curl.se/). Подробную информацию о параметрах запросов см. в [Справочнике API](/api/navigation/isochrone/reference/isochrone_200).
+
+Для начала работы с Isochrone API [получите API-ключ](/api/navigation/isochrone/overview#get-access-key).
+
+## Время в пути {#durations}
+
+Вы можете строить зоны доступности для нескольких значений времени в пути. Например, получить области, куда можно добраться от заданной точки за 5, 10, 20 и 30 минут. Результатом запроса будут несколько зон доступности, рассчитанные для разных значений времени.
+
+По умолчанию можно задать до пяти промежутков времени, каждый из которых не превышает 3600 секунд.
+
+Пример зон доступности для автомобиля для разного времени в пути:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Isochrone API</title>
+    <meta name="description" content="Построение зон доступности с разным временем в пути" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        select {
+            border: 0;
+            padding: 4px 10px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div id="tooltip"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const reqUrl = \`https://routing.api.2gis.com/isochrone/2.0.0?key=Your directions API access key\`;
+        const start = {
+            lat: 55.762590,
+            lon: 37.668598,
+        };
+
+        const map = new mapgl.Map('container', {
+            center: [start.lon, start.lat],
+            zoom: 11,
+            key: 'Your API access key',
+        });
+
+        const controlsHtml = \`<div class="controls">
+            <select name="duration">
+                <option value="300">5 минут</option>
+                <option value="600" selected>10 минут</option>
+                <option value="1200">20 минут</option>
+                <option value="1800">30 минут</option>
+            </select>
+        </div>\`;
+        new mapgl.Control(map, controlsHtml, {
+            position: "topLeft"
+        });
+        const durationSelectEl = document.querySelector('select[name="duration"]');
+        const startMarker = new mapgl.Marker(map, {
+            coordinates: [start.lon, start.lat]
+        });
+        let polygon;
+        function renderGeometries(geometry) {
+            if (polygon) {
+                polygon.destroy();
+            }
+            const coordinates = geometry
+                .replace("MULTIPOLYGON(((", "")
+                .replace(")))", "")
+                .split(",")
+                .map((point) => point.trim().split(" ").map(Number));
+            polygon = new mapgl.Polygon(map, {
+                coordinates: [coordinates],
+                strokeWidth: 3,
+                strokeColor: "#bb0000",
+                fillColor: "rgba(187, 0, 0, 0.3)"
+            });
+        }
+        window.addEventListener("change", (evt) => {
+            if (
+                evt.target.name === "duration"
+            ) {
+                updateGeometries();
+            }
+        });
+        updateGeometries();
+        function updateGeometries() {
+            const duration = Number(durationSelectEl.value);
+            fetch(reqUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    start,
+                    durations: [duration],
+                    transport: "driving",
+                    reverse: false,
+                    format: "wkt",
+                    start_time: new Date().toISOString()
+                })
+            })
+                .then((res) => res.json())
+                .then((parsed) => {
+                    if (parsed.isochrones && parsed.isochrones.length > 0) {
+                        renderGeometries(parsed.isochrones[0].geometry);
+                    } else {
+                        console.error("Изохроны не найдены в ответе");
+                    }
+                })
+                .catch((err) => console.error("Ошибка при получении данных изохронов:", err));
+        }
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+Чтобы построить несколько зон доступности для разного времени в пути, отправьте POST-запрос на [/isochrone/2.0.0](/api/navigation/isochrone/reference/isochrone_200) со следующими параметрами:
+
+* `durations` (обязательный параметр) — массив со значениями времени в пути в секундах. Например, 600 секунд (10 минут) и 1200 секунд (20 минут).
+* `start` (обязательный параметр) — координаты точки (широта и долгота).
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "durations": [600, 1200],
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    }
+}'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 1200,
+            "geometry": "MULTIPOLYGON(((37.677025 55.712329, 37.712186 55.723263, 37.713465 55.726161, 37.709961 55.729575, 37.712752 55.73205, 37.723211 55.729428, 37.728062 55.730713, 37.716695 55.733873, 37.707652 55.742093, 37.713459 55.743031, 37.712826 55.747938, 37.719169 55.748588, 37.72119 55.751678, 37.726243 55.751194, 37.718632 55.755744, 37.722462 55.765979, 37.71662 55.775074, 37.71971 55.776515, 37.725232 55.772232, 37.724149 55.775074, 37.729106 55.777348, 37.716311 55.781895, 37.723482 55.785152, 37.723579 55.787371, 37.718537 55.789495, 37.715397 55.79682, 37.710557 55.797507, 37.707406 55.803689, 37.702522 55.803216, 37.704172 55.806892, 37.698957 55.810867, 37.692495 55.810523, 37.699551 55.80609, 37.699409 55.80323, 37.688851 55.800338, 37.684808 55.803965, 37.685741 55.800688, 37.676723 55.792926, 37.660305 55.793119, 37.659905 55.801212, 37.662575 55.802812, 37.667291 55.801212, 37.665698 55.80462, 37.669823 55.806892, 37.666617 55.809297, 37.664596 55.806342, 37.658354 55.808128, 37.653311 55.803011, 37.657089 55.800076, 37.651033 55.797804, 37.656779 55.794244, 37.640342 55.794036, 37.634278 55.797558, 37.633561 55.790986, 37.628003 55.787577, 37.629452 55.785304, 37.624172 55.78452, 37.622128 55.786453, 37.622782 55.781539, 37.615774 55.781895, 37.618618 55.774788, 37.613055 55.773937, 37.618733 55.773152, 37.620179 55.770555, 37.616087 55.770062, 37.61883 55.765979, 37.615621 55.763704, 37.623029 55.764199, 37.623529 55.754606, 37.629742 55.754884, 37.630686 55.753469, 37.623295 55.752824, 37.620129 55.749452, 37.609065 55.746045, 37.609088 55.743842, 37.612619 55.744368, 37.6116 55.740705, 37.615199 55.739817, 37.613887 55.737441, 37.622613 55.737802, 37.624911 55.730713, 37.622502 55.729575, 37.630235 55.728383, 37.63832 55.730918, 37.642852 55.72985, 37.644384 55.722691, 37.648426 55.727577, 37.648448 55.726173, 37.655277 55.725466, 37.654394 55.721607, 37.657089 55.720469, 37.656129 55.728437, 37.66084 55.72746, 37.661302 55.71933, 37.658532 55.720089, 37.657955 55.718192, 37.660469 55.715868, 37.663352 55.716353, 37.662531 55.712474, 37.664596 55.7122, 37.665951 55.717429, 37.672681 55.719777, 37.677532 55.714776, 37.673691 55.71193, 37.677025 55.712329)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        },
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.671425 55.740524, 37.677274 55.74323, 37.673018 55.744368, 37.674036 55.745881, 37.679827 55.746643, 37.67066 55.748597, 37.674355 55.752331, 37.672919 55.758018, 37.679722 55.755744, 37.676779 55.753469, 37.678744 55.751896, 37.684294 55.756033, 37.690939 55.755706, 37.697676 55.758018, 37.696935 55.761974, 37.691458 55.760623, 37.688325 55.762567, 37.688851 55.76661, 37.684446 55.765979, 37.688567 55.770527, 37.688667 55.776211, 37.676723 55.774751, 37.677075 55.778683, 37.667894 55.778903, 37.669116 55.775942, 37.647488 55.772191, 37.646015 55.76917, 37.660944 55.760073, 37.655016 55.756585, 37.654889 55.750969, 37.648426 55.753371, 37.64191 55.748919, 37.646405 55.747078, 37.648008 55.749154, 37.651784 55.748919, 37.65449 55.745885, 37.6612 55.74587, 37.658532 55.743055, 37.664596 55.741042, 37.669263 55.742444, 37.671425 55.740524)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        }
+    ],
+    "format": "wkt",
+    "transport": "driving",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+</details>
+
+## Направление движения {#reverse}
+
+По умолчанию при построении зоны доступности используется направление движения **от** заданной точки: строится область, в которую можно попасть из точки за указанное время. Вы можете строить обратные зоны доступности и рассчитывать области, от границ которых можно попасть за указанное время **до** заданной точки.
+
+:::note[Ограничение по типу транспорта]
+
+Параметр направления движения `reverse` не поддерживается для общественного транспорта (`"transport": "public_transport"`).
+
+:::
+
+Пример зон доступности для автомобиля со временем в пути 10 минут для разных направлений движения:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Isochrone API</title>
+    <meta name="description" content="Построение зон доступности с разным направлением движения" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        select {
+            border: 0;
+            padding: 4px 10px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div id="tooltip"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const reqUrl = \`https://routing.api.2gis.com/isochrone/2.0.0?key=Your directions API access key\`;
+        const start = {
+            lat: 55.762590,
+            lon: 37.668598,
+        };
+
+        const map = new mapgl.Map('container', {
+            center: [start.lon, start.lat],
+            zoom: 11,
+            key: 'Your API access key',
+        });
+
+        const controlsHtml = \`<div class="controls">
+                <select name="reverse">
+                    <option value="to">К точке</option>
+                    <option value="from" selected>От точки</option>
+                </select>
+            </div>\`;
+        new mapgl.Control(map, controlsHtml, {
+            position: "topLeft"
+        });
+        const reverseSelectEl = document.querySelector('select[name="reverse"]');
+        const startMarker = new mapgl.Marker(map, {
+            coordinates: [start.lon, start.lat]
+        });
+        let polygon;
+        function renderGeometries(geometry) {
+            if (polygon) {
+                polygon.destroy();
+            }
+            const coordinates = geometry
+                .replace("MULTIPOLYGON(((", "")
+                .replace(")))", "")
+                .split(",")
+                .map((point) => point.trim().split(" ").map(Number));
+            polygon = new mapgl.Polygon(map, {
+                coordinates: [coordinates],
+                strokeWidth: 3,
+                strokeColor: "#bb0000",
+                fillColor: "rgba(187, 0, 0, 0.3)"
+            });
+        }
+        window.addEventListener("change", (evt) => {
+            if (
+                evt.target.name === "reverse"
+            ) {
+                updateGeometries();
+            }
+        });
+        updateGeometries();
+        function updateGeometries() {
+            const reverse = reverseSelectEl.value === "to";
+            fetch(reqUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    start,
+                    durations: [600],
+                    transport: "driving",
+                    reverse,
+                    format: "wkt",
+                    start_time: new Date().toISOString()
+                })
+            })
+                .then((res) => res.json())
+                .then((parsed) => {
+                    if (parsed.isochrones && parsed.isochrones.length > 0) {
+                        renderGeometries(parsed.isochrones[0].geometry);
+                    } else {
+                        console.error("Изохроны не найдены в ответе");
+                    }
+                })
+                .catch((err) => console.error("Ошибка при получении данных изохронов:", err));
+        }
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+### От точки {#from}
+
+Чтобы построить зону доступности, до границ которой можно добраться из заданной точки за определённое время, отправьте POST-запрос на [/isochrone/2.0.0](/api/navigation/isochrone/reference/isochrone_200) со следующими параметрами:
+
+* `durations` (обязательный параметр) — время в пути.
+* `start` (обязательный параметр) — координаты точки (широта и долгота).
+* `"reverse": "false"` — направление движения: от заданной точки.
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "durations": [600],
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    },
+    "reverse": false
+}'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.671764 55.740333, 37.677047 55.743182, 37.674359 55.745699, 37.679428 55.746461, 37.672282 55.749468, 37.674679 55.752149, 37.672818 55.757941, 37.680038 55.755562, 37.677014 55.753287, 37.679068 55.752078, 37.685132 55.756095, 37.697976 55.758974, 37.697468 55.761366, 37.691195 55.760907, 37.687186 55.76466, 37.689599 55.766934, 37.686716 55.768071, 37.688758 55.770345, 37.686293 55.773755, 37.689238 55.777202, 37.686974 55.777266, 37.677047 55.773514, 37.674489 55.775194, 37.678057 55.776029, 37.67729 55.778439, 37.666941 55.778839, 37.669411 55.775777, 37.658159 55.773363, 37.654813 55.775107, 37.644707 55.769939, 37.649316 55.76839, 37.655345 55.761547, 37.661115 55.761248, 37.656087 55.759394, 37.65522 55.750783, 37.648613 55.753364, 37.642261 55.748737, 37.646729 55.746949, 37.648167 55.749065, 37.653306 55.749026, 37.654813 55.746288, 37.657753 55.746979, 37.658631 55.742922, 37.671764 55.740333)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        }
+    ],
+    "format": "wkt",
+    "transport": "driving",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+</details>
+
+### К точке {#to}
+
+Чтобы построить зону доступности, от границ которой можно добраться до заданной точки за определённое время, отправьте POST-запрос на [/isochrone/2.0.0](/api/navigation/isochrone/reference/isochrone_200) со следующими параметрами:
+
+* `durations` (обязательный параметр) — время в пути.
+* `start` (обязательный параметр) — координаты точки (широта и долгота).
+* `"reverse": "true"` — направление движения: к заданной точке.
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "durations": [600],
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    },
+    "reverse": true
+}'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.656899 55.747563, 37.660877 55.750941, 37.667082 55.749795, 37.666481 55.752408, 37.673954 55.751615, 37.673004 55.758021, 37.679624 55.755875, 37.677047 55.750878, 37.685132 55.755923, 37.689961 55.755562, 37.68713 55.750999, 37.693216 55.753925, 37.697259 55.749726, 37.695551 55.753287, 37.699438 55.754335, 37.698567 55.755963, 37.707574 55.754306, 37.702249 55.758974, 37.707603 55.760111, 37.700529 55.766934, 37.70743 55.771482, 37.701017 55.771641, 37.697259 55.767674, 37.694706 55.770345, 37.704189 55.777166, 37.697453 55.782959, 37.685132 55.777203, 37.674788 55.779573, 37.670553 55.778061, 37.673408 55.780576, 37.666941 55.782937, 37.662743 55.781713, 37.669308 55.775834, 37.656835 55.773434, 37.650771 55.776132, 37.647434 55.771085, 37.642349 55.770534, 37.649359 55.766934, 37.64437 55.767123, 37.640481 55.763522, 37.643417 55.760111, 37.638644 55.758136, 37.645137 55.758078, 37.648264 55.755562, 37.646587 55.75207, 37.655458 55.751375, 37.654687 55.747599, 37.656899 55.747563)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        }
+    ],
+    "format": "wkt",
+    "transport": "driving",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+</details>
+
+## Способы передвижения {#transport}
+
+По умолчанию в запросе для построения зон доступности передаётся значение параметра `"transport": "driving"` (способ передвижения на автомобиле). Вы можете строить зоны доступности для других способов передвижения.
+
+Пример зон доступности со временем в пути 10 минут для разных способов передвижения:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Isochrone API</title>
+    <meta name="description" content="Построение зон доступности для разных видов транспорта" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        select {
+            border: 0;
+            padding: 4px 10px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div id="tooltip"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const reqUrl = \`https://routing.api.2gis.com/isochrone/2.0.0?key=Your directions API access key\`;
+        const start = {
+            lat: 55.762590,
+            lon: 37.668598,
+        };
+
+        const map = new mapgl.Map('container', {
+            center: [start.lon, start.lat],
+            zoom: 11,
+            key: 'Your API access key',
+        });
+
+        const controlsHtml = \`<div class="controls">
+                <select name="transport">
+                    <option value="walking">Пешком</option>
+                    <option value="driving" selected>На автомобиле</option>
+                    <option value="bicycle">На велосипеде</option>
+                    <option value="public_transport">На общественном транспорте</option>
+                </select>
+            </div>\`;
+        new mapgl.Control(map, controlsHtml, {
+            position: "topLeft"
+        });
+        const transportSelectEl = document.querySelector('select[name="transport"]');
+        const startMarker = new mapgl.Marker(map, {
+            coordinates: [start.lon, start.lat]
+        });
+        let polygons_on_map = [];
+        function renderGeometries(geometry) {
+            for (let polygon_on_map of polygons_on_map) {
+                polygon_on_map.destroy();
+            }
+            polygons_on_map = [];
+
+            let polygon_groups = [];
+
+            const wkt_polygon_groups = geometry.replace("MULTIPOLYGON(((", "((").replace(")))", "))").split(")), ");
+            for (let wkt_polygon_group_str of wkt_polygon_groups)
+            {    
+                wkt_polygon_group_str = wkt_polygon_group_str.indexOf("))") == -1 ? wkt_polygon_group_str + "))" : wkt_polygon_group_str;
+                const wkt_polygon_group = wkt_polygon_group_str.replace("((", "(").replace("))", ")").split("), ");
+                
+                let polygon_group = [];
+                for (let wkt_polygon_str of wkt_polygon_group)
+                {
+                    wkt_polygon_str = wkt_polygon_str.indexOf(")") == -1 ? wkt_polygon_str + ")" : wkt_polygon_str;
+                    let polygon = wkt_polygon_str.replace("(", "").replace(")", "").split(",").map((point) => point.trim().split(" ").map(Number));
+
+                    polygon_group.push(polygon);
+                }    
+
+                polygon_groups.push(polygon_group);
+            }
+
+            for (let polygon_group of polygon_groups)
+            {
+                polygon_on_map = new mapgl.Polygon(map, {
+                    coordinates: polygon_group,
+                    strokeWidth: 3,
+                    strokeColor: "#bb0000",
+                    fillColor: "rgba(187, 0, 0, 0.3)"
+                });
+
+                polygons_on_map.push(polygon_on_map);
+            }
+        }
+        window.addEventListener("change", (evt) => {
+            if (
+                evt.target.name === "transport"
+            ) {
+                updateGeometries();
+            }
+        });
+        updateGeometries();
+        function updateGeometries() {
+            const transport = transportSelectEl.value;
+            fetch(reqUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    start,
+                    durations: [600],
+                    transport,
+                    reverse: false,
+                    format: "wkt",
+                    start_time: new Date().toISOString()
+                })
+            })
+                .then((res) => res.json())
+                .then((parsed) => {
+                    if (parsed.isochrones && parsed.isochrones.length > 0) {
+                        renderGeometries(parsed.isochrones[0].geometry);
+                    } else {
+                        console.error("Изохроны не найдены в ответе");
+                    }
+                })
+                .catch((err) => console.error("Ошибка при получении данных изохронов:", err));
+        }
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+### Пешком {#on-foot}
+
+Чтобы построить зону доступности для способа передвижения пешком, отправьте POST-запрос на [/isochrone/2.0.0](/api/navigation/isochrone/reference/isochrone_200) со следующими параметрами:
+
+* `durations` (обязательный параметр) — время в пути.
+* `start` (обязательный параметр) — координаты точки (широта и долгота).
+* `"transport": "walking"` — способ передвижения: пешком.
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "durations": [600],
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    },
+    "transport": "walking"
+}'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.662471 55.758456, 37.667496 55.760177, 37.668562 55.759173, 37.674189 55.759444, 37.674698 55.76219, 37.679468 55.762539, 37.679533 55.763729, 37.675547 55.764126, 37.677111 55.765137, 37.67694 55.767324, 37.675749 55.766934, 37.674109 55.768258, 37.668562 55.769329, 37.665867 55.767869, 37.664 55.768209, 37.663388 55.767037, 37.661376 55.767403, 37.659616 55.766632, 37.656536 55.76261, 37.658681 55.76194, 37.659749 55.762706, 37.661168 55.758567, 37.662471 55.758456)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        }
+    ],
+    "format": "wkt",
+    "transport": "walking",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+</details>
+
+### На автомобиле {#car}
+
+По умолчанию при построении зоны доступности для способа передвижения на автомобиле (`"transport": "driving"`) используется информация о текущих пробках. Чтобы для расчёта использовалась информация о статистических пробках, укажите [время отправления](#start-time).
+
+Чтобы построить зону доступности для автомобиля, отправьте POST-запрос на [/isochrone/2.0.0](/api/navigation/isochrone/reference/isochrone_200) со следующими параметрами:
+
+* `durations` (обязательный параметр) — время в пути.
+* `start` (обязательный параметр) — координаты точки (широта и долгота).
+* `"transport": "driving"` — способ передвижения: на автомобиле.
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "durations": [600],
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    },
+    "transport": "driving"
+}'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.671829 55.740296, 37.678057 55.743048, 37.674366 55.745695, 37.679428 55.746461, 37.672291 55.749473, 37.67468 55.752149, 37.672818 55.757941, 37.680023 55.755562, 37.676981 55.753287, 37.679068 55.752046, 37.685132 55.756087, 37.697641 55.757836, 37.697259 55.762304, 37.691195 55.76091, 37.687249 55.76466, 37.68964 55.766934, 37.686718 55.768071, 37.688868 55.770345, 37.686293 55.773755, 37.689174 55.777734, 37.677047 55.773512, 37.674479 55.7752, 37.677241 55.778412, 37.666941 55.778597, 37.668962 55.775589, 37.662898 55.77566, 37.658151 55.773359, 37.654813 55.775055, 37.644707 55.769939, 37.649316 55.76839, 37.655345 55.761547, 37.661115 55.761248, 37.656105 55.759384, 37.655218 55.750784, 37.64859 55.753377, 37.642385 55.748567, 37.646729 55.746932, 37.648172 55.749062, 37.653297 55.749021, 37.654813 55.746219, 37.658711 55.74638, 37.658599 55.742904, 37.671829 55.740296)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        }
+    ],
+    "format": "wkt",
+    "transport": "driving",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+</details>
+
+### На велосипеде {#bicycle}
+
+Чтобы построить зону доступности для велосипеда, отправьте POST-запрос на [/isochrone/2.0.0](/api/navigation/isochrone/reference/isochrone_200) со следующими параметрами:
+
+* `durations` (обязательный параметр) — время в пути.
+* `start` (обязательный параметр) — координаты точки (широта и долгота).
+* `"transport": "bicycle"` — способ передвижения: на велосипеде.
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "durations": [600],
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    },
+    "transport": "bicycle"
+}'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.667264 55.748934, 37.666927 55.752646, 37.673416 55.752915, 37.670845 55.757465, 37.67228 55.758244, 37.672603 55.756707, 37.677707 55.755154, 37.680402 55.756555, 37.688936 55.756454, 37.68877 55.758223, 37.691182 55.759277, 37.692529 55.757591, 37.697245 55.758981, 37.69338 55.761734, 37.692486 55.765046, 37.6871 55.764266, 37.687099 55.765069, 37.688206 55.765204, 37.688168 55.766741, 37.689957 55.768078, 37.690043 55.770352, 37.68556 55.772496, 37.685547 55.774004, 37.67865 55.775658, 37.673311 55.775459, 37.67198 55.777173, 37.666927 55.776781, 37.66019 55.773861, 37.657127 55.7749, 37.647877 55.771868, 37.642956 55.764288, 37.645132 55.763397, 37.645353 55.758973, 37.650348 55.757993, 37.652217 55.753673, 37.667264 55.748934)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        }
+    ],
+    "format": "wkt",
+    "transport": "bicycle",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+</details>
+
+### На общественном транспорте {#public-transport}
+
+По умолчанию зоны доступности строятся для всех доступных видов общественного транспорта. Вы можете выбрать определённые виды общественного транспорта: метро, трамвай, автобус, троллейбус и другие.
+
+В некоторых случаях результат может представлять несколько полигонов, в том числе несплошных: с вырезанными полигонами внутри. Например, за 10 минут на метро вы можете добраться до отдалённой области, поэтому в результат будет включена эта область. Также в результат включится область вокруг заданной стартовой точки (станции метро).
+
+Пример зон доступности со временем в пути 20 минут для разных видов общественного транспорта:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Isochrone API</title>
+    <meta name="description" content="Построение зон доступности для разных видов общественного транспорта" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        select {
+            border: 0;
+            padding: 4px 10px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div id="tooltip"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const reqUrl = \`https://routing.api.2gis.com/isochrone/2.0.0?key=Your directions API access key\`;
+        const start = {
+            lat: 55.762590,
+            lon: 37.668598,
+        };
+
+        const map = new mapgl.Map('container', {
+            center: [start.lon, start.lat],
+            zoom: 13,
+            key: 'Your API access key',
+        });
+
+        const controlsHtml = \`<div class="controls">
+            <select name="publicTransportTypes" id="publicTransportTypesSelect">
+                                <option value="metro">Метро</option>
+                                <option value="tram">Трамвай</option>
+                                <option value="bus" selected>Автобус</option>
+                                <option value="trolleybus">Троллейбус</option>
+                            </select>
+        </div>\`;
+        new mapgl.Control(map, controlsHtml, {
+            position: "topLeft"
+        });
+        const publicTransportTypesSelectEl = document.querySelector('select[name="publicTransportTypes"]');
+        const startMarker = new mapgl.Marker(map, {
+            coordinates: [start.lon, start.lat]
+        });
+        let polygons_on_map = [];
+        function renderGeometries(geometry) {
+            for (let polygon_on_map of polygons_on_map) {
+                polygon_on_map.destroy();
+            }
+            polygons_on_map = [];
+
+            let polygon_groups = [];
+
+            const wkt_polygon_groups = geometry.replace("MULTIPOLYGON(((", "((").replace(")))", "))").split(")), ");
+            for (let wkt_polygon_group_str of wkt_polygon_groups)
+            {    
+                wkt_polygon_group_str = wkt_polygon_group_str.indexOf("))") == -1 ? wkt_polygon_group_str + "))" : wkt_polygon_group_str;
+                const wkt_polygon_group = wkt_polygon_group_str.replace("((", "(").replace("))", ")").split("), ");
+                
+                let polygon_group = [];
+                for (let wkt_polygon_str of wkt_polygon_group)
+                {
+                    wkt_polygon_str = wkt_polygon_str.indexOf(")") == -1 ? wkt_polygon_str + ")" : wkt_polygon_str;
+                    let polygon = wkt_polygon_str.replace("(", "").replace(")", "").split(",").map((point) => point.trim().split(" ").map(Number));
+
+                    polygon_group.push(polygon);
+                }    
+
+                polygon_groups.push(polygon_group);
+            }
+
+            for (let polygon_group of polygon_groups)
+            {
+                polygon_on_map = new mapgl.Polygon(map, {
+                    coordinates: polygon_group,
+                    strokeWidth: 3,
+                    strokeColor: "#bb0000",
+                    fillColor: "rgba(187, 0, 0, 0.3)"
+                });
+
+                polygons_on_map.push(polygon_on_map);
+            }
+        }
+        window.addEventListener("change", (evt) => {
+            if (
+                evt.target.name === "publicTransportTypes"
+            ) {
+                updateGeometries();
+            }
+        });
+        updateGeometries();
+        function updateGeometries() {
+            const publicTransportTypes = [publicTransportTypesSelectEl.value];
+            fetch(reqUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    start,
+                    durations: [1200],
+                    transport: "public_transport",
+                    public_transport_types: publicTransportTypes,
+                    reverse: false,
+                    format: "wkt",
+                    start_time: new Date().toISOString()
+                })
+            })
+                .then((res) => res.json())
+                .then((parsed) => {
+                    if (parsed.isochrones && parsed.isochrones.length > 0) {
+                        renderGeometries(parsed.isochrones[0].geometry);
+                    } else {
+                        console.error("Изохроны не найдены в ответе");
+                    }
+                })
+                .catch((err) => console.error("Ошибка при получении данных изохронов:", err));
+        }
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+Чтобы построить зону доступности для общественного транспорта, отправьте POST-запрос на [/isochrone/2.0.0](/api/navigation/isochrone/reference/isochrone_200) со следующими параметрами:
+
+* `durations` (обязательный параметр) — время в пути.
+* `start` (обязательный параметр) — координаты точки (широта и долгота).
+* `"transport": "public_transport"` — способ передвижения: на общественном транспорте.
+* `"public_transport_types": ["tram", "bus"]` — массив видов общественного транспорта. Например `tram` — трамвай, `bus` — автобус. Полный список видов общественного транспорта см. в описании параметра [public\_transport\_types](/api/navigation/isochrone/reference/isochrone_200#:~:text=public_transport_types) в Справочнике API. Если параметр не указан, будут построены зоны доступности для всех доступных видов общественного транспорта.
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "durations": [600],
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    },
+    "transport": "public_transport",
+    "public_transport_types": ["tram", "bus"]
+}'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.663459 55.758652, 37.667736 55.760289, 37.668789 55.758787, 37.670585 55.760282, 37.671483 55.759125, 37.674615 55.759697, 37.674067 55.762287, 37.677992 55.7621, 37.680445 55.763235, 37.675764 55.764245, 37.677279 55.767278, 37.672382 55.768751, 37.666992 55.769137, 37.666094 55.768068, 37.661313 55.76744, 37.658315 55.765084, 37.655113 55.764358, 37.658009 55.761741, 37.659935 55.762802, 37.660893 55.758686, 37.663459 55.758652)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859801566192,
+                    "lat": 55.762589995531236
+                }
+            ]
+        }
+    ],
+    "format": "wkt",
+    "transport": "public_transport",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+</details>
+
+## Время отправления {#start-time}
+
+При построении зоны доступности вы можете указать время отправления для следующих способов передвижения:
+
+* На автомобиле (`"transport": "driving"`). Если вы укажете дату и время начала движения, для расчёта будет использоваться информация о статистических пробках.
+* На общественном транспорте (`"transport": "public_transport"`). При расчёте учитывается расписание транспорта. Если вы укажете дату и время начала движения, когда общественный транспорт недоступен, будет построена зона доступности для пешехода.
+
+Пример зон доступности для автомобиля со временем в пути 10 минут для разного времени отправления:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Isochrone API</title>
+    <meta name="description" content="Построение зон доступности с разным временем начала движения" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        select {
+            border: 0;
+            padding: 4px 10px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div id="tooltip"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const reqUrl = \`https://routing.api.2gis.com/isochrone/2.0.0?key=Your directions API access key\`;
+        const start = {
+            lat: 55.762590,
+            lon: 37.668598,
+        };
+
+        const map = new mapgl.Map('container', {
+            center: [start.lon, start.lat],
+            zoom: 11,
+            key: 'Your API access key',
+        });
+
+        const controlsHtml = \`<div class="controls">
+        <select name="start_time">
+            <option value="2025-05-15T18:00:00Z" selected>18:00</option>
+            <option value="2025-05-15T00:00:00Z">00:00</option>
+        </select>
+    </div>\`;
+        new mapgl.Control(map, controlsHtml, {
+            position: "topLeft"
+        });
+        const startSelectEl = document.querySelector('select[name="start_time"]');
+        const startMarker = new mapgl.Marker(map, {
+            coordinates: [start.lon, start.lat]
+        });
+        let polygon;
+        function renderGeometries(geometry) {
+            if (polygon) {
+                polygon.destroy();
+            }
+            const coordinates = geometry
+                .replace("MULTIPOLYGON(((", "")
+                .replace(")))", "")
+                .split(",")
+                .map((point) => point.trim().split(" ").map(Number));
+            polygon = new mapgl.Polygon(map, {
+                coordinates: [coordinates],
+                strokeWidth: 3,
+                strokeColor: "#bb0000",
+                fillColor: "rgba(187, 0, 0, 0.3)"
+            });
+        }
+        window.addEventListener("change", (evt) => {
+            if (
+                evt.target.name === "start_time"
+            ) {
+                updateGeometries();
+            }
+        });
+        updateGeometries();
+        function updateGeometries() {
+            const start_time = startSelectEl.value;
+            fetch(reqUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    start,
+                    start_time,
+                    durations: [600],
+                    transport: "driving",
+                    reverse: false,
+                    format: "wkt"
+                })
+            })
+                .then((res) => res.json())
+                .then((parsed) => {
+                    if (parsed.isochrones && parsed.isochrones.length > 0) {
+                        renderGeometries(parsed.isochrones[0].geometry);
+                    } else {
+                        console.error("Изохроны не найдены в ответе");
+                    }
+                })
+                .catch((err) => console.error("Ошибка при получении данных изохронов:", err));
+        }
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+Чтобы построить зону доступности в зависимости от времени отправления, отправьте POST-запрос на [/isochrone/2.0.0](/api/navigation/isochrone/reference/isochrone_200) со следующими параметрами:
+
+* `durations` (обязательный параметр) — время в пути.
+* `start` (обязательный параметр) — координаты точки (широта и долгота).
+* `start_time` — дата и время начала движения в формате RFC 3339 (например, `2025-05-15T15:52:01Z`).
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "durations": [600],
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    },
+    "start_time": "2025-05-15T15:52:01Z"
+}'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.671208 55.739509, 37.677202 55.744186, 37.674328 55.745716, 37.681215 55.746461, 37.672174 55.748269, 37.675025 55.752952, 37.677047 55.750102, 37.68311 55.751296, 37.685132 55.749672, 37.691195 55.753719, 37.69928 55.746024, 37.699907 55.748737, 37.696281 55.752149, 37.701366 55.753287, 37.698661 55.75591, 37.708965 55.754424, 37.702312 55.757836, 37.702456 55.759461, 37.70743 55.760111, 37.700476 55.763522, 37.702986 55.76466, 37.701301 55.770297, 37.696515 55.768071, 37.696646 55.771826, 37.701301 55.771585, 37.703322 55.778151, 37.692397 55.771021, 37.688406 55.772619, 37.695238 55.780827, 37.68311 55.776455, 37.677793 55.778722, 37.670465 55.778011, 37.664919 55.78063, 37.659388 55.776867, 37.652792 55.775725, 37.640665 55.780765, 37.63921 55.777984, 37.631005 55.778303, 37.630559 55.774503, 37.628538 55.778505, 37.623187 55.774491, 37.620453 55.777621, 37.619145 55.774491, 37.608792 55.773755, 37.622474 55.773124, 37.624495 55.771378, 37.627135 55.772967, 37.632484 55.771482, 37.634757 55.76912, 37.632369 55.766934, 37.636398 55.764533, 37.642686 55.766291, 37.644707 55.76447, 37.655005 55.76363, 37.657665 55.757836, 37.655188 55.750801, 37.650165 55.751808, 37.64875 55.754301, 37.64723 55.75073, 37.642642 55.751037, 37.636496 55.747599, 37.653405 55.746806, 37.651937 55.740291, 37.659513 55.742679, 37.671208 55.739509)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        }
+    ],
+    "format": "wkt",
+    "transport": "driving",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+</details>
+
+## Детализация полигонов {#detailing}
+
+Вы можете указать уровень детализации отрисовки полигонов при построении зон доступности: количество точек, по которым строятся многоугольники. Доступные значения уровня детализации — диапазон чисел с плавающей точкой от `0` (минимальная детализация) до `1` (максимальная детализация). Чем выше уровень детализации, тем сложнее форма полигона, размер геометрии в ответе и скорость выполнения запроса.
+
+Пример зон доступности для автомобиля со временем в пути 10 минут с разным уровнем детализации полигонов:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Isochrone API</title>
+    <meta name="description" content="Построение зон доступности с разным уровнем детализации" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        select {
+            border: 0;
+            padding: 4px 10px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div id="tooltip"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const reqUrl = \`https://routing.api.2gis.com/isochrone/2.0.0?key=Your directions API access key\`;
+        const start = {
+            lat: 55.762590,
+            lon: 37.668598,
+        };
+
+        const map = new mapgl.Map('container', {
+            center: [start.lon, start.lat],
+            zoom: 13,
+            key: 'Your API access key',
+        });
+
+        const controlsHtml = \`<div class="controls">
+                    <select name="detailing">
+                        <option value="0" selected>Уровень детализации 0</option>
+                        <option value="0.5">Уровень детализации 0.5</option>
+                        <option value="1">Уровень детализации 1</option>
+                    </select>
+                </div>\`;
+        new mapgl.Control(map, controlsHtml, {
+            position: "topLeft"
+        });
+
+        const detailingSelectEl = document.querySelector('select[name="detailing"]');
+
+        const startMarker = new mapgl.Marker(map, {
+            coordinates: [start.lon, start.lat]
+        });
+
+        let polygon;
+        function renderGeometries(geometry) {
+            if (polygon) {
+                polygon.destroy();
+            }
+            const coordinates = geometry
+                .replace("MULTIPOLYGON(((", "")
+                .replace(")))", "")
+                .split(",")
+                .map((point) => point.trim().split(" ").map(Number));
+            polygon = new mapgl.Polygon(map, {
+                coordinates: [coordinates],
+                strokeWidth: 3,
+                strokeColor: "#bb0000",
+                fillColor: "rgba(187, 0, 0, 0.3)"
+            });
+        }
+
+        window.addEventListener("change", (evt) => {
+            if (
+                evt.target.name === "detailing"
+            ) {
+                updateGeometries();
+            }
+        });
+        updateGeometries();
+
+        function updateGeometries() {
+            const detailing = parseFloat(detailingSelectEl.value);
+
+            fetch(reqUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    start,
+                    durations: [600],
+                    transport: "driving",
+                    reverse: false,
+                    detailing,
+                    format: "wkt",
+                    start_time: new Date().toISOString()
+                })
+            })
+                .then((res) => res.json())
+                .then((parsed) => {
+                    if (parsed.isochrones && parsed.isochrones.length > 0) {
+                        renderGeometries(parsed.isochrones[0].geometry);
+                    } else {
+                        console.error("Изохроны не найдены в ответе");
+                    }
+                })
+                .catch((err) => console.error("Ошибка при получении данных изохронов:", err));
+        }
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+Чтобы указать уровень детализации при построении зоны доступности, отправьте POST-запрос на [/isochrone/2.0.0](/api/navigation/isochrone/reference/isochrone_200) со следующими параметрами:
+
+* `durations` (обязательный параметр) — время в пути.
+* `start` (обязательный параметр) — координаты точки (широта и долгота).
+* `detailing` — уровень детализации полигона от 0 до 1 (`0` — минимальная детализация, `1` — максимальная детализация).
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "durations": [600],
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    },
+    "detailing": 1
+}'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.671769 55.74071, 37.67138 55.742066, 37.673447 55.74216, 37.673678 55.741847, 37.673927 55.742529, 37.674801 55.742669, 37.673964 55.74283, 37.674045 55.743221, 37.676415 55.743807, 37.674352 55.743912, 37.673678 55.743567, 37.67143 55.743679, 37.670826 55.74617, 37.672537 55.746577, 37.673485 55.744945, 37.672138 55.744565, 37.673678 55.744494, 37.674125 55.746589, 37.679164 55.746461, 37.679068 55.74687, 37.676373 55.746978, 37.675699 55.747372, 37.675025 55.747003, 37.673422 55.747076, 37.673004 55.747491, 37.672134 55.747109, 37.671145 55.747599, 37.671657 55.748547, 37.669891 55.747076, 37.66916 55.747599, 37.670074 55.749874, 37.671929 55.750859, 37.674026 55.753287, 37.671896 55.756699, 37.671741 55.758547, 37.672347 55.758983, 37.677579 55.758974, 37.676838 55.756961, 37.680415 55.756856, 37.682058 55.75632, 37.68198 55.755818, 37.678895 55.754142, 37.678861 55.753024, 37.677768 55.752908, 37.678394 55.75251, 37.685658 55.757919, 37.688327 55.756602, 37.691195 55.756278, 37.686326 55.758508, 37.686931 55.758974, 37.686319 55.76049, 37.687053 55.760925, 37.693429 55.759093, 37.69127 55.757078, 37.691746 55.757009, 37.69389 55.758422, 37.697259 55.757963, 37.69728 55.758215, 37.69681 55.758721, 37.69558 55.758787, 37.69487 55.759353, 37.696697 55.760869, 37.696657 55.761587, 37.69727 55.761627, 37.696563 55.761639, 37.696347 55.761003, 37.69389 55.759534, 37.687725 55.76157, 37.686249 55.764909, 37.682999 55.76466, 37.68499 55.767313, 37.684978 55.76845, 37.686296 55.769208, 37.686268 55.770463, 37.688258 55.770724, 37.686108 55.771103, 37.687195 55.771482, 37.686479 55.77256, 37.686111 55.771688, 37.685132 55.771511, 37.68465 55.771861, 37.685567 55.773889, 37.687848 55.774892, 37.687995 55.776692, 37.688528 55.776771, 37.688522 55.777178, 37.68841 55.776838, 37.687767 55.77682, 37.687616 55.776526, 37.686361 55.776474, 37.68333 55.774769, 37.676373 55.772917, 37.672071 55.776029, 37.673678 55.776966, 37.676598 55.776282, 37.675318 55.777545, 37.676373 55.778235, 37.677586 55.777924, 37.677099 55.778332, 37.674352 55.778088, 37.670983 55.776652, 37.669879 55.777682, 37.668454 55.778396, 37.667558 55.778713, 37.666941 55.778757, 37.667015 55.778639, 37.667513 55.778625, 37.669172 55.777284, 37.669876 55.776029, 37.667113 55.774416, 37.665295 55.77506, 37.665593 55.774027, 37.664246 55.774009, 37.663266 55.774685, 37.663678 55.772559, 37.662779 55.772552, 37.661551 55.773629, 37.661007 55.772924, 37.658856 55.772477, 37.655283 55.772504, 37.654326 55.774134, 37.654886 55.774852, 37.655712 55.774892, 37.654813 55.77491, 37.654012 55.774513, 37.65435 55.7725, 37.652118 55.772758, 37.651738 55.772075, 37.65035 55.771861, 37.651926 55.771482, 37.651017 55.770585, 37.649423 55.770875, 37.648365 55.769803, 37.645477 55.769966, 37.64532 55.769587, 37.649604 55.768551, 37.649809 55.767909, 37.653552 55.765845, 37.653709 55.765176, 37.656226 55.763938, 37.65634 55.762486, 37.660203 55.76281, 37.662277 55.762036, 37.661722 55.760207, 37.662727 55.760207, 37.663572 55.761293, 37.666941 55.760914, 37.66769 55.76049, 37.667776 55.759065, 37.6688 55.759065, 37.668909 55.759761, 37.671491 55.760204, 37.671571 55.761248, 37.671485 55.761531, 37.668288 55.761582, 37.668242 55.762032, 37.672187 55.762466, 37.673054 55.763551, 37.672418 55.760111, 37.668355 55.757799, 37.664463 55.757335, 37.663695 55.755182, 37.662898 55.754729, 37.661451 55.754747, 37.661219 55.755754, 37.659319 55.755941, 37.661316 55.75632, 37.660445 55.75911, 37.658631 55.758847, 37.657508 55.759678, 37.657905 55.758974, 37.657177 55.758595, 37.6566 55.755182, 37.654118 55.754424, 37.655487 55.754365, 37.656161 55.754695, 37.656631 55.754424, 37.655124 55.752528, 37.655753 55.752149, 37.655165 55.750633, 37.650587 55.75015, 37.650304 55.750749, 37.648372 55.751391, 37.64803 55.752933, 37.646686 55.752149, 37.647723 55.751951, 37.64828 55.750518, 37.645426 55.750253, 37.648256 55.749773, 37.645381 55.749292, 37.644889 55.749977, 37.64336 55.75026, 37.643671 55.748941, 37.642135 55.748737, 37.645004 55.748525, 37.646729 55.747481, 37.64562 55.748737, 37.647198 55.749231, 37.650097 55.749256, 37.650771 55.74963, 37.654813 55.749358, 37.655352 55.747599, 37.654514 55.74722, 37.655487 55.746689, 37.656498 55.747599, 37.655674 55.747978, 37.655779 55.749874, 37.656704 55.750327, 37.662224 55.749964, 37.663673 55.749173, 37.664246 55.747792, 37.660877 55.749175, 37.65926 55.747372, 37.657592 55.74722, 37.658182 55.746925, 37.662224 55.747044, 37.665345 55.746461, 37.662694 55.745818, 37.660877 55.744689, 37.659742 55.744685, 37.659565 55.744964, 37.658856 55.745008, 37.658886 55.744927, 37.659417 55.744881, 37.659433 55.743428, 37.658631 55.742922, 37.661551 55.743313, 37.663572 55.741721, 37.664021 55.743048, 37.662417 55.743428, 37.666941 55.745099, 37.668571 55.743428, 37.666172 55.742343, 37.66505 55.741226, 37.667035 55.741857, 37.667288 55.742473, 37.670309 55.743223, 37.670763 55.741531, 37.669785 55.741152, 37.670309 55.740723, 37.671769 55.74071)))",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859397324314,
+                    "lat": 55.76279352485273
+                }
+            ]
+        }
+    ],
+    "format": "wkt",
+    "transport": "driving",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+</details>
+
+## Статус построения зон доступности {#calculation-status}
+
+По умолчанию в ответе API возвращается общий статус выполнения задачи по построению зон доступности для всех указанных значений времени в пути (`durations`). Чтобы получить статус построения каждой зоны отдельно, отправьте POST-запрос на [/isochrone/2.0.0](/api/navigation/isochrone/reference/isochrone_200) со следующими параметрами:
+
+* `durations` (обязательный параметр) — время в пути.
+* `start` (обязательный параметр) — координаты точки (широта и долгота).
+* `detailed_response` — флаг, который указывает, нужно ли дополнительно возвращать статус построения каждой зоны доступности.
+
+Если флаг установлен, в ответе будут возвращаться следующие статусы:
+
+- Общий статус (поле `status`):
+    
+    - `OK` — все зоны доступности построены;
+    - `partial_success` — некоторые зоны доступности не были вычислены;
+    - `build_error` — ни одна из зон доступности не была вычислена.
+
+- Статус построения каждой зоны доступности (поля `status` в массиве `isochrones`):
+
+    - `OK` — зона доступности построена;
+    - `build_error` — зона доступности не построена.
+
+**Пример запроса:**
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/isochrone/2.0.0?key=API_KEY' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "durations": [600, 1200],
+    "start": {
+        "lat": 55.76259,
+        "lon": 37.668598
+    },
+    "detailed_response": true
+}'
+```
+
+**Пример ответа:**
+
+<details>
+<summary><code>response.json</code></summary>
+
+```json
+{
+    "isochrones": [
+        {
+            "duration": 1200,
+            "geometry": "MULTIPOLYGON(((37.677276 55.712188, 37.700978 55.719607, 37.708468 55.714776, 37.712297 55.714776, 37.704717 55.72064, 37.721922 55.725748, 37.727254 55.729961, 37.733317 55.728418, 37.735338 55.730113, 37.750497 55.729575, 37.73736 55.732434, 37.728713 55.731535, 37.727254 55.73392, 37.723211 55.731521, 37.708549 55.740955, 37.714072 55.74323, 37.712463 55.747781, 37.717303 55.751194, 37.721316 55.76143, 37.72201 55.765979, 37.714278 55.772801, 37.716159 55.777348, 37.720874 55.779621, 37.715439 55.783031, 37.717391 55.785441, 37.712263 55.786441, 37.715268 55.78993, 37.707648 55.792464, 37.705215 55.797913, 37.700758 55.799063, 37.703847 55.792123, 37.696935 55.787343, 37.69229 55.787577, 37.697032 55.790986, 37.694914 55.794185, 37.691517 55.79176, 37.686528 55.792292, 37.685261 55.789596, 37.678744 55.790564, 37.676723 55.788785, 37.67066 55.792194, 37.669505 55.790986, 37.672038 55.78985, 37.669603 55.789256, 37.659976 55.792934, 37.658532 55.795494, 37.656511 55.793776, 37.645886 55.794687, 37.64564 55.792829, 37.65297 55.792404, 37.65393 55.785304, 37.662804 55.779492, 37.65449 55.776057, 37.652469 55.777959, 37.650232 55.777226, 37.640342 55.789937, 37.63832 55.786895, 37.634278 55.787996, 37.632257 55.780906, 37.630235 55.782071, 37.625301 55.77912, 37.623993 55.781995, 37.618487 55.774861, 37.611126 55.773937, 37.618532 55.773039, 37.620129 55.769227, 37.621772 55.773014, 37.624172 55.769227, 37.63097 55.771664, 37.627173 55.767116, 37.63059 55.766178, 37.631758 55.76115, 37.642363 55.761988, 37.646167 55.760293, 37.642822 55.756622, 37.63832 55.75838, 37.63832 55.754959, 37.634122 55.754606, 37.64088 55.750056, 37.633811 55.746643, 37.633893 55.744151, 37.641045 55.745902, 37.646969 55.74323, 37.643604 55.743669, 37.643879 55.739817, 37.640342 55.738842, 37.634551 55.730713, 37.644384 55.731624, 37.646405 55.73374, 37.652469 55.730676, 37.651729 55.733406, 37.656511 55.733419, 37.660554 55.730551, 37.662317 55.731851, 37.659849 55.732592, 37.65956 55.735825, 37.661766 55.732534, 37.666617 55.73134, 37.674702 55.735775, 37.684808 55.733336, 37.690872 55.736482, 37.69558 55.735265, 37.693904 55.729575, 37.702999 55.730059, 37.709063 55.725798, 37.705302 55.722587, 37.680015 55.716338, 37.673476 55.712499, 37.677276 55.712188)))",
+            "transport": "driving",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859217661257,
+                    "lat": 55.76279377755796
+                }
+            ],
+            "status": "OK"
+        },
+        {
+            "duration": 600,
+            "geometry": "MULTIPOLYGON(((37.671193 55.750894, 37.673949 55.752331, 37.671964 55.758422, 37.685377 55.757698, 37.691228 55.760293, 37.68405 55.765979, 37.686829 55.769681, 37.674175 55.774234, 37.67066 55.772454, 37.662894 55.772801, 37.663459 55.771166, 37.658111 55.76939, 37.663048 55.768519, 37.660885 55.766929, 37.656511 55.768836, 37.65229 55.767216, 37.656511 55.761445, 37.660891 55.76162, 37.662575 55.759389, 37.666763 55.760375, 37.666943 55.757835, 37.661031 55.754606, 37.671193 55.750894)))",
+            "transport": "driving",
+            "start_point": {
+                "lon": 37.66859801566192,
+                "lat": 55.762589995531236
+            },
+            "attract_points": [
+                {
+                    "lon": 37.66859217661257,
+                    "lat": 55.76279377755796
+                }
+            ],
+            "status": "OK"
+        }
+    ],
+    "format": "wkt",
+    "transport": "driving",
+    "status": "OK",
+    "generation_time": 0
+}
+```
+
+</details>

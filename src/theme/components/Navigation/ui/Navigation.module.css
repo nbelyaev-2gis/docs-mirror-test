@@ -1,0 +1,15 @@
+.layout {
+  padding: 0 var(--gap-10m);
+
+  @media screen and (--media-m) {
+    padding: 0 var(--gap-8m);
+  }
+
+  @media screen and (--media-s) {
+    padding: 0 var(--gap-4m);
+  }
+}
+
+.wrapper {
+  padding: 0;
+}

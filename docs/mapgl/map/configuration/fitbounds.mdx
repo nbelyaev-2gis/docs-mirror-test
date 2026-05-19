@@ -1,0 +1,295 @@
+---
+sidebar: mapgljsapi
+---
+# Масштабирование по границам
+
+Чтобы уместить все нужные объекты на карте, вызовите метод [fitBounds()](/mapgl/reference/class#map/fit-bounds), который автоматически изменит центр и масштаб карты в соответствии с указанными границами. Метод принимает два параметра: координаты северо-восточной точки (правый верхний угол карты) и координаты юго-западной точки (левый нижний угол карты).
+
+```js
+map.fitBounds({
+   northEast: [37.618655, 55.771005],
+   southWest: [37.612655, 55.765005],
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Масштабирование по границам" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const zoom = 16;
+            const rotation = 45;
+            const center = [37.615655, 55.768005];
+
+            const map = new mapgl.Map('container', {
+                key: 'Your API access key',
+                disableZoomOnScroll: true,
+                rotation,
+                center,
+                zoom,
+            });
+
+            const s = 0.0005;
+            const x = center[0];
+            const y = center[1];
+            const bound = [
+                [x-s, y-s],
+                [x+s, y-s],
+                [x+s, y+s],
+                [x-s, y+s],
+            ];
+            new mapgl.Polygon(map, { coordinates: [[...bound, bound[0]]] });
+
+            const control = new mapgl.Control(map, '<button>Масштабировать по границам</button>', {
+                position: 'topLeft',
+            });
+            control
+                .getContainer()
+                .querySelector('button')
+                .addEventListener('click', () => {
+                    map.fitBounds({
+                        northEast: bound[2],
+                        southWest: bound[0],
+                    });
+                });
+
+            const reset = new mapgl.Control(map, '<button>Сбросить</button>', {
+                position: 'topLeft',
+            });
+            reset
+                .getContainer()
+                .querySelector('button')
+                .addEventListener('click', () => {
+                    map
+                        .setZoom(zoom)
+                        .setCenter(center)
+                        .setRotation(rotation)
+                })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Отступы {#paddings}
+
+Если для карты были указаны отступы ([padding](/mapgl/reference/interface#map-options/padding)), они будут учтены при масштабировании по границам. Чтобы не учитывать отступы, укажите параметр `skipMapPadding`:
+
+```js
+map.fitBounds(
+    {
+        northEast: [37.618655, 55.771005],
+        southWest: [37.612655, 55.765005],
+    },
+    {
+        skipMapPadding: true,
+    },
+);
+```
+
+Вы можете указать дополнительные отступы с помощью параметра `padding`. Эти отступы будут добавлены к отступам, указанным для карты:
+
+```js
+map.fitBounds(
+    {
+        northEast: [37.618655, 55.771005],
+        southWest: [37.612655, 55.765005],
+    },
+    {
+        padding: { top: 20, left: 60, bottom: 20, right: 60 },
+    },
+);
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Отступы в масштабировании по границам" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const zoom = 16;
+            const rotation = 45;
+            const center = [37.615655, 55.768005];
+
+            const map = new mapgl.Map('container', {
+                key: 'Your API access key',
+                disableZoomOnScroll: true,
+                rotation,
+                center,
+                zoom,
+                padding: { top: 20, left: 60, bottom: 20, right: 60 }
+            });
+
+            const s = 0.0005;
+            const x = center[0];
+            const y = center[1];
+            const bound = [
+                [x-s, y-s],
+                [x+s, y-s],
+                [x+s, y+s],
+                [x-s, y+s],
+            ];
+            new mapgl.Polygon(map, { coordinates: [[...bound, bound[0]]] });
+
+            const control = new mapgl.Control(map, '<button>Масштабировать по границам</button>', {
+                position: 'topLeft',
+            });
+            control
+                .getContainer() // Получаем обёртку UI-элемента
+                .querySelector('button') // Получаем ссылку на внутренний HTML-элемент кнопки
+                .addEventListener('click', (ev) => {
+                    map.fitBounds({
+                        northEast: bound[2],
+                        southWest: bound[0],
+                    }, {
+                        padding: { top: 20, left: 60, bottom: 20, right: 60 }
+                    });
+                });
+
+            const reset = new mapgl.Control(map, '<button>Сбросить</button>', {
+                position: 'topLeft',
+            });
+            reset
+                .getContainer()
+                .querySelector('button')
+                .addEventListener('click', () => {
+                    map
+                        .setZoom(zoom)
+                        .setCenter(center)
+                        .setRotation(rotation)
+                })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Сохранение угла поворота {#keeping-rotation-angle}
+
+Чтобы сохранить угол поворота карты при масштабировании по границам, укажите параметр `considerRotation`:
+
+```js
+map.fitBounds(
+    {
+        northEast: [37.618655, 55.771005],
+        southWest: [37.612655, 55.765005],
+    },
+    {
+        considerRotation: true,
+    },
+);
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Сохранение угла поворота при масштабировании по границам" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const zoom = 16;
+            const rotation = 45;
+            const center = [37.615655, 55.768005];
+
+            const map = new mapgl.Map('container', {
+                key: 'Your API access key',
+                disableZoomOnScroll: true,
+                rotation,
+                center,
+                zoom,
+            });
+
+            const s = 0.0005;
+            const x = center[0];
+            const y = center[1];
+            const bound = [
+                [x-s, y-s],
+                [x+s, y-s],
+                [x+s, y+s],
+                [x-s, y+s],
+            ];
+            new mapgl.Polygon(map, { coordinates: [[...bound, bound[0]]] });
+
+            const control = new mapgl.Control(map, '<button>Масштабировать по границам</button>', {
+                position: 'topLeft',
+            });
+            control
+                .getContainer() // Получаем обёртку UI-элемента
+                .querySelector('button') // Получаем ссылку на внутренний HTML-элемент кнопки
+                .addEventListener('click', (ev) => {
+                    map.fitBounds({
+                        northEast: bound[2],
+                        southWest: bound[0],
+                    }, {
+                        considerRotation: true,
+                    });
+                });
+
+            const reset = new mapgl.Control(map, '<button>Сбросить</button>', {
+                position: 'topLeft',
+            });
+            reset
+                .getContainer()
+                .querySelector('button')
+                .addEventListener('click', () => {
+                    map
+                        .setZoom(zoom)
+                        .setCenter(center)
+                        .setRotation(rotation)
+                })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

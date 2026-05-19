@@ -1,0 +1,1110 @@
+---
+sidebar: mapgljsapi
+---
+# Анимация маркеров
+
+Вы можете добавлять анимацию к маркерам на карте:
+
+* [Движение по окружности](#animation-circle).
+* [Прыжок](#animation-jump) (движение вверх-вниз).
+* [Движение по заданным координатам](#animation-coordinates). Дополнительно вы можете добавить [CSS-анимацию маркера](#animation-css).
+* [Анимацию пройденного пути](#animation-traveled-path) с помощью [Polyline](/mapgl/reference/class#polyline).
+* [Анимацию HTML-маркера с помощью Lottie](#animation-lottie).
+
+Чтобы добавить анимацию к маркеру, сначала добавьте объект [Marker](/mapgl/reference/class#marker) на карту и укажите координаты центра маркера:
+
+```js
+const marker = new mapgl.Marker(map, {
+    coordinates: [37.615655, 55.768005],
+});
+```
+
+## Движение по окружности {#animation-circle}
+
+Анимация движения маркера вокруг заданной точки выполняется с помощью изменения координат маркера на окружности. Для этого вычисляются новые координаты на основе текущего времени и угла поворота.
+
+Чтобы добавить анимацию движения по окружности, используйте функцию `animateCircle`:
+
+```js
+function animateCircle(marker, centerCoords, radius, duration) {
+    const startTime = performance.now();
+
+    function frame(time) {
+        const elapsed = (time - startTime) % duration; // Время с начала текущей итерации анимации
+        const angle = (2 * Math.PI * elapsed) / duration; // Текущий угол в радианах
+
+        const newCoords = [
+            centerCoords[0] + radius * Math.cos(angle), // Вычисление долготы
+            centerCoords[1] + radius * Math.sin(angle), // Вычисление широты
+        ];
+
+        marker.setCoordinates(newCoords); // Установка новых координат маркера
+
+        requestAnimationFrame(frame); // Запуск следующего кадра анимации
+    }
+
+    requestAnimationFrame(frame);
+}
+
+// Вызов функции анимации
+animateCircle(marker, [37.615655, 55.768005], 0.01, 5000);
+```
+
+Укажите следующие параметры функции `animateCircle`:
+
+* `marker` — объект маркера, для которого будет добавлена анимация.
+* `centerCoords` — координаты центра окружности в формате `[долгота, широта]`.
+* `radius` — радиус окружности в географических координатах (в градусах).
+* `duration` — длительность одного полного оборота в миллисекундах.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Движение маркера по окружности" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+<div id="container"></div>
+<script src="__MAPGL_API_URL__"></script>
+<script>
+        const map = new mapgl.Map('container', {
+            center: [37.615655, 55.768005],
+            zoom: 10.5,
+            key: 'Your API access key',
+        });
+
+        const marker = new mapgl.Marker(map, {
+            coordinates: [37.615655, 55.768005],
+        });
+
+        const centerCoords = [37.615655, 55.768005];
+        const radius = 0.07;
+        const duration = 5000;
+
+        function animateMarkerInCircle(marker, centerCoords, radius, duration) {
+            const startTime = performance.now();
+
+            function frame(time) {
+                const elapsed = (time - startTime) % duration;
+                const angle = (2 * Math.PI * elapsed) / duration;
+                const newCoords = [
+                    centerCoords[0] + radius * Math.cos(angle),
+                    centerCoords[1] + radius * Math.sin(angle),
+                ];
+
+                marker.setCoordinates(newCoords);
+                requestAnimationFrame(frame);
+            }
+
+            requestAnimationFrame(frame);
+        }
+
+        animateMarkerInCircle(marker, centerCoords, radius, duration);
+</script>
+</body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Прыжок {#animation-jump}
+
+При анимации в виде прыжка маркер двигается вверх и вниз, создавая эффект подпрыгивания.
+
+Для выполнения анимации вычисляется смещение маркера по вертикали относительно базовых координат маркера. Чтобы прыжок выглядел одинаково не зависимо от масштаба карты и корректно при изменении положения камеры, учитывается текущий масштаб карты.
+
+Чтобы добавить анимацию в виде прыжка, используйте функцию `animateJump`:
+
+```js
+function animateJump(marker, map, baseCoords, amplitude, duration) {
+    const startTime = performance.now();
+
+    function frame(time) {
+        const elapsed = (time - startTime) % duration; // Время с начала текущей итерации анимации
+        const bounce = Math.sin((2 * Math.PI * elapsed) / duration) * amplitude; // Высота прыжка
+
+        // Преобразование географических координат в пиксельные
+        const basePixelCoords = map.project(baseCoords);
+
+        // Добавление смещения по оси Y (по вертикали) в пикселях
+        const newPixelCoords = [
+            basePixelCoords[0], // X остаётся без изменений
+            basePixelCoords[1] - bounce, // Уменьшение Y для прыжка вверх
+        ];
+
+        // Преобразование пиксельных координат обратно в географические
+        const newGeoCoords = map.unproject(newPixelCoords);
+
+        // Установка новых координат маркера
+        marker.setCoordinates(newGeoCoords);
+
+        requestAnimationFrame(frame); // Запуск следующего кадра анимации
+    }
+
+    requestAnimationFrame(frame);
+}
+
+// Вызов функции анимации
+animateJump(marker, map, [37.615655, 55.768005], 20, 1000);
+```
+
+Укажите следующие параметры функции `animateJump`:
+
+* `marker` — объект маркера, для которого будет добавлена анимация.
+* `map` — объект карты, используемый для преобразования координат.
+* `baseCoords` — исходные координаты маркера в формате `[долгота, широта]`.
+* `amplitude` — амплитуда прыжка (высота движения) в пикселях.
+* `duration` — длительность одного полного прыжка (вверх и вниз) в миллисекундах.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Прыжок маркера" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+        const map = new mapgl.Map('container', {
+            center: [37.615655, 55.758005],
+            zoom: 10.5,
+            key: 'Your API access key',
+        });
+
+        const marker = new mapgl.Marker(map, {
+            coordinates: [37.615655, 55.768005],
+        });
+
+        const centerCoords = [37.615655, 55.768005];
+        const radius = 0.1;
+        const duration = 5000;
+
+        function jumpMarkerAnimation(marker, map, baseCoords, amplitude, duration) {
+            const startTime = performance.now();
+
+            function frame(time) {
+                const elapsed = (time - startTime) % duration;
+                const bounce = Math.sin((2 * Math.PI * elapsed) / duration) * amplitude;
+
+                const basePixelCoords = map.project(baseCoords);
+                const newPixelCoords = [
+                    basePixelCoords[0],
+                    basePixelCoords[1] - bounce,
+                ];
+                const newGeoCoords = map.unproject(newPixelCoords);
+                marker.setCoordinates(newGeoCoords);
+
+                requestAnimationFrame(frame);
+            }
+
+            requestAnimationFrame(frame);
+        }
+
+        jumpMarkerAnimation(marker, map, [37.615655, 55.768005], 20, 1000);
+
+    </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Движение по координатам {#animation-coordinates}
+
+Анимация движения по координатам выполняется с помощью изменения географических координат маркера.
+
+Чтобы добавить анимацию движения по заданному маршруту, используйте функцию `animateTravel`:
+
+```js
+// Функция для интерполяции между двумя точками
+function interpolateCoordinates(coord1, coord2, t) {
+    return [coord1[0] + (coord2[0] - coord1[0]) * t, coord1[1] + (coord2[1] - coord1[1]) * t];
+}
+
+function animateTravel(marker, route, durationPerSegment) {
+    let segmentIndex = 0;
+
+    function animateSegment(startTime) {
+        const elapsedTime = performance.now() - startTime;
+        const t = elapsedTime / durationPerSegment; // Процент завершения сегмента
+
+        if (t < 1) {
+            // Интерполяция координат
+            const newCoords = interpolateCoordinates(
+                route[segmentIndex],
+                route[segmentIndex + 1],
+                t,
+            );
+            marker.setCoordinates(newCoords);
+
+            // Продолжение анимации текущего сегмента
+            requestAnimationFrame(() => animateSegment(startTime));
+        } else {
+            // Переход к следующему сегменту
+            segmentIndex++;
+            if (segmentIndex < route.length - 1) {
+                animateSegment(performance.now());
+            } else {
+                // Зацикливание маршрута
+                segmentIndex = 0;
+                animateSegment(performance.now());
+            }
+        }
+    }
+
+    // Начало анимации первого сегмента
+    if (route.length > 1) {
+        animateSegment(performance.now());
+    }
+}
+
+// Вызов функции анимации
+const durationPerSegment = 2000;
+animateTravel(marker, route, durationPerSegment);
+```
+
+Укажите следующие параметры функции `animateTravel`:
+
+* `marker` — объект маркера, для которого будет добавлена анимация.
+* `route` — массив координат маршрута в формате `[долгота, широта]`.
+* `durationPerSegment` — длительность каждого сегмента в миллисекундах.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>MapGL JS API</title>
+      <meta name="description" content="Движение маркера по координатам" />
+      <style>
+         html,
+         body,
+         #container {
+               margin: 0;
+               width: 100%;
+               height: 100%;
+               overflow: hidden;
+         }
+      </style>
+   </head>
+   <body>
+      <div id="container"></div>
+      <script src="__MAPGL_API_URL__"></script>
+      <script>
+         const map = new mapgl.Map('container', {
+            center: [37.615655, 55.761005],
+            zoom: 14,
+            key: 'Your API access key',
+         });
+         const route = '37.615655 55.768005,37.631717 55.766863,37.625832 55.759516,37.620183 55.759002,37.613652 55.768298,37.615655 55.768005'.split(',')
+         .map(pair => pair.split(' ').map(Number));
+
+         const marker = new mapgl.Marker(map, {
+            coordinates: route[0],
+            icon: 'https://disk.2gis.com/styles/assets/icons/poi_cars-66605ef515e3adca7dea4e3f1bac00195e250a1250a5bf9e313708cb25fd1467.svg',
+            size: [20,20],
+         });
+
+         function interpolateCoordinates(coord1, coord2, t) {
+            return [
+                  coord1[0] + (coord2[0] - coord1[0]) * t,
+                  coord1[1] + (coord2[1] - coord1[1]) * t,
+            ];
+         }
+
+         function animateCourier(marker, route, durationPerSegment) {
+            let segmentIndex = 0;
+
+            function animateSegment(startTime) {
+                  const elapsedTime = performance.now() - startTime;
+                  const t = elapsedTime / durationPerSegment;
+
+                  if (t < 1) {
+                     const newCoords = interpolateCoordinates(
+                        route[segmentIndex],
+                        route[segmentIndex + 1],
+                        t
+                     );
+                     marker.setCoordinates(newCoords);
+                     requestAnimationFrame(() => animateSegment(startTime));
+                  } else {
+                     segmentIndex++;
+                     if (segmentIndex < route.length - 1) {
+                        animateSegment(performance.now());
+                     } else {
+                        segmentIndex = 0;
+                        animateSegment(performance.now());
+                     }
+                  }
+            }
+
+            if (route.length > 1) {
+                  animateSegment(performance.now());
+            }
+         }
+
+         const durationPerSegment = 2000;
+         animateCourier(marker, route, durationPerSegment);
+
+         window.addEventListener('unload', () => map.destroy());
+      </script>
+   </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Дополнительно вы можете добавить [CSS-анимацию маркера](#animation-css).
+
+## Движение по координатам с CSS-анимацией {#animation-css}
+
+Дополнительно к анимации движения маркера по заданным координатам маршрута вы можете анимировать HTML-маркер с помощью CSS:
+
+1. Создайте CSS-анимацию, например:
+
+   ```html
+   <style>
+       html,
+       body,
+       #container {
+           margin: 0;
+           width: 100%;
+           height: 100%;
+           overflow: hidden;
+       }
+       .marker_container {
+           position: relative;
+           width: 40px;
+           height: 40px;
+       }
+       .marker_container::before {
+           content: '';
+           position: absolute;
+           top: 10px;
+           left: 10px;
+           transform: translate(-50%, -50%);
+           width: 80px;
+           height: 80px;
+           border-radius: 50%;
+           background: radial-gradient(
+               closest-side,
+               rgba(255, 165, 0, 0.8),
+               rgba(255, 69, 0, 0.5),
+               transparent
+           );
+           animation: firePulse 1s infinite ease-in-out;
+       }
+       @keyframes firePulse {
+           0% {
+               transform: translate(-50%, -50%) scale(1);
+               opacity: 1;
+           }
+           50% {
+               transform: translate(-50%, -50%) scale(1.2);
+               opacity: 0.7;
+           }
+           100% {
+               transform: translate(-50%, -50%) scale(1);
+               opacity: 1;
+           }
+       }
+       .wave {
+           position: absolute;
+           top: 10px;
+           left: 10px;
+           width: 10px;
+           height: 10px;
+           background: rgba(0, 0, 255, 0.5);
+           border-radius: 50%;
+           transform: translate(-50%, -50%);
+           animation: waveAnimation 2s infinite;
+       }
+       @keyframes waveAnimation {
+           0% {
+               transform: translate(-50%, -50%) scale(1);
+               opacity: 1;
+           }
+           100% {
+               transform: translate(-50%, -50%) scale(5);
+               opacity: 0;
+           }
+       }
+   </style>
+   ```
+
+2. Создайте HTML-маркер. Анимация движения по маршруту выполняется с помощью изменения географических координат маркера:
+
+   ```js
+   const htmlMarker = new mapgl.HtmlMarker(map, {
+       coordinates: [37.615655, 55.768005],
+       html:
+           '<div class="marker_container"><div class="wave"></div><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 50 50">\n' +
+           '    <circle cx="25" cy="25" r="25" fill="white"/>\n' +
+           '</svg></div>\n',
+   });
+   ```
+
+3. Добавьте анимацию движения по координатам с помощью функции `animateTravel`:
+
+   ```js
+   // Функция для интерполяции между двумя точками
+   function interpolateCoordinates(coord1, coord2, t) {
+       return [coord1[0] + (coord2[0] - coord1[0]) * t, coord1[1] + (coord2[1] - coord1[1]) * t];
+   }
+
+   function animateTravel(htmlMarker, route, durationPerSegment) {
+       let segmentIndex = 0;
+
+       function animateSegment(startTime) {
+           const elapsedTime = performance.now() - startTime;
+           const t = elapsedTime / durationPerSegment; // Процент завершения сегмента
+
+           if (t < 1) {
+               // Интерполяция координат
+               const newCoords = interpolateCoordinates(
+                   route[segmentIndex],
+                   route[segmentIndex + 1],
+                   t,
+               );
+               htmlMarker.setCoordinates(newCoords);
+
+               // Продолжение анимации текущего сегмента
+               requestAnimationFrame(() => animateSegment(startTime));
+           } else {
+               // Переход к следующему сегменту
+               segmentIndex++;
+               if (segmentIndex < route.length - 1) {
+                   animateSegment(performance.now());
+               } else {
+                   // Зацикливание маршрута
+                   segmentIndex = 0;
+                   animateSegment(performance.now());
+               }
+           }
+       }
+
+       // Начало анимации первого сегмента
+       if (route.length > 1) {
+           animateSegment(performance.now());
+       }
+   }
+
+   // Вызов функции анимации
+   const durationPerSegment = 2000;
+   animateTravel(htmlMarker, route, durationPerSegment);
+   ```
+
+   Укажите следующие параметры функции `animateTravel`:
+
+   * `htmlMarker` — объект HTML-маркера, для которого будет добавлена анимация (создан на шаге 2).
+   * `route` — массив координат маршрута в формате `[долгота, широта]`.
+   * `durationPerSegment` — длительность каждого сегмента в миллисекундах.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Движение маркера по координатам с CSS-анимацией" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .marker_container {
+            position: relative;
+            width: 40px;
+            height: 40px;
+        }
+        .marker_container::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(closest-side, rgba(255, 165, 0, 0.8), rgba(255, 69, 0, 0.5), transparent);
+            animation: firePulse 1s infinite ease-in-out;
+        }
+        @keyframes firePulse {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+        .wave {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 10px;
+            height: 10px;
+            background: rgba(0, 0, 255, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: waveAnimation 2s infinite;
+        }
+        @keyframes waveAnimation {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(5);
+                opacity: 0;
+            }
+        }
+
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<script src="__MAPGL_API_URL__"></script>
+<script>
+    const map = new mapgl.Map('container', {
+        center: [37.615655, 55.761005],
+        zoom: 14,
+        key: 'Your API access key',
+    });
+     const route = '37.615655 55.768005,37.631717 55.766863,37.625832 55.759516,37.620183 55.759002,37.613652 55.768298,37.615655 55.768005'.split(',')
+     .map(pair => pair.split(' ').map(Number));
+
+    const htmlMarker = new mapgl.HtmlMarker(map, {
+        coordinates: [37.615655, 55.761005],
+        html: '<div class="marker_container"><div class="wave"></div>' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 50 50">' +
+      '<circle cx="25" cy="25" r="25" fill="white"/></svg></div>'
+    });
+
+    function interpolateCoordinates(coord1, coord2, t) {
+        return [
+            coord1[0] + (coord2[0] - coord1[0]) * t,
+            coord1[1] + (coord2[1] - coord1[1]) * t,
+        ];
+    }
+
+    function animateCourier(marker, route, durationPerSegment) {
+        let segmentIndex = 0;
+
+        function animateSegment(startTime) {
+            const elapsedTime = performance.now() - startTime;
+            const t = elapsedTime / durationPerSegment;
+
+            if (t < 1) {
+                const newCoords = interpolateCoordinates(
+                    route[segmentIndex],
+                    route[segmentIndex + 1],
+                    t
+                );
+                marker.setCoordinates(newCoords);
+                requestAnimationFrame(() => animateSegment(startTime));
+            } else {
+                segmentIndex++;
+                if (segmentIndex < route.length - 1) {
+                    animateSegment(performance.now());
+                } else {
+                    segmentIndex = 0;
+                    animateSegment(performance.now());
+                }
+            }
+        }
+
+        if (route.length > 1) {
+            animateSegment(performance.now());
+        }
+    }
+
+    const durationPerSegment = 2000;
+    animateCourier(htmlMarker, route, durationPerSegment);
+
+    window.addEventListener('unload', () => map.destroy());
+</script>
+</body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Анимация пройденного пути {#animation-traveled-path}
+
+Вы можете анимировать движение HTML-маркера по заданному маршруту: показать на карте пройденный путь в виде линии и добавить анимацию маркера в виде пульсирующего круга с помощью HTML-элемента Canvas. Для этого:
+
+1. Укажите маршрут маркера в виде массива геокоординат. Чтобы маршрут был замкнутым, конечная координата маркера должна совпадать со стартовой, например:
+
+   ```js
+   // Маршрут маркера
+   const path = [
+       [37.62372, 55.74965],
+       [37.61306, 55.74789],
+       [37.61189, 55.74826],
+       [37.61097, 55.74889],
+       [37.60950, 55.74937],
+       [37.60972, 55.75055],
+       [37.61114, 55.75259],
+       [37.61448, 55.75655],
+       [37.61780, 55.75844],
+       [37.62453, 55.75953],
+       [37.62576, 55.7595],
+       [37.62696, 55.75872],
+       [37.63023, 55.7566],
+       [37.63334, 55.75432],
+       [37.63228, 55.7498],
+       [37.62812, 55.74995],
+       [37.62372, 55.74965], // Маршрут замыкается начальной точкой
+   ];
+   ```
+
+2. Укажите скорость маркера в м/с для каждого сегмента маршрута:
+
+   ```js
+   // Скорость в м/с для каждого сегмента
+   const segmentSpeedsMps = [45, 25, 15, 15, 30, 30, 30, 20, 30, 30, 20, 30, 15, 20, 23, 45];
+   ```
+
+3. Добавьте функции для вычисления расстояния и длительности сегментов маршрута:
+
+   ```js
+   // Функция вычисления длины дуги по геокоординатам в метрах
+   function getDistance([lon1, lat1], [lon2, lat2]) {
+       ...
+   }
+
+   // Вычисление длительности для каждого сегмента
+   const segmentDurationsMs = path.slice(0, -1).map((_, i) => {
+       const dist = getDistance(path[i], path[i + 1]);
+       const speed = segmentSpeedsMps[i]; // м/с
+       return (dist / speed) * 1000; // мс
+   });
+   ```
+
+4. Для пульсирующего круга создайте `canvas`, который используется в качестве [HtmlMarkerOptions](/mapgl/reference/interface#html-marker-options/html):
+
+   ```js
+   // Создание canvas для пульсирующего круга
+   const canvas = document.createElement('canvas');
+   canvas.width = 80;
+   canvas.height = 80;
+   canvas.style.position = 'absolute';
+   canvas.style.transform = 'translate(-50%, -50%)';
+   const ctx = canvas.getContext('2d');
+   ```
+
+5. Добавьте функцию для отрисовки пульсирующего круга с помощью [CanvasRenderingContext2D](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D):
+
+   ```js
+   // Функция отрисовки пульсирующего круга
+   function drawPulse(radius) {
+       ctx.clearRect(0, 0, canvas.width, canvas.height);
+       ctx.beginPath();
+       ctx.arc(40, 40, radius, 0, Math.PI * 2);
+       ctx.fillStyle = 'rgba(206,56,56,0.4)';
+       ctx.fill();
+       ctx.beginPath();
+       ctx.arc(40, 40, 14, 0, Math.PI * 2);
+       ctx.fillStyle = 'rgba(206,56,56,0.8)';
+       ctx.fill();
+   }
+   ```
+
+   Вместо `canvas` вы можете создать анимацию при помощи CSS: см. [пример с CSS-анимацией](#animation-css).
+
+6. Создайте HTML-маркер, который отображает `canvas` на карте:
+
+   ```js
+   // HTML-маркер с анимированным canvas
+   const htmlMarker = new mapgl.HtmlMarker(map, {
+       coordinates: path[0],
+       html: canvas,
+       zIndex: 100,
+   });
+   ```
+
+7. Добавьте анимацию пройденного пути маркера с помощью полилинии ([Polyline](/mapgl/reference/class#polyline)) и функции `animate()`, которая вызывается при [отрисовке кадра](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame):
+
+   ```js
+   // Функция для интерполяции между двумя точками
+   function interpolateCoords(a, b, t) {
+       return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+   }
+   let index = 0;
+   let passedCoords = [path[0]];
+   let polylines = [];
+   let startTime = performance.now();
+   function destroyPolylines() {
+       polylines.forEach((p) => p.destroy());
+       polylines = [];
+   }
+   function animate() {
+       // Пульсация круга
+       const animRadius = 18 + 9 * (0.5 + 0.5 * Math.sin(Date.now() / 250));
+       drawPulse(animRadius);
+       // Текущее время на сегменте
+       const now = performance.now();
+       const duration = segmentDurationsMs[index];
+       const t = Math.min((now - startTime) / duration, 1);
+       const newCoord = interpolateCoords(path[index], path[index + 1], t);
+       htmlMarker.setCoordinates(newCoord);
+       // Отрисовка пройденного маршрута с помощью Polyline
+       const updatedPassed = passedCoords.slice();
+       updatedPassed.push(newCoord);
+       destroyPolylines();
+       polylines.push(
+           new mapgl.Polyline(map, {
+               coordinates: updatedPassed,
+               color: '#ce3838',
+               width: 5,
+           }),
+       );
+       if (t < 1) {
+           requestAnimationFrame(animate);
+       } else {
+           // Переход к новому сегменту
+           index++;
+           if (index >= path.length - 1) {
+               // В конце маршрута начать сначала
+               index = 0;
+               passedCoords = [path[0]];
+               destroyPolylines();
+           } else {
+               passedCoords.push(path[index]);
+           }
+           startTime = performance.now();
+           // Вызов функции animate() при отрисовке кадра
+           requestAnimationFrame(animate);
+       }
+   }
+   // Вызов функции анимации
+   animate();
+   ```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Анимация пройденного пути" />
+    <style>
+    html, body, #container {
+        margin: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [37.620, 55.750],
+            zoom: 14,
+            key: 'Your API access key',
+        });
+
+        const path = [
+            [37.62372, 55.74965],
+            [37.61306, 55.74789],
+            [37.61189, 55.74826],
+            [37.61097, 55.74889],
+            [37.60950, 55.74937],
+            [37.60972, 55.75055],
+            [37.61114, 55.75259],
+            [37.61448, 55.75655],
+            [37.61780, 55.75844],
+            [37.62453, 55.75953],
+            [37.62576, 55.75950],
+            [37.62696, 55.75872],
+            [37.63023, 55.75660],
+            [37.63334, 55.75432],
+            [37.63228, 55.74980],
+            [37.62812, 55.74995],
+            [37.62372, 55.74965],
+        ];
+
+        const segmentSpeedsMps = [
+            45,
+            25,
+            15,
+            15,
+            30,
+            30,
+            30,
+            20,
+            30,
+            30,
+            20,
+            30,
+            15,
+            20,
+            23,
+            45,
+        ];
+
+        function getDistance([lon1, lat1], [lon2, lat2]) {
+            const R = 6371000; // Радиус земли, м
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2 - lat1) * Math.PI/180;
+            const Δλ = (lon2 - lon1) * Math.PI/180;
+            const a = Math.sin(Δφ/2)*Math.sin(Δφ/2) +
+                Math.cos(φ1)*Math.cos(φ2) *
+                Math.sin(Δλ/2)*Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        const segmentDurationsMs = path.slice(0, -1).map((_, i) => {
+            const dist = getDistance(path[i], path[i + 1]);
+            const speed = segmentSpeedsMps[i]; // м/с
+            return (dist / speed) * 1000; // мс
+        });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 80;
+        canvas.height = 80;
+        canvas.style.position = 'absolute';
+        canvas.style.transform = 'translate(-50%, -50%)';
+
+        const ctx = canvas.getContext('2d');
+
+        function drawPulse(radius) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.arc(40, 40, radius, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(206,56,56,0.4)';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(40, 40, 14, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(206,56,56,0.8)';
+            ctx.fill();
+        }
+
+        const htmlMarker = new mapgl.HtmlMarker(map, {
+            coordinates: path[0],
+            html: canvas,
+            zIndex: 100,
+        });
+
+        function interpolateCoords(a, b, t) {
+            return [
+                a[0] + (b[0] - a[0]) * t,
+                a[1] + (b[1] - a[1]) * t,
+            ];
+        }
+
+        let index = 0;
+        let passedCoords = [path[0]];
+        let polylines = [];
+        let startTime = performance.now();
+
+        function destroyPolylines() {
+            polylines.forEach(p => p.destroy());
+            polylines = [];
+        }
+
+        function animate() {
+            const animRadius = 18 + 9 * (0.5 + 0.5 * Math.sin(Date.now() / 250));
+            drawPulse(animRadius);
+
+            const now = performance.now();
+            const duration = segmentDurationsMs[index];
+            const t = Math.min((now - startTime) / duration, 1);
+
+            const newCoord = interpolateCoords(path[index], path[index + 1], t);
+            htmlMarker.setCoordinates(newCoord);
+
+            const updatedPassed = passedCoords.slice();
+            updatedPassed.push(newCoord);
+            destroyPolylines();
+            polylines.push(
+                new mapgl.Polyline(map, {
+                    coordinates: updatedPassed,
+                    color: '#ce3838',
+                    width: 5,
+                })
+            );
+
+            if (t < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                index++;
+                if (index >= path.length - 1) {
+                    index = 0;
+                    passedCoords = [path[0]];
+                    destroyPolylines();
+                } else {
+                    passedCoords.push(path[index]);
+                }
+                startTime = performance.now();
+                requestAnimationFrame(animate);
+            }
+        }
+
+        animate();
+    </script>
+</body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Анимация с помощью Lottie {#animation-lottie}
+
+Вы можете анимировать HTML-маркер с помощью Lottie:
+
+1. Подключите Lottie:
+
+   ```html
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.0/lottie.min.js"></script>
+   ```
+
+2. Создайте HTML-маркер:
+
+   ```js
+   const markerHtml = `
+           <div class="marker_container">
+               <div class="lottie_animation" id="lottie"></div>
+           </div>
+       `;
+
+   const htmlMarker = new mapgl.HtmlMarker(map, {
+       coordinates: [37.615655, 55.768005],
+       html: markerHtml,
+   });
+   ```
+
+3. Создайте анимацию с помощью Lottie:
+
+   ```js
+   // Используем MutationObserver для отслеживания появления элемента
+   // Вместо этого можно использовать setTimeout со значением 0
+   const observer = new MutationObserver(() => {
+       const lottieContainer = document.getElementById('lottie');
+       if (lottieContainer) {
+           observer.disconnect(); // Отключаем наблюдение, когда элемент найден
+           lottie.loadAnimation({
+               container: lottieContainer, // ID контейнера
+               renderer: 'svg',
+               loop: true,
+               autoplay: true,
+               path: '<your>.json', // Путь к JSON
+           });
+       }
+   });
+
+   observer.observe(document.body, { childList: true, subtree: true });
+   ```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.0/lottie.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Анимация с помощью Lottie" />
+    <style>
+        html, body, #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .marker_container {
+            right: 20px;
+            bottom: 20px;
+            position: relative;
+            width: 40px;
+            height: 40px;
+        }
+        .lottie_animation {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<script src="__MAPGL_API_URL__"></script>
+<script>
+    const map = new mapgl.Map('container', {
+        center: [37.615655, 55.768005],
+        zoom: 14,
+        key: 'Your API access key',
+    });
+
+    const markerHtml = \`
+        <div class="marker_container">
+            <div class="lottie_animation" id="lottie"></div>
+        </div>
+    \`;
+
+    const htmlMarker = new mapgl.HtmlMarker(map, {
+        coordinates: [37.615655, 55.768005],
+        html: markerHtml,
+    });
+
+    const observer = new MutationObserver(() => {
+        const lottieContainer = document.getElementById('lottie');
+        if (lottieContainer) {
+            observer.disconnect();
+            lottie.loadAnimation({
+                container: lottieContainer,
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: 'https://lottie.host/7401522f-2d8b-4049-ad18-eb0edb6af224/CE9lFrNlEH.json',
+            });
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    window.addEventListener('unload', () => map.destroy());
+</script>
+</body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

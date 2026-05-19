@@ -1,0 +1,19 @@
+.base {
+  resize: none;
+  font-family: inherit;
+  color: var(--text-main);
+
+  /* 
+  * Хак для того, чтобы отключить автозум в инпут на мобильном Safari.
+  * Желаемый шрифт: 14px, для отключения зума надо 16px.
+  * Для этого увеличиваем всё на 16/14 и уменьшаем на 14/16
+  * Взято из: https://stackoverflow.com/a/53106477
+  */
+  width: 114.28%;
+  height: 114.28%;
+  font-size: 16px;
+  line-height: 20.57px;
+  margin-right: -14.28%;
+  transform: scale(0.875);
+  transform-origin: left top;
+}

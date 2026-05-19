@@ -1,0 +1,538 @@
+import Link from '@docusaurus/Link';
+
+Ниже приведены примеры конфигурационных файлов и команд запуска утилиты 2GIS CLI.
+
+Более полная документация, включая все доступные настройки, приведена в разделах <Link to="./config">Конфигурационный файл 2GIS CLI</Link> и <Link to="./help">Справка по команде и аргументам 2GIS CLI</Link>.
+
+:::note[Пароли приведены для примера]
+
+При реальной установке используйте более сложные и надёжные пароли.
+
+:::
+
+## Базовые операции
+
+:::warning
+
+Перед запуском утилиты убедитесь, что у вашего пользователя есть права на запуск Docker без использования `sudo`. В обратном случае возникнут ошибки загрузки.
+
+:::
+
+### Режим `pull`
+
+#### pull в S3-совместимое хранилище {#scenario-pull-to-s3}
+
+1. Создайте конфигурационный файл `dgctl-config.yaml`. Подробное описание доступных параметров см. в описании <Link to="./config">конфигурационного файла 2GIS CLI</Link>. Пример:
+
+   <details>
+   <summary><code>dgctl-config.yaml</code></summary>
+
+   ```yaml
+   key: DEMO-KEY-DGCTL-AAAAAA-BBBBBB
+   log-format: json
+
+   storage:
+     type: s3
+     host: artifacts.example.com
+     bucket: dgctl-store
+     access-key: AKIAIOSFODNN7EXAMPLE
+     secret-key: wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+
+   docker:
+     registry:
+       username: registry-user
+       password: DOCKERregistryP@ssW0rd
+       server-address: https://docker.registry.example.com
+       image-prefix: /
+
+   # Для утилиты версии 3
+   components:
+     core:
+       version: <core-version>
+     api-platform:
+       version: <api-platform-version>
+   ```
+
+   </details>
+
+2. Запустите одну из следующих команд:
+
+   * Чтобы загрузить Docker-образы в реестр, а все прочие артефакты — в хранилище:
+
+      ```bash
+      docker run --rm \
+         -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+         -v /mnt/dgctl-source:/dgctl-source \
+         -v /var/run/docker.sock:/var/run/docker.sock \
+         --user $(id -u):$(id -g) \
+         2gis/dgctl:3 \
+         pull --config=/dgctl-config.yaml --apps-to-registry
+      ```
+
+   * Чтобы загрузить все артефакты в хранилище, включая Docker-образы:
+
+      ```bash
+      docker run --rm \
+         -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+         -v /mnt/dgctl-source:/dgctl-source \
+         --user $(id -u):$(id -g) \
+         2gis/dgctl:3 \
+         pull --config=/dgctl-config.yaml
+      ```
+
+   Если вы используете утилиту 2GIS CLI версии 2, дополнительно укажите параметр `--version` с нужной версией программного комплекса On-Premise. Подробнее см. в <Link to="./help">Справке по командам и аргументам 2GIS CLI</Link>.
+
+#### pull в файловую систему {#scenario-pull-to-fs}
+
+1. Создайте конфигурационный файл `dgctl-config.yaml`. Подробное описание доступных параметров см. в описании <Link to="./config">конфигурационного файла 2GIS CLI</Link>. Пример:
+
+   <details>
+   <summary><code>dgctl-config.yaml</code></summary>
+
+   ```yaml
+   key: DEMO-KEY-DGCTL-AAAAAA-BBBBBB
+   log-format: json
+
+   storage:
+     type: fs
+     directory: /dgctl-source
+
+   docker:
+     registry:
+       username: registry-user
+       password: DOCKERregistryP@ssW0rd
+       server-address: https://docker.registry.example.com
+       image-prefix: /
+
+   # Для утилиты версии 3
+   components:
+     core:
+       version: <core-version>
+     api-platform:
+       version: <api-platform-version>
+   ```
+
+   </details>
+
+2. Запустите одну из следующих команд:
+
+   * Чтобы загрузить Docker-образы в реестр, а все прочие артефакты — в файловую систему:
+
+      ```bash
+      docker run --rm \
+         -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+         -v /mnt/dgctl-source:/dgctl-source \
+         -v /var/run/docker.sock:/var/run/docker.sock \
+         --user $(id -u):$(id -g) \
+         2gis/dgctl:3 \
+         pull --config=/dgctl-config.yaml --apps-to-registry
+      ```
+
+   * Чтобы загрузить все артефакты в файловую систему, включая Docker-образы:
+
+      ```bash
+      docker run --rm \
+         -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+         -v /mnt/dgctl-source:/dgctl-source \
+         --user $(id -u):$(id -g) \
+         2gis/dgctl:3 \
+         pull --config=/dgctl-config.yaml
+      ```
+
+   Если вы используете утилиту 2GIS CLI версии 2, дополнительно укажите параметр `--version` с нужной версией программного комплекса On-Premise. Подробнее см. в <Link to="./help">Справке по командам и аргументам 2GIS CLI</Link>.
+
+### Режим `restore`
+
+#### restore в S3-совместимое хранилище {#scenario-restore-to-s3}
+
+1. Создайте конфигурационный файл `dgctl-config.yaml`. Подробное описание доступных параметров см. в описании <Link to="./config">конфигурационного файла 2GIS CLI</Link>. Пример:
+
+   <details>
+   <summary><code>dgctl-config.yaml</code></summary>
+
+   ```yaml
+   key: DEMO-KEY-DGCTL-AAAAAA-BBBBBB
+   log-format: json
+
+   storage:
+     type: s3
+     host: artifacts.example.com
+     bucket: dgctl-store
+     access-key: AKIAIOSFODNN7EXAMPLE
+     secret-key: wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+
+   docker:
+     registry:
+       username: registry-user
+       password: DOCKERregistryP@ssW0rd
+       server-address: https://docker.registry.example.com
+       image-prefix: /
+
+   # Для утилиты версии 3
+   components:
+     core:
+       version: <core-version>
+     api-platform:
+       version: <api-platform-version>
+   ```
+
+   </details>
+
+2. Запустите одну из следующих команд:
+
+   * Чтобы выгрузить Docker-образы в реестр, а все прочие артефакты — в хранилище:
+
+      ```bash
+      docker run --rm \
+         -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+         -v /mnt/dgctl-source:/dgctl-source \
+         -v /var/run/docker.sock:/var/run/docker.sock \
+         --user $(id -u):$(id -g) \
+         2gis/dgctl:3 \
+         restore --config=/dgctl-config.yaml --from-dir=/dgctl-source --apps-to-registry
+      ```
+
+   * Чтобы выгрузить все артефакты в хранилище, включая Docker-образы:
+
+      ```bash
+      docker run --rm \
+         -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+         -v /mnt/dgctl-source:/dgctl-source \
+         --user $(id -u):$(id -g) \
+         2gis/dgctl:3 \
+         restore --config=/dgctl-config.yaml --from-dir=/dgctl-source
+      ```
+
+   Если вы используете On-Premise версии 1.16.0 и ниже, добавьте аргумент `--with-license-v1` в конец команды, а также используйте аргументы `--only-apps` и/или `--only-data` для выгрузки образов сервисов и/или данных соответственно.
+
+#### restore в файловую систему {#scenario-restore-to-fs}
+
+1. Создайте конфигурационный файл `dgctl-config.yaml`. Подробное описание доступных параметров см. в описании <Link to="./help">конфигурационного файла 2GIS CLI</Link>. Пример:
+
+   <details>
+   <summary><code>dgctl-config.yaml</code></summary>
+
+   ```yaml
+   key: DEMO-KEY-DGCTL-AAAAAA-BBBBBB
+   log-format: json
+
+   storage:
+     type: fs
+     directory: /dgctl-target
+
+   docker:
+     registry:
+       username: registry-user
+       password: DOCKERregistryP@ssW0rd
+       server-address: https://docker.registry.example.com
+       image-prefix: /
+
+   # Для утилиты версии 3
+   components:
+     core:
+       version: <core-version>
+     api-platform:
+       version: <api-platform-version>
+   ```
+
+   </details>
+
+2. Запустите одну из следующих команд:
+
+   * Чтобы выгрузить Docker-образы в реестр, а все прочие артефакты — в файловую систему:
+
+      ```bash
+      docker run --rm \
+         -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+         -v /mnt/dgctl-source:/dgctl-source \
+         -v /mnt/dgctl-target:/dgctl-target \
+         -v /var/run/docker.sock:/var/run/docker.sock \
+         --user $(id -u):$(id -g) \
+         2gis/dgctl:3 \
+         restore --config=/dgctl-config.yaml --from-dir=/dgctl-source --apps-to-registry
+      ```
+
+   * Чтобы выгрузить все артефакты в файловую систему, включая Docker-образы:
+
+      ```bash
+      docker run --rm \
+         -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+         -v /mnt/dgctl-source:/dgctl-source \
+         -v /mnt/dgctl-target:/dgctl-target \
+         --user $(id -u):$(id -g) \
+         2gis/dgctl:3 \
+         restore --config=/dgctl-config.yaml --from-dir=/dgctl-source
+      ```
+
+   Если вы используете On-Premise версии 1.16.0 и ниже, добавьте аргумент `--with-license-v1` в конец команды, а также используйте аргументы `--only-apps` и/или `--only-data` для выгрузки образов сервисов и/или данных соответственно.
+
+### Режим `save`
+
+#### save из S3-совместимого хранилища
+
+1. Создайте конфигурационный файл `dgctl-config.yaml`. Подробное описание доступных параметров см. в описании <Link to="./config">конфигурационного файла 2GIS CLI</Link>. Пример:
+
+   <details>
+   <summary><code>dgctl-config.yaml</code></summary>
+
+   ```yaml
+   key: DEMO-KEY-DGCTL-AAAAAA-BBBBBB
+   log-format: json
+
+   storage:
+     type: s3
+     host: artifacts.example.com
+     bucket: dgctl-store
+     access-key: AKIAIOSFODNN7EXAMPLE
+     secret-key: wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+
+   docker:
+     registry:
+       username: registry-user
+       password: DOCKERregistryP@ssW0rd
+       server-address: https://docker.registry.example.com
+       image-prefix: /
+
+   # Для утилиты версии 3
+   components:
+     core:
+       version: <core-version>
+     api-platform:
+       version: <api-platform-version>
+   ```
+
+   </details>
+
+2. Запустите команду для сохранения всех артефактов в хранилище:
+
+   ```bash
+   docker run --rm \
+      -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+      -v /mnt/dgctl-target:/dgctl-target \
+      --user $(id -u):$(id -g) \
+      2gis/dgctl:3 \
+      save --config=/dgctl-config.yaml --to-dir=/dgctl-target
+   ```
+
+### Режим `license`
+
+#### Запись лицензии в S3-совместимое хранилище
+
+1. Создайте конфигурационный файл `dgctl-config.yaml`. Подробное описание доступных параметров см. в описании <Link to="./config">конфигурационного файла 2GIS CLI</Link>. Пример:
+
+   <details>
+   <summary><code>dgctl-config.yaml</code></summary>
+
+   ```yaml
+   key: DEMO-KEY-DGCTL-AAAAAA-BBBBBB
+   log-format: json
+
+   storage:
+     type: s3
+     host: artifacts.example.com
+     bucket: dgctl-store
+     access-key: AKIAIOSFODNN7EXAMPLE
+     secret-key: wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+
+   docker:
+     registry:
+       username: registry-user
+       password: DOCKERregistryP@ssW0rd
+       server-address: https://docker.registry.example.com
+       image-prefix: /
+
+   # Для утилиты версии 3
+   components:
+     core:
+       version: <core-version>
+     api-platform:
+       version: <api-platform-version>
+   ```
+
+   </details>
+
+2. Запустите команду для сохранения файлов лицензии в хранилище:
+
+   ```bash
+   docker run --rm \
+      -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+      --user $(id -u):$(id -g) \
+      2gis/dgctl:3 \
+      license --config=/dgctl-config.yaml
+   ```
+
+#### Запись лицензии в файловую систему
+
+1. Создайте конфигурационный файл `dgctl-config.yaml`. Подробное описание доступных параметров см. в описании <Link to="./config">конфигурационного файла 2GIS CLI</Link>. Пример:
+
+   <details>
+   <summary><code>dgctl-config.yaml</code></summary>
+
+   ```yaml
+   key: DEMO-KEY-DGCTL-AAAAAA-BBBBBB
+   log-format: json
+
+   storage:
+     type: fs
+     directory: /dgctl-source
+
+   docker:
+     registry:
+       username: registry-user
+       password: DOCKERregistryP@ssW0rd
+       server-address: https://docker.registry.example.com
+       image-prefix: /
+
+   # Для утилиты версии 3
+   components:
+     core:
+       version: <core-version>
+     api-platform:
+       version: <api-platform-version>
+   ```
+
+   </details>
+
+2. Запустите команду для сохранения файлов лицензии в файловую систему:
+
+   ```bash
+   docker run --rm \
+      -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+      -v /mnt/dgctl-source:/dgctl-source \
+      --user $(id -u):$(id -g) \
+      2gis/dgctl:3 \
+      license --config=/dgctl-config.yaml
+   ```
+
+### Режим `manifest`
+
+#### Получение списка манифестов
+
+1. Создайте конфигурационный файл `dgctl-config.yaml`. Подробное описание доступных параметров см. в описании <Link to="./config">конфигурационного файла 2GIS CLI</Link>. Пример:
+
+   <details>
+   <summary><code>dgctl-config.yaml</code></summary>
+
+   ```yaml
+   key: DEMO-KEY-DGCTL-AAAAAA-BBBBBB
+   log-format: json
+
+   storage:
+     type: s3
+     host: artifacts.example.com
+     bucket: dgctl-store
+     access-key: AKIAIOSFODNN7EXAMPLE
+     secret-key: wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+
+   docker:
+     registry:
+       username: registry-user
+       password: DOCKERregistryP@ssW0rd
+       server-address: https://docker.registry.example.com
+       image-prefix: /
+
+   # Для утилиты версии 3
+   components:
+     core:
+       version: <core-version>
+     api-platform:
+       version: <api-platform-version>
+   ```
+
+   </details>
+
+2. Запустите команду для получения списка манифестов в S3-совместимом хранилище:
+
+   ```bash
+   docker run --rm \
+      -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+      --user $(id -u):$(id -g) \
+      2gis/dgctl:3 \
+      manifest list --component <component>
+   ```
+
+   Где `component` — название компонента (например, `api-platform`), для которого вы хотите получить список манифестов.
+
+## Использование системных сертификатов
+
+Если утилиту 2GIS CLI необходимо запускать на системе с установленными сертификатами безопасности, требуются дополнительные настройки.
+
+### Запуск в Docker
+
+Чтобы обеспечить работу сертификата внутри Docker-контейнера с утилитой 2GIS CLI, добавляйте следующий аргумент во все команды запуска контейнера, чтобы подключить сертификат к утилите:
+
+```bash
+-v <path-to-cert>:/etc/ssl/cert.pem
+```
+
+Где `<path-to-cert>` — путь к установленному сертификату.
+
+Пример полной команды для запуска утилиты с системным сертификатом безопасности:
+
+```bash
+docker run -it \
+   -v <path-to-cert>:/etc/ssl/cert.pem \
+   -v $(pwd)/dgctl-config.yaml:/dgctl-config.yaml \
+   -v /mnt/dgctl-source:/dgctl-source \
+   -v /var/run/docker.sock:/var/run/docker.sock \
+   --user $(id -u):$(id -g) \
+   2gis/dgctl:3 \
+   pull --config=/dgctl-config.yaml --apps-to-registry
+```
+
+Если вы используете утилиту 2GIS CLI версии 2, дополнительно укажите параметр `--version` с нужной версией программного комплекса On-Premise. Подробнее см. в <Link to="./help">Справке по командам и аргументам 2GIS CLI</Link>.
+
+### Запуск бинарного файла
+
+При запуске бинарного файла утилиты вы можете получить ошибку следующего вида:
+
+```bash
+ERROR[0004] failed to upload object: unable to put object into s3
+```
+
+Это может свидетельствовать о проблемах с сертификатом для доступа к S3-совместимому хранилищу.
+
+1. Убедитесь, что проблема связана с сертификатом. Для этого проверьте, что у вас есть конфигурационный файл с учётными данными для доступа к S3-совместимому хранилищу и выполните команду через S3cmd:
+
+   ```bash
+   s3cmd ls s3://bucket --host https://s3.my-host.com
+   ```
+
+   Если вы получаете ошибку следующего вида, то проблема связана с сертификатом:
+
+   ```bash
+   ERROR: SSL certificate verification failure: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate (_ssl.c:1007)
+   ```
+
+2. Скачайте сертификат безопасности.
+
+3. Установите сертификат в системе:
+
+   Для UNIX-подобных систем (Linux, macOS):
+
+   1. Запустите терминал.
+
+   2. Скопируйте сертификат в системное хранилище сертификатов при помощи команды ниже:
+
+      ```bash
+      sudo cp /<path-to-cert>/cert.crt /usr/local/share/ca-certificates/
+      ```
+
+      Где `<path-to-cert>` — путь к скачанному сертификату.
+
+   3. Обновите список доверенных сертификатов:
+
+      ```bash
+      sudo update-ca-certificates
+      ```
+
+   Для Windows:
+
+   1. Откройте меню **Пуск**, начните вводить в поиске **Управление сертификатами компьютера** и выберите соответствующее приложение.
+   2. В дереве папок слева выберите **Личное** → **Сертификаты**.
+   3. В верхнем меню выберите **Действие** → **Все задачи** → **Импорт**.
+   4. Следуйте инструкциям мастера импорта сертификатов для установки скачанного сертификата.
+
+Если сертификат установлен корректно, приложение будет соединяться с сервером без ошибок.
+
+

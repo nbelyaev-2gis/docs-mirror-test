@@ -1,0 +1,230 @@
+# Начало работы
+
+## Получение ключа доступа {#getting-access-key}
+
+Чтобы работать с API сервиса, получите ключ доступа:
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=api_dm).
+2. Создайте [демо-ключ](/platform-manager/subscription/keys#demo) или купите [подписку](/platform-manager/subscription/purchase) для доступа к API. Подробнее о стоимости сервиса см. в разделе [Тарифы](#tariffs).
+
+Работать с ключами можно в Менеджере Платформы: подробнее см. в документации [личного кабинета](/platform-manager/overview).
+
+Дальнейшие шаги зависят от выбранного режима работы Distance Matrix API.
+
+## Синхронный режим {#synchronous-mode}
+
+Используйте синхронный режим для расчёта запросов, которые соответствуют следующим условиям:
+
+* Количество точек в массиве `sources` или в массиве `targets` не превышает 25.
+* Расстояние между точками не превышает 2000 км по прямой.
+
+Если хотя бы одно из этих ограничений не выполнено, запрос вернёт ошибку. Для выполнения запросов с такими входными данными используйте [асинхронный метод](#large-numbers-of-points).
+
+### Пример запроса {#request-example}
+
+Чтобы получить информацию о маршруте, отправьте POST-запрос на endpoint `/get_dist_matrix`. В строке запроса укажите ваш ключ API в качестве значения параметра `key` и параметр `version` (по умолчанию `2.0`), указывающий на версию API:
+
+```http
+https://routing.api.2gis.com/get_dist_matrix?key=API_KEY&version=2.0
+```
+
+Координаты точек маршрута и другие параметры передайте в виде JSON в теле запроса.
+
+В запросе можно указать несколько точек отправления и несколько точек прибытия. Для каждой указанной точки отправления будет рассчитан маршрут до каждой указанной точки прибытия.
+
+Например, чтобы рассчитать маршруты для двух точек отправления и двух точек прибытия, отправьте следующий запрос:
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/get_dist_matrix?key=API_KEY&version=2.0' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "points": [
+        {
+            "lat": 54.99770587584445,
+            "lon": 82.79502868652345
+        },
+        {
+            "lat": 54.99928130973027,
+            "lon": 82.92137145996095
+        },
+        {
+            "lat": 55.04533538802211,
+            "lon": 82.98179626464844
+        },
+        {
+            "lat": 55.072470687600536,
+            "lon": 83.04634094238281
+        }
+    ],
+    "sources": [0, 1],
+    "targets": [2, 3]
+}'
+```
+
+Параметр `points` содержит массив точек маршрута. Параметры `sources` и `targets` определяют, какие из точек массива являются точками отправления и точками прибытия соответственно.
+
+### Пример ответа {#response-example}
+
+Запрос вернет длину маршрута в метрах (`distance`) и время в пути в секундах (`duration`) для каждой пары точек отправления-прибытия. В полях `source_id` и `target_id` будут указаны индексы точек отправления и прибытия из массива `points`. Если для конкретной пары точек не удалось построить маршрут, поле `status` будет содержать строку `"FAIL"`.
+
+Подробную информацию о полях ответа можно посмотреть в [Справочнике API](/api/navigation/distance-matrix/reference).
+
+```json
+{
+    "generation_time": 3349,
+    "routes": [
+        {
+            "distance": 11287,
+            "duration": 1319,
+            "source_id": 0,
+            "status": "OK",
+            "target_id": 2
+        },
+        {
+            "distance": 3839,
+            "duration": 603,
+            "source_id": 0,
+            "status": "OK",
+            "target_id": 3
+        },
+        {
+            "distance": 12245,
+            "duration": 1094,
+            "source_id": 1,
+            "status": "OK",
+            "target_id": 2
+        },
+        {
+            "distance": 11418,
+            "duration": 931,
+            "source_id": 1,
+            "status": "OK",
+            "target_id": 3
+        }
+    ]
+}
+```
+
+## Асинхронный режим {#asynchronous-mode}
+
+Чтобы использовать асинхронный режим, обратитесь в [службу поддержки](mailto:api@2gis.com).
+
+Используйте асинхронный режим для расчёта запросов, содержащих больше 25 точек отправления или 25 точек прибытия:
+
+1. Создайте задачу на расчёт времени и расстояния между точками.
+2. Периодически проверяйте статус задачи, пока не завершится расчёт.
+3. Получите решение после завершения задачи.
+
+### Создание задачи 
+
+Для создания задачи отправьте POST-запрос на endpoint `/async_matrix/create_task/get_dist_matrix`. В строке запроса укажите ваш ключ API в качестве значения параметра `key` и параметр `version` (по умолчанию `2.0`), указывающий на версию API:
+
+```http
+https://routing.api.2gis.com/async_matrix/create_task/get_dist_matrix?key=API_KEY&version=2.0
+```
+
+#### Пример запроса {#asynchronous-request-example}
+
+Передайте координаты точек маршрута и другие параметры в виде JSON в теле запроса. Например, чтобы рассчитать маршруты для двух точек отправления и двух точек прибытия, отправьте следующий запрос:
+
+```bash
+curl --request POST \
+ --url 'https://routing.api.2gis.com/async_matrix/create_task/get_dist_matrix?key=API_KEY&version=2.0' \
+ --header 'Content-Type: application/json' \
+ --data '{
+    "points": [
+        {
+            "lat": 54.99770587584445,
+            "lon": 82.79502868652345
+        },
+        {
+            "lat": 54.99928130973027,
+            "lon": 82.92137145996095
+        },
+        {
+            "lat": 55.04533538802211,
+            "lon": 82.98179626464844
+        },
+        {
+            "lat": 55.072470687600536,
+            "lon": 83.04634094238281
+        }
+    ],
+    "sources": [0, 1],
+    "targets": [2, 3]
+}'
+```
+
+Запрос вернёт информацию о созданной задаче, включая её идентификатор (`task_id`), который нужно будет использовать для проверки статуса:
+
+```json
+{
+    "task_id": "TASK_ID",
+    "status ": "TASK_CREATED"
+}
+```
+
+### Проверка статуса задачи
+
+Чтобы проверить статус задачи, отправьте GET-запрос на endpoint `/async_matrix/result/get_dist_matrix/{task_id}?key=API_KEY`. В строке запроса укажите два параметра:
+
+* `task_id` — идентификатор задачи;
+* `key` — ваш ключ API.
+
+#### Пример запроса
+
+```bash
+curl --request GET \
+  --url    'https://routing.api.2gis.com/async_matrix/result/get_dist_matrix/TASK_ID?key=API_KEY' \
+  --header 'accept: application/json'
+```
+
+### Получение решения 
+
+Запрос вернёт текущий статус задачи и ссылку на файл с решением, если задача была успешно завершена. Структура файла с решением совпадает со структурой ответа при использовании [синхронного запроса](#response-example).
+
+#### Пример ответа {#asynchronous-response-example}
+
+```json
+{
+    // Идентификатор задачи.
+    "task_id": "TASK_ID",
+    // Статус задачи.
+    "status": "TASK_DONE",
+    // Код ответа.
+    "code": 200,
+    // Дополнительная информация о статусе задачи.
+    "message": "start_time_ms=16516816106601123 calc_time_ms=14419 attract_time=4 build_time=28 points_count=3 source_count=1 target_count=2",
+    // Ссылка на файл с решением.
+    "result_link": "http://storage_host:port/dm/TASK_ID.response.json"
+}
+```
+
+Возможные статусы задачи:
+
+* `TASK_CREATED` — задача создана;
+* `TASK_IN_QUEUE` — задача находится в очереди на обработку;
+* `TASK_IN_PROGRESS` — задача находится в процессе выполнения;
+* `TASK_DONE` — задача успешно завершена;
+* `TASK_CANCELED` — задача была отменена (см. поле `message`).
+
+{/*
+## Формат ответа
+
+По умолчанию ответы имеют формат JSON. Чтобы получить ответ в формате [Protocol Buffers](https://en.wikipedia.org/wiki/Protocol_Buffers):
+
+* При работе в синхронном режиме укажите параметр `response_format=protobuf` в строке запроса:
+
+    ```http
+    https://routing.api.2gis.com/get_dist_matrix?key=API_KEY&version=2.0&response_format=protobuf
+    ```
+
+* При работе в асинхронном режиме укажите параметр `response_format=protobuf` при создании задачи:
+
+    ```http
+    https://routing.api.2gis.com/async_matrix/create_task/get_dist_matrix?key=API_KEY&version=2.0&response_format=protobuf
+    ```
+
+Схема формата Protocol Buffers доступна по адресу [DistanceMatrix.proto](http://disk.2gis.com/navi-docs/DistanceMatrix.proto).
+*/}

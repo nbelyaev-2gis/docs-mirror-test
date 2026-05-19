@@ -1,0 +1,24 @@
+.wrapper {
+  /* С вычетом border 1px  */
+  padding: 7px 11px;
+  margin-top: auto;
+  background-color: var(--shape-red-light);
+  border-radius: 12px;
+  font-size: var(--fs-md);
+  line-height: 18px;
+  border: 1px solid transparent;
+
+  [data-theme='dark'] & {
+    background-color: var(--shape-level-2);
+    border-color: var(--shape-red-light);
+  }
+}
+
+.text {
+  margin-bottom: 8px;
+}
+
+.messageError {
+  width: fit-content;
+  margin-right: 20px;
+}

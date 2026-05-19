@@ -1,0 +1,40 @@
+---
+sidebar: mapgljsapi
+---
+# Скролл страницы с картой
+
+При добавлении карты на веб-страницу вам может потребоваться настройка корректного поведения скролла с помощью специальных опций карты.
+
+## Указывающие устройства (мышь, тачпад)
+
+Чтобы карта не перехватывала события скролла, передайте значение `true` свойству `disableZoomOnScroll` в опциях карты [MapOptions](/mapgl/reference/interface#map-options):
+
+```js
+const map = new mapgl.Map('container', {
+    center: [37.615655, 55.768005],
+    zoom: 2,
+    key: 'Your API access key',
+    disableZoomOnScroll: true,
+});
+```
+
+Страница будет прокручиваться, даже когда курсор мыши или тачпада находится над картой. Карта при этом не масштабируется.
+
+## Сенсорные устройства
+
+Для сенсорных устройств используйте следующие опции карты [MapOptions](/mapgl/reference/interface#map-options):
+
+* `disableDragging: true` — позволяет прокручивать страницу при движении пальцем по области карты. Карта при этом не перемещается.
+* `enableTwoFingerDragging: true` — включает перемещение карты жестом двумя пальцами. Возможность прокрутки страницы одним пальцем при этом сохраняется.
+
+Пример использования:
+
+```js
+const map = new mapgl.Map('container', {
+    center: [37.615655, 55.768005],
+    zoom: 2,
+    key: 'Your API access key',
+    disableDragging: true,
+    enableTwoFingerDragging: true,
+});
+```

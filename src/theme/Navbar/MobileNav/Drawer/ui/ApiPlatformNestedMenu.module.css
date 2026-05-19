@@ -1,0 +1,18 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.accordionTrigger {
+  padding: var(--gap-3m) var(--gap-4m) !important;
+
+  span {
+    font-size: var(--fs-sm);
+    line-height: var(--lh-sm);
+  }
+}
+
+.accordionContent {
+  padding-bottom: 0;
+}

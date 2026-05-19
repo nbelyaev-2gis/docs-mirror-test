@@ -1,0 +1,573 @@
+---
+sidebar: on-premise-citylens
+---
+# Установка <Brand /> Ситискан
+
+:::note[Пароли и ключи приведены для примера]
+
+При реальной установке используйте более сложные и надёжные пароли.
+
+:::
+
+## 1. Перед установкой {#before-installing}
+
+1. Ознакомьтесь с основной информацией:
+
+   * [Архитектура сервиса <Brand /> Ситискан](/on-premise-citylens/architecture/citylens-architecture)
+   * [Архитектура программного комплекса <Brand />](/on-premise-citylens/architecture/solution-architecture)
+   * [Системные требования](/on-premise-citylens/install/requirements)
+
+2. Выполните предварительные шаги:
+
+   1. [Подготовка к установке](/on-premise-citylens/preparation)
+   2. [Установка сервиса лицензий](/on-premise-api-platform/core/install/license)
+   3. [Установка сервиса API-ключей](/on-premise-api-platform/core/install/keys)
+   4. [Установка API для работы с картами](/on-premise-api-platform/api-platform/install/maps)
+   5. [Установка API для работы с поиском](/on-premise-api-platform/api-platform/install/search)
+   6. [Установка API для работы с навигацией](/on-premise-api-platform/api-platform/install/navigation)
+   7. [Установка <Brand /> Про](/on-premise-pro/install/installation)
+
+3. Соберите необходимые данные, заданные или полученные на предыдущих шагах:
+
+   | Объект                                                 | Пример значения                          | Как получить значение                                                      |
+   | ------------------------------------------------------ | ---------------------------------------- | -------------------------------------------------------------------------- |
+   | Endpoint реестра Docker для хранения образов сервисов             | `docker.registry.example.com`            | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts) |
+   | Секрет Kubernetes для доступа к реестру Docker | `onpremise-registry-creds`                 | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts)        |
+   | Endpoint S3-совместимого хранилища артефактов установки | `artifacts.example.com`                    | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts)        |
+   | Название бакета с артефактами установки                | `onpremise-artifacts`                    | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts)  |
+   | Идентификатор ключа для доступа к артефактам установки | `AKIAIOSFODNN7EXAMPLE`                   | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts)  |
+   | Секрет ключа для доступа к артефактам установки        | `wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY` | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts)  |
+   | Путь к файлу манифеста                                 | `manifests/citylens/1640661259.json`     | См. [Получение артефактов установки](/on-premise-api-platform/preparation#artifacts)  |
+   | Endpoint сервиса лицензий                              | `https://license.svc`                    | См. [Установка сервиса лицензий](/on-premise-api-platform/core/install/license)        |
+   | Endpoint MapGL JS API                                  | `mapgl.example.local`                    | См. [Установка API для работы с картами](/on-premise-api-platform/api-platform/install/maps)   |
+   | Endpoint Catalog APIs                                  | `catalog-api.example.local`              | См. [Установка API для работы с поиском](/on-premise-api-platform/api-platform/install/search) |
+   | Endpoint Pro API                                       | `https://pro-api.host`                   | См. [Установка <Brand /> Про](/on-premise-pro/install/installation)                    |
+
+4. Убедитесь, что удовлетворены требования к ресурсам, приведённые в Helm-чартах:
+
+   * [CityLens API и CityLens Routes API](https://github.com/2gis/on-premise-helm-charts/blob/master/charts/citylens/values.yaml),
+   * [CityLens Routes UI](https://github.com/2gis/on-premise-helm-charts/blob/master/charts/citylens-routes-ui/values.yaml).
+
+   Подробнее о том, как это сделать, см. в документе [Системные требования](/on-premise-citylens/install/requirements).
+
+   :::note[Используйте чарты, соответствующие версии <Brand /> Ситискан]
+
+   Содержание Helm-чартов, описанных в данном разделе, актуально для последней версии <Brand /> Ситискан (см. [Релизы <Brand /> Ситискан](/on-premise-citylens/releases)). Чтобы изучить параметры для предыдущих версий, откройте нужный [values.yaml в GitHub](https://github.com/2gis/on-premise-helm-charts/blob/master/charts) и в списке тегов слева выберите тег `Citylens-<версия>`.
+
+   :::
+
+5. Определите доменные имена:
+
+   **Пример:**
+
+   * Доменное имя для сервиса <Brand /> Ситискан (UI для просмотра загруженных треков): `http://citylens-web.host`.
+   * Доменное имя для CityLens API, куда подключается мобильное приложение и загружает треки: `http://citylens-api.host`.
+   * Доменное имя для CityLens Routes API (backend-сервиса для планирования задач и построения маршрутов): `http://citylens-routes-api.host`.
+
+## 2. Подготовьте инфраструктуру {#prepare-infrastructure}
+
+:::note[Настройка аналогов из реестра Минцифры]
+
+Если вместо PostgreSQL и Apache Kafka вы используете аналоги из реестра Минцифры, для инструкций по их настройке обратитесь к официальной документации этих сервисов.
+
+:::
+
+### Настройте PostgreSQL {#configure-postgresql}
+
+1. Разместите кластер PostgreSQL с доменным именем `citylens-postgresql.storage.example.local` в приватной сети. Предполагается, что кластер работает на стандартном порту `5432`.
+
+2. Подключитесь к кластеру от имени суперпользователя (обычно это `postgres`).
+
+3. Создайте пользователя базы данных и установите пароль для него:
+
+   ```sql
+   create user citylens password 'wNgJamrIym8UAcdX';
+   ```
+
+4. Создайте базы данных, принадлежащие этому пользователю:
+
+   ```sql
+   create database citylens owner citylens;
+   create database routes owner citylens;
+   create database hangfire owner citylens;
+   create database realtime_data owner citylens;
+   ```
+
+5. Установите расширение [PostGIS](https://postgis.net/documentation/getting_started/#installing-postgis) для PostgreSQL.
+
+6. Включите расширение PostGIS:
+
+   ```sql
+   create extension postgis;
+   ```
+
+### Настройте S3-хранилище {#configure-s3}
+
+1. Разместите S3-совместимое хранилище с доменным именем `citylens-s3.storage.example.local` в приватной сети. Предполагается, что хранилище работает на стандартном порту `80`.
+
+2. Создайте ключи для подключения к сервису. Запомните реквизиты.
+
+   **Пример:**
+
+   * Ключ доступа: `PHEI4AHTHEETHAHXEEGE`.
+   * Секретный ключ: `aiw6ahlaeshahngaiJaebie6aeth0aiV2pucuey1`.
+
+3. Определите префиксы названий бакетов: префикс для кадров и префикс для логов мобильного приложения (`bucketPrefix` и `logsBucketPrefix` соответственно в [Helm-чарте](https://github.com/2gis/on-premise-helm-charts/blob/master/charts/citylens/values.yaml)). Бакеты будут сгенерированы «на лету».
+
+   **Пример:**
+
+   * Бакет для основных данных: `onprem-citylens`.
+
+### Настройте Apache Kafka {#configure-kafka}
+
+1. Разместите кластер Apache Kafka с доменным именем `citylens-kafka.storage.example.local` в приватной сети. Предполагается, что кластер работает на стандартном порту `9092`.
+
+2. Создайте пользователя для подключения к сервису. Запомните его реквизиты.
+
+   **Пример:**
+
+   * Имя пользователя: `kafka`.
+   * Пароль: `kafka_password`.
+
+3. (Рекомендуется) Настройте топики Apache Kafka следующим образом:
+
+   | Имя топика                      | Передаваемые данные                   | Рекомендуемые настройки                                                                                                                                                                                                 |
+   | ------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `kafka.topics.frames`           | Кадры съёмки из мобильного приложения | <ul><li>Максимальный размер сообщения — 10 Мб (`max.message.bytes: 10485760`).</li><li>Период хранения файла лога — 2 дня (`retention.ms: 172800000`). См. подробные рекомендации по выбору значения ниже.</li></ul>                                                        |
+   | `kafka.topics.tracks`           | Мета-информация о треке и GPS-трек    | <ul><li>Максимальный размер сообщения — 1 Мб (`max.message.bytes: 1048576`).</li><li>Период хранения файла лога — 2 дня (`retention.ms: 172800000`). См. подробные рекомендации по выбору значения ниже.</li></ul>                                                          |
+   | `kafka.topics.logs`             | Логи трека из мобильного приложения   | <ul><li>Максимальный размер сообщения — 5 Мб (`max.message.bytes: 5242880`).</li><li>Период хранения файла лога — 2 дня (`retention.ms: 172800000`). См. подробные рекомендации по выбору значения ниже.</li><li>Формат сжатия — Gzip (`compression.type: gzip`).</li></ul> |
+   | `kafka.topics.predictions`      | Детекции                              | Максимальный размер сообщения — 1 Мб (`max.message.bytes: 1048576`)                                                                                                                                                     |
+   | `kafka.topics.framesLifecycle`  | Данные кадров                         | Максимальный размер сообщения — 1 Мб (`max.message.bytes: 1048576`)                                                                                                                                                     |
+   | `kafka.topics.tracksLifecycle`  | Данные треков                         | Максимальный размер сообщения — 1 Мб (`max.message.bytes: 1048576`)                                                                                                                                                     |
+   | `kafka.topics.objectsLifecycle` | Данные распознанных объектов          | Максимальный размер сообщения — 1 Мб (`max.message.bytes: 1048576`)                                                                                                                                                     |
+   | `kafka.topics.pro`              | Набор данных **Кадры**                | Максимальный размер сообщения — 1 Мб (`max.message.bytes: 1048576`)                                                                                                                                                     |
+   | `kafka.topics.proDrivers`       | Набор данных **Водители**             | Максимальный размер сообщения — 5 Мб (`max.message.bytes: 5242880`)                                                                                                                                                     |
+   | `kafka.topics.proObjects`       | Набор данных **Объекты**              | Максимальный размер сообщения — 1 Мб (`max.message.bytes: 1048576`)                                                                                                                                                     |
+
+   Параметр `retention.ms` определяет гарантированное время хранения сообщений в Apache Kafka и используется как буфер на случай деградации или недоступности потребителей (consumers) и соответствующих сервисов. Значение параметра следует выбирать исходя из скорости обработки очереди и допустимого времени восстановления системы. Более высокое значение снижает риск потери данных при инцидентах, но избыточное увеличение не даёт дополнительной надёжности, при этом увеличивает расход дискового пространства и время восстановления кластера. Для топиков с данными от мобильного приложения, особенно с кадрами и треками, рекомендуется закладывать увеличенный, но обоснованный `retention.ms`, который соответствует ожидаемым сценариям деградации системы.
+
+   Указанные значения параметра `retention.ms` — рекомендуемые, так как помогают сохранить баланс между надёжностью хранения данных и эксплуатационными затратами. Вы можете изменять значения, если это обосновано нагрузкой, архитектурными особенностями или требованиями к времени восстановления.
+   
+   Полное описание настроек см. в [документации Apache Kafka](https://kafka.apache.org/documentation/).
+
+## 3. Установите <Brand /> Ситискан {#install-services}
+
+### Установите CityLens API и CityLens Routes API {#install-citylens-api}
+
+1. Создайте конфигурационный файл для Helm (для установки обоих компонентов CityLens API и CityLens Routes API нужен один файл). Подробное описание доступных параметров см. [здесь](https://github.com/2gis/on-premise-helm-charts/blob/master/charts/citylens/README.md).
+
+   Пример файла уже заполнен всеми необходимыми данными, собранными на предыдущих этапах.
+
+    <details>
+    <summary><code>values-citylens-api.yaml</code></summary>
+
+   ```yaml
+    dgctlDockerRegistry: docker.registry.example.com
+
+    api:
+      auth:
+        enabled: true
+        authServerUrl: https://keycloak.host
+        realm: CityLens_app
+        storeOIDCUserinfoFields: []
+        predictorsTokens:
+          camcom: token
+
+      licensing:
+        url: 'https://license.svc'
+
+      ingress:
+        className: nginx
+        enabled: false
+        hosts:
+        - host: citylens-api.host
+          paths:
+          - path: /
+            pathType: Prefix
+        tls:
+        - hosts:
+          - citylens-api.host
+
+    web:
+      auth:
+        enabled: true
+        realm: Inspection_Portal_backend
+        authServerUrl: https://keycloak.host
+        clientId: citylens-web-client
+        clientSecret: secret
+        pkce: false
+
+      ingress:
+        className: nginx
+        enabled: true
+        hosts:
+        - host: citylens-web.host
+          paths:
+          - path: /
+            pathType: Prefix
+        tls: []
+        - hosts:
+          - citylens-web.host
+
+    worker:
+      camcomSender:
+        enabled: true
+        apiKey: key
+        endpointUrl: http://camcom-mock-service/user_upload
+        sourceEnv: test
+      reporterPro:
+        enabled: true
+        predictors: [camcom]
+        replicas: 1
+
+    kafka:
+      bootstrapServer: kafka1.host:9092,kafka2.host:9092,kafka3.host:9092
+      username: kafka
+      password: kafka_password
+      topics:
+        frames: frames
+        tracks: tracks
+        pro: pro
+        proObjects: objects
+        proDrivers: drivers
+        logs: logs
+        uploader: uploader
+        framesLifecycle: flifecycle
+        tracksLifecycle: tlifecycle
+        objectsLifecycle: olifecycle
+        predictions: predictions
+      consumerGroups:
+        prefix: citylens_
+
+    s3:
+      endpoint: https://s3.host
+      accessKey: PHEI4AHTHEETHAHXEEGE
+      secretAccessKey: aiw6ahlaeshahngaiJaebie6aeth0aiV2pucuey1
+      bucketPrefix: onprem-citylens # приложение само создаст бакет вида bucketPrefix + %Y%m
+      logsBucketPrefix: citylens-logs
+      verifySsl: true
+      setPublicReadACL: false
+
+    dgctlStorage:
+      host: artifacts.example.com
+      secure: true
+      bucket: onpremise-artifacts
+      accessKey: AKIAIOSFODNN7EXAMPLE
+      secretKey: wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+      manifest: manifests/citylens/1640661259.json
+
+    postgres:
+      host: postgres.host
+      port: 5432
+      database: citylens
+      username: citylens
+      password: citylens
+
+    routes:
+      imagePullSecrets: [onpremise-registry-creds]
+      adminCredentials:
+        username: admin
+        password: secret_password
+      endpointInternalApiKey:
+        dataScience: 451d6159-191a-4391-bf1e-c36224a859d2randomKey
+        companies: fc3b5fa0-aa2a-488a-9fa6-bf6fe3f42b6frandomKey
+      worker:
+        busConfig:
+          consumers:
+            appEvents:
+              groupId: ''
+      postgres:
+        api:
+          database: routes
+        hangfire:
+          database: hangfire
+        realtimeDataApi:
+          database: realtime_data
+      navi:
+        url: http://navi-front
+        key: key
+      pro:
+        authorizationToken: ''
+      keys: 
+        url: http://keys-api
+      realtimeData:
+        url: https://realtimedata-api.host
+
+    dashboardDomain: https://citylens-web.host
+
+    locale: en
+
+    map:
+      tileserverUrl: https://tiles-api-raster.host
+      mapgl:
+        host:  mapgl-js-api.host
+        key: key
+
+    pro:
+      baseUrl: https://pro-api.host
+      key: key
+      verifySsl: true
+      framesAssetId: ''
+      objectsAssetId: ''
+
+    customCAs:
+      bundle: ''
+      # bundle: |
+      #   -----BEGIN CERTIFICATE-----
+      #   ...
+      #   -----END CERTIFICATE-----
+      certsPath: ''
+    ```
+
+    </details>
+
+   Где:
+
+   * `dgctlDockerRegistry`: endpoint вашего реестра Docker, в котором находятся образы сервисов программного комплекса <Brand /> в формате `HOST:PORT`.
+
+   * `api`: настройки CityLens API.
+
+     * `auth`: настройки аутентификации.
+
+       * `enabled`: включена аутентификация или нет.
+       * `authServerUrl`: URL API службы аутентификации.
+       * `realm`: realm для аутентификации.
+       * `storeOIDCUserinfoFields`: список полей из ответа провайдера OIDC для хранения информации о водителях, загружающих треки.
+       * `predictorsTokens.camcom`: случайно сгенерированная строка длиной 64 символа (ASCII + цифры). Передается в Camcom для доступа к CityLens API.
+
+     * `licensing`: настройки [сервиса лицензий](/on-premise-api-platform/architecture/core/license).
+
+       * `url`: URL-адрес сервиса лицензий. Пример: `https://license.svc`.
+
+     * `ingress`: конфигурация ресурса [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). Адаптируйте приведенную конфигурацию для соответствия используемому вами Ingress. **URL, указанный в параметре `ingress.hosts.host`, должен быть доступен извне вашего кластера Kubernetes, чтобы пользователи из приватного сегмента сети могли получить доступ к ресурсам по этому URL.**
+
+   * `web`: настройки веб-сервиса <Brand /> Ситискан.
+
+     * `auth`: настройки аутентификации.
+
+       * `enabled`: включена аутентификация или нет.
+       * `realm`: realm для аутентификации.
+       * `authServerUrl`: URL API службы аутентификации.
+       * `clientId`: ID клиента поставщика OpenID Connect.
+       * `clientSecret`: секрет клиента поставщика OpenID Connect.
+       * `pkce`: включена ли проверка ключа PKCE.
+
+     * `ingress`: конфигурация ресурса [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). Адаптируйте приведенную конфигурацию для соответствия используемому вами Ingress. **URL, указанный в параметре `ingress.hosts.host`, должен быть доступен извне вашего кластера Kubernetes, чтобы пользователи из приватного сегмента сети могли получить доступ к ресурсам по этому URL.**
+
+   * `worker`: настройки рабочих процессов <Brand /> Ситискан.
+
+     * `camcomSender`: настройки рабочих процессов CamcomSender.
+
+       * `enabled`: включен ли Camcom Sender.
+       * `apiKey`: ключ доступа к API Camcom Sender.
+       * `endpointUrl`: endpoint для Camcom Sender.
+       * `sourceEnv`: имя окружения в Camcom, предоставляемое Camcom'ом.
+
+     * `reporterPro`: настройки для выгрузки данных в <Brand /> Про.
+
+       * `enabled`: включена ли интеграция с <Brand /> Про.
+       * `predictors`: предиктор, используемый отгрузчиком данных.
+       * `replicas`: количество реплик пода.
+
+   * `kafka`: настройки доступа к брокеру Apache Kafka.
+
+     * `bootstrapServer`: endpoint брокера Kafka. Пример: `HOST:PORT`.
+
+     * `username`: имя пользователя.
+
+     * `password`: пароль пользователя.
+
+     * `topics`: настройки топиков.
+
+       * `frames`: список топиков для Frames Saver.
+       * `tracks`: список топиков для Track Metadata.
+       * `pro`: топик для синхронизации кадров с <Brand /> Про через Reporter Pro.
+       * `proObjects`: топик для синхронизации локализованных детекций (распознанных объектов) с <Brand /> Про через Reporter Pro.
+       * `proDrivers`: топик для синхронизации треков водителей с <Brand /> Про через Reporter Pro.
+       * `logs`: топик для логов мобильного приложения (загружаются через CityLens API).
+       * `uploader`: топик для Uploader.
+       * `framesLifecycle`: топик для событий жизненного цикла кадров.
+       * `tracksLifecycle`: топик для событий жизненного цикла треков.
+       * `objectsLifecycle`: топик для событий жизненного цикла объектов.
+       * `predictions`: топик для событий прогнозов от детекторов.
+
+     * `consumerGroups`: настройка группы потребителей.
+
+       * `prefix`: префикс для топиков группы потребителей.
+
+   * `s3`: настройки доступа к S3-совместимому хранилищу.
+
+     * `endpoint`: endpoint S3-совместимого хранилища в формате `HOST:PORT`.
+     * `accessKey`: идентификатор ключа для доступа к бакету S3.
+     * `secretAccessKey`: секретный ключ для доступа к бакету S3.
+     * `bucketPrefix`: префикс имени бакета S3 для бакетов кадров.
+     * `logsBucketPrefix`: префикс имени бакета S3 для бакетов логов мобильных приложений.
+     * `verifySsl`: включить ли проверку SSL-сертификатов при подключении к `s3.endpoint`.
+     * `setPublicReadACL`: сделать ли S3-бакет публичным (просмотр кадров будет доступен без авторизации).
+
+   * `dgctlStorage`: настройки доступа к хранилищу артефактов установки.
+
+     * `host`: endpoint S3-совместимого хранилища артефактов установки в формате `HOST:PORT`.
+     * `secure`: использовать ли HTTPS для работы с S3-совместимым хранилищем. Значение по умолчанию: `false`.
+     * `bucket`: имя бакета S3.
+     * `accessKey`: идентификатор ключа для доступа к бакету S3.
+     * `secretKey`: секретный ключ для доступа к бакету S3.
+     * `manifest`: путь до файла с манифестом в формате `manifests/citylens/1640661259.json`. Этот файл содержит в себе описания фрагментов данных, которые требуются сервисам для работы. См. [Жизненный цикл артефактов установки](/on-premise-citylens/overview/lifecycle).
+
+   * `postgres`: настройки доступа к PostgreSQL.
+    * `host`: адрес или IP PostgreSQL read-write (rw) хоста.
+     * `port`: номер порта.
+     * `database`: имя БД.
+     * `username`: имя пользователя БД c rw-доступом.
+     * `password`: пароль пользователя БД.
+
+   * `routes`: настройки CityLens Routes API.
+
+     * `imagePullSecrets`: [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/#using-imagepullsecrets) для доступа к реестру Docker, в котором находятся образы сервисов программного комплекса <Brand />.
+     * `adminCredentials`: настройки доступа к Hangfire (Планировщику задач).
+        * `username`: имя пользователя. Обязательный параметр.
+        * `password`: пароль. Обязательный параметр.
+     * `endpointInternalApiKey`: ключи для доступа ко внутренним сервисам без авторизации.
+        * `dataScience`: ключ доступа к контроллеру Data Science. Ключ должен быть уникальным и состоять из букв и цифр. Обязательный параметр.
+        * `companies`: ключ доступа к контроллеру компаний. Ключ должен быть уникальным и состоять из букв и цифр. Обязательный параметр.
+     * `worker.busConfig.consumers.appEvents.groupId`: ID потребительской группы Kafka для передачи событий.
+     * `postgres`: настройки доступа к PostgreSQL.
+       * `api.database`: имя базы данных для доступа API.
+       * `hangfire.database`: имя базы данных для доступа Hangfire (Планировщика задач).
+       * `realtimeDataApi.database`: имя базы данных для доступа RealtimeData API (для получения текущей геопозиции водителя).
+     * `navi`: настройки для интеграции с API навигации.
+       * `url`: URL для доступа к Navi-Front.
+       * `key`: ключ для доступа к API навигации. Убедитесь, что выполнены следующие условия:
+         * Этот ключ содержит права доступа к Routes Planner API.
+         * Соответствующий сервисный токен из сервиса API-ключей добавлен в конфигурационный файл Navi-Router (параметр `keys.apis.route-planner-api`).
+     * `pro`: настройки для интеграции с <Brand /> Про.
+       * `authorizationToken`: Bearer-токен для отправки данных в Про. Подробнее см. в инструкции по [загрузке данных по API](/pro/data/api-upload/dynamic-upload).
+     * `keys.url`: endpoint сервиса API-ключей.
+     * `realtimeData`: настройки для интеграции с RealtimeData API.
+       * `url`: URL для доступа к RealtimeData API.
+
+   * `dashboardDomain`: ссылка на веб-версию <Brand /> Ситискан.
+
+   * `locale`: используемый язык.
+
+   * `map`: настройки карт.
+
+     * `tileserverUrl`: URL сервера для получения растровых тайлов.
+     * `mapgl`: настройки доступа к MapGL JS API.
+
+       * `host`: имя хоста MapGL.
+       * `key`: ключ сервера MapGL.
+
+   * `pro`: группа настроек для интеграции <Brand /> Ситискан с <Brand /> Про.
+
+     * `baseUrl`: URL Pro API для актуализации фильтров.
+     * `key`: токен аутентификации Pro API
+     * `verifySsl`: включить ли проверку SSL-сертификатов.
+     * `framesAssetId`: ID набора данных для загрузки кадров.
+     * `objectsAssetId`: ID набора данных для загрузки объектов.
+
+   * `customCAs`: настройки пользовательских сертификатов.
+
+     * `bundle`: текстовое представление сертификата в формате [X.509 PEM public-key](https://www.rfc-editor.org/rfc/rfc7468#section-5.1).
+     * `certsPath`: директория для монтирования сертификата внутри контейнера.
+
+2. Установите сервис с помощью Helm, используя подготовленный конфигурационный файл `values-citylens-api.yaml`:
+
+   ```bash
+   helm upgrade --install --version=VERSION --atomic --values ./values-citylens-api.yaml citylens 2gis-on-premise/citylens
+   ```
+
+   В параметре `--version` укажите нужную версию <Brand /> Ситискан. Список версий см. в разделе [Релизы <Brand /> Ситискан](/on-premise-citylens/releases).
+
+   :::warning
+
+   Версии сервисов внутри компонента должны быть одинаковыми и совпадать с версией компонента.
+
+   :::
+
+### Установите CityLens Routes UI {#install-citylens-ui}
+
+1. Создайте конфигурационный файл для Helm. Подробное описание доступных параметров см. [здесь](https://github.com/2gis/on-premise-helm-charts/blob/master/charts/citylens-routes-ui/README.md).
+
+   Пример файла уже заполнен всеми необходимыми данными, собранными на предыдущих этапах.
+
+    <details>
+    <summary><code>values-citylens-ui.yaml</code></summary>
+
+   ```yaml
+   dgctlDockerRegistry: docker.registry.example.com
+
+   imagePullSecrets: [onpremise-registry-creds]
+
+   env:
+      CATALOG_API_URL: 'https://catalog-api.ingress.host'
+      MAPGL_API_URL: 'https://mapgl-js-api.ingress.host'
+      MAPGL_DEFAULT_CENTER: ''
+      MAPGL_KEY: ''
+      SSO_API_URL: https://keycloak.example.com/realms/platform
+      SSO_CLIENT_ID: platform
+      SSO_CLIENT_SECRET: secret
+      SSO_SCOPE: 'openid email name phone'
+      ROUTES_API_URL: 'http://citylens-routes-api.ingress.host'
+   ```
+
+    </details>
+
+   Где:
+
+   * `dgctlDockerRegistry`: endpoint вашего реестра Docker, в котором находятся образы сервисов программного комплекса <Brand /> в формате `HOST:PORT`.
+   * `imagePullSecrets`: [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/#using-imagepullsecrets) для доступа к реестру Docker, в котором находятся образы сервисов программного комплекса <Brand />.
+   * `env`: настройка окружения.
+
+     * `CATALOG_API_URL`: базовый URL для Catalog APIs.
+     * `MAPGL_API_URL`: базовый URL для MapGL JS API.
+     * `MAPGL_DEFAULT_CENTER`: координаты центра карты по умолчанию в формате `долгота,широта` (например, `37.61565,55.76805`).
+     * `MAPGL_KEY`: ключ для доступа к MapGL JS API.
+     * `SSO_API_URL`: базовый URL для API авторизации по технологии единого входа (SSO) в формате `<origin>/realms/<realm>` (например, `https://<domain>.com/realms/Inspection_Portal_backend`).
+     * `SSO_CLIENT_ID`: идентификатор клиента OpenID для SSO-авторизации.
+     * `SSO_CLIENT_SECRET`: ключ клиента OpenID для SSO-авторизации.
+     * `SSO_SCOPE`: набор пользовательских атрибутов, которые запрашивает клиент OpenID для SSO-авторизации.
+     * `ROUTES_API_URL`: базовый URL для CityLens Routes API.
+
+2. Установите сервис с помощью Helm, используя подготовленный конфигурационный файл `values-citylens-ui.yaml`:
+
+   ```bash
+   helm upgrade --install --version=VERSION --atomic --values ./values-citylens-ui.yaml citylens 2gis-on-premise/citylens
+   ```
+
+   В параметре `--version` укажите нужную версию <Brand /> Ситискан. Список версий см. в разделе [Релизы <Brand /> Ситискан](/on-premise-citylens/releases).
+
+   :::warning
+
+   Версии сервисов внутри компонента должны быть одинаковыми и совпадать с версией компонента.
+
+   :::
+
+## 4. Проверьте работоспособность <Brand /> Ситискан {#test}
+
+Воспользуйтесь одним из способов:
+
+* Перейдите по адресу http://citylens-web.host.
+* Запустите мобильное приложение <Brand /> Ситискан.
+
+## 5. Настройте аутентификацию пользователей
+
+Настройте [внешнего поставщика OpenID Connect](/on-premise-citylens/install/authentication) для аутентификации конечных пользователей в <Brand /> Ситискан.
+
+## 6. После установки
+
+После установки <Brand /> Ситискан в вашем контуре и настройки доступов конечные пользователи могут начать работу с продуктом.
+
+Подробные инструкции см. в [Руководстве пользователя](/citylens/overview).
+
+## Что дальше? {#whats-next}
+
+* Узнайте, как [обновить <Brand /> Ситискан](/on-premise-citylens/update).
+
+* Установите другие продукты программного комплекса <Brand />:
+
+  * [мобильный SDK](/on-premise-api-platform/api-platform/install/mobilesdk),
+  * [GIS-платформа](/on-premise-gis-platform/install/installation),
+  * [Менеджер Платформы](/on-premise-api-platform/api-platform/install/platform).
+
+* Изучите рекомендации по [обслуживанию системы](/on-premise-citylens/administering).

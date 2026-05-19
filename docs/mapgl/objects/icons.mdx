@@ -1,0 +1,238 @@
+---
+sidebar: mapgljsapi
+---
+# Иконки
+
+## Добавление иконок
+
+Вы можете добавлять на карту иконки через стилевой слой в [Редакторе стилей](https://styles.2gis.com/) или через метод `addIcon()`:
+
+```js
+map.addIcon('newIconName', { url: '//path_to_icon/icon.svg' });
+```
+
+В качестве аргументов метод принимает имя иконки и объект опций [StyleIconConfig](/mapgl/reference/interface#style-icon-config), содержащий путь до иконки.
+
+Ограничения по работе с методом:
+
+* В качестве URL до иконки вы можете использовать только абсолютный или шаблонный путь, например `//absolute_path_to_icon/icon.svg` или `//{appHost}/path_to_icon/icon.svg`.
+* В качестве иконки вы можете использовать только SVG-изображение.
+
+Текст внутри SVG-файла рекомендуется конвертировать в кривые. Иначе, если на клиентском устройстве отсутствует используемый в SVG-файле шрифт, могут возникнуть визуальные отличия текста от исходной иконки.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Добавление иконок" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.619510, 55.768944],
+                zoom: 16,
+                key: 'Your API access key',
+            });
+
+            const data = {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'Point',
+                            coordinates: map.getCenter(),
+                        },
+                    },
+                ],
+            };
+
+            const source = new mapgl.GeoJsonSource(map, {
+                data,
+                attributes: {
+                    purpose: 'icon',
+                },
+            });
+
+            const layer = {
+                id: 'my-point-layer',
+                filter: [
+                    'match',
+                    ['sourceAttr', 'purpose'],
+                    ['icon'],
+                    true,
+                    false,
+                ],
+                type: 'point',
+                style: {
+                    iconImage: 'custom',
+                    iconWidth: 30,
+                    iconPriority: 1000
+                },
+            };
+
+            map.on('styleload', () => {
+                map.addIcon('custom', { url: '__BASE_URL__/img/mapgl/point-red.svg'});
+                map.addLayer(layer);
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Изменение ранее добавленной иконки
+
+Чтобы обновить ранее добавленную иконку, удалите её, а затем добавьте новую:
+
+```js
+map.removeIcon('newIconName');
+map.addIcon('newIconName', { url: '//path_to_icon/new-icon.svg' });
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Изменение иконки" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.619510, 55.768944],
+                zoom: 16,
+                key: 'Your API access key',
+            });
+
+            const data = {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'Point',
+                            coordinates: map.getCenter(),
+                        },
+                    },
+                ],
+            };
+
+            const source = new mapgl.GeoJsonSource(map, {
+                data,
+                attributes: {
+                    purpose: 'icon',
+                },
+            });
+
+            const layer = {
+                id: 'my-point-layer',
+                filter: [
+                    'match',
+                    ['sourceAttr', 'purpose'],
+                    ['icon'],
+                    true,
+                    false,
+                ],
+                type: 'point',
+                style: {
+                    iconImage: 'custom',
+                    iconWidth: 30,
+                    iconPriority: 1000
+                },
+            };
+
+            map.on('styleload', () => {
+                map.addIcon('custom', { url: '__BASE_URL__/img/mapgl/point-red.svg'});
+                map.addLayer(layer);
+                map.once('idle', () => {
+                    map.removeIcon('custom');
+                    map.addIcon('custom', { url: '__BASE_URL__/img/mapgl/point-green.svg'});
+                });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Изменение иконки из стиля
+
+Чтобы изменить иконку из существующего стиля, удалите её, а затем добавьте новую:
+
+```js
+map.removeIcon('metro_line10_33');
+map.addIcon('metro_line10_33', { url: '//path_to_icon/new-metro_line10_33.svg' });
+```
+
+Передайте текущее имя иконки, которое используется в стиле. Посмотреть имя иконки вы можете в [Редакторе стилей](https://styles.2gis.com/).
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Изменение иконки в текущем стиле" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.619510, 55.768944],
+                zoom: 16,
+                key: 'Your API access key',
+            });
+
+            map.once('idle', () => {
+                map.removeIcon('metro_line10_33');
+                map.addIcon('metro_line10_33', { url: '__BASE_URL__/img/mapgl/point-red.svg'});
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

@@ -1,0 +1,158 @@
+---
+sidebar: staticapi
+---
+# Примеры
+
+## Карта
+
+Чтобы отобразить простую карту без дополнительных объектов, укажите её размер, центр и масштаб.
+
+Если на карте будут дополнительные объекты, то можно не указывать центр и масштаб, карта подстроится автоматически.
+
+```plaintext
+https://static.maps.2gis.com/2.0?s=880x300&c=55.05888,82.91118&z=15&key=API_KEY
+```
+
+![Пустая карта](/img/static/map.png)
+
+## Маркеры
+
+На карту можно добавить маркеры в виде кругов, пинов или с произвольным изображением (кастомные). Для кругов и пинов можно указать цвет и размер, добавить нумерацию.
+
+![Виды маркеров](/img/static/marker_types.png)
+
+### Встроенные стили
+
+По умолчанию маркер отображается маленьким синим пином. В параметрах можно указать форму маркера (круг или пин), один из девяти цветов, большой или маленький размер.
+
+```plaintext
+https://static.maps.2gis.com/2.0?s=880x300&pt=55.71433,37.56050~k:p~c:rd~s:s&pt=55.70433,37.57050~k:c~c:gn~s:l&key=API_KEY
+```
+
+![Предустановленные стили маркеров](/img/static/styles.png)
+
+### Нумерованный маркер
+
+Маркеру можно задать номер от 1 до 99. Номер может быть задан как для пина, так и для круга.
+
+Для нумерованного маркера нельзя задать цвет и размер.
+
+```plaintext
+https://static.maps.2gis.com/2.0?s=880x300&pt=55.71433,37.56050~n:1&pt=55.70433,37.57050~k:c~n:2&key=API_KEY
+```
+
+![Стили маркеров с нумерацией](/img/static/numeric_marker.png)
+
+### Кастомный маркер (URL)
+
+Можно использовать маркер с произвольным изображением, доступным по URL.
+
+```plaintext
+https://static.maps.2gis.com/2.0?s=880x300&pt=55.70433,37.57050~u:https%3A%2F%2Fimg.icons8.com%2Foffices%2F1x%2Fsound-recording-copyright.png&key=API_KEY
+```
+
+![Кастомный маркер с URL](/img/static/custom_marker.png)
+
+### Кастомный маркер (Base64)
+
+Картинку для маркера можно указать в формате Base64.
+
+```plaintext
+https://static.maps.2gis.com/2.0?s=880x300&pt=55.70433,37.57050~b:iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAMAAAAM7l6QAAABQVBMVEUAAAAAAP9Pe7lNd7NKe7VQeLdLeLRPfbVOerdMd7NQerVOeLZNerNPe7ROebZPebRPe7ZOebRNebZPe7NOebRNe7VQfLdRe7ZQe7dQfbdPfLhSfrlTf7pTfrlRfrlSf7lSfbhSfrpRfbhRfLdQfbhQfblRfblSfblRfrlSfrlRfrlSfbhQfbdRfbhQfLdQfbdRfblVgbtVgbxXhL5YhL5YhMBZhMBRfbhTgbtUgLtUgbtUgbxXhL9RfbhPe7dPe7ZPe7dpldBqlNBqltFQe7Zpls9pl9BrltBrl9BxnddyntdxndZxnddynddyntd6puB6p%2BF8p%2BF8qOF8qOJ8qeJ8qeN9qOKBreaCrueHtO2ItO2ItO6KtvCLt%2FCOufCQuvGRu%2FGpyvSqyvTG3Pjm7%2Fzv9f3w9f3w9v38%2Ff%2F%2B%2Fv%2F%2F%2F%2F%2BT0lLZAAAAT3RSTlMAAR0eHyAiLS4vMDEyOjs9TU5QUVJTgIGDg4TLy8zNzc7O0ODh4eLk5eXm5%2B3t7u7v8fHx8fHx8vLy8vLy8%2Ff4%2BPj4%2BPn5%2Bfn5%2Bvr7%2B%2Fv790vtUwAAAAFiS0dEaiVilQ4AAAFRSURBVCjPY2AgFnBLKWq6uGjKS3BjyjGKqBm5BURER4cHuFurCqPJsiqZBsfCQZCJAjOyLL%2BuV0wsEojx1edDkjUPi0UDIeZweRa9oFgMEGrABnWVkl8sFuAjB5EWNYHamwUCmWnJ8RD7zYTAmtVgbs6CghSIfKAKSJrHMBYuDSTiEtOzkiF8S06gtJQHinRsbGJWKoTvJgmUVgxAk07IyoDw%2FWWB0toRaNJJMN0RGkBp%2B2hUu5PgdkfbA6UdomKxuzw20g4orRWBIp2ZCvV3bGy4BjanwYG%2FDFBawhmXtJMYUJrLGpe0BTso2FSCsEsHKIOjRBgRJShJwkYAEmUKvtgi1FMamhyY9QKxJAddJlhy4bMNRpcNMudFJDY%2BHU%2FUpOitz4ucVFnkTJAsCDCWZkJL6UIqVq7%2B4cBs4O9opSyIJRNxSspq2tury4pzEJ3vAFWY0vzr8IKOAAAAAElFTkSuQmCC&key=API_KEY
+```
+
+![Кастомный маркер в base64](/img/static/custom_marker_base_64.png)
+
+## Линии
+
+На карту можно добавить ломаные линии с заданными цветом и толщиной.
+
+```plaintext
+https://static.maps.2gis.com/2.0?s=880x300&ls=55.73740,37.52284,55.74033,37.53542,55.72481,37.55050~w:5&ls=55.72481,37.55050,55.71790,37.56943,55.72634,37.58097~c:a23fb5~w:5&key=API_KEY
+```
+
+![Линии](/img/static/lines.png)
+
+## Многоугольники
+
+На карту можно добавить многоугольники с заданными цветом и толщиной контура, а также цветом заливки.
+
+```plaintext
+https://static.maps.2gis.com/2.0?size=880x300&pn=59.99051,30.19207,59.99284,30.20503,59.98907,30.20292~c:22fe46~f:22fe46a1~w:2&pn=59.99233,30.20822,59.99121,30.21735,59.98738,30.21537,59.98856,30.20592~w:5&pn=59.99054,30.21812,59.98655,30.22571,59.98773,30.21646~c:ed3125~f:ed3125&key=API_KEY
+```
+
+![Полигоны](/img/static/polygons.png)
+
+## GeoJSON
+
+На карту можно добавить любые объекты по спецификации [GeoJSON](https://ru.wikipedia.org/wiki/GeoJSON#%D0%9E%D0%B1%D1%8A%D0%B5%D0%BA%D1%82%D1%8B) ([RFC 7946](https://tools.ietf.org/html/rfc7946)) и задать их стиль в полях `properties` аналогично параметрам в URL.
+
+```json
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [82.91871, 55.03652],
+                    [82.92131, 55.02711],
+                    [82.92698, 55.0247]
+                ]
+            },
+            "properties": {
+                "w": 5
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [82.92698, 55.0247]
+            },
+            "properties": {
+                "k": "c",
+                "n": 1
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [82.89827, 55.03687],
+                        [82.90021, 55.03489],
+                        [82.91062, 55.03264],
+                        [82.91355, 55.03636],
+                        [82.90925, 55.04067],
+                        [82.89827, 55.03687]
+                    ]
+                ]
+            },
+            "properties": {
+                "c": "03ee10",
+                "f": "03ee10a0"
+            }
+        }
+    ]
+}
+```
+
+```plaintext
+https://static.maps.2gis.com/2.0?s=880x450&z=14&g=%7B%22type%22%3A%22FeatureCollection%22%2C%22features%22%3A%5B%7B%22type%22%3A%22Feature%22%2C%22geometry%22%3A%7B%22type%22%3A%22Point%22%2C%22coordinates%22%3A%5B82.91871%2C55.03652%5D%7D%2C%22properties%22%3Anull%7D%2C%7B%22type%22%3A%22Feature%22%2C%22geometry%22%3A%7B%22type%22%3A%22LineString%22%2C%22coordinates%22%3A%5B%5B82.91871%2C55.03652%5D%2C%5B82.92131%2C55.02711%5D%2C%5B82.92698%2C55.02470%5D%5D%7D%2C%22properties%22%3A%7B%22w%22%3A5%7D%7D%2C%7B%22type%22%3A%22Feature%22%2C%22geometry%22%3A%7B%22type%22%3A%22Point%22%2C%22coordinates%22%3A%5B82.92698%2C55.02470%5D%7D%2C%22properties%22%3A%7B%22k%22%3A%22c%22%2C%22n%22%3A1%7D%7D%2C%7B%22type%22%3A%22Feature%22%2C%22geometry%22%3A%7B%22type%22%3A%22Polygon%22%2C%22coordinates%22%3A%5B%5B%5B82.89827%2C55.03687%5D%2C%5B82.90021%2C55.03489%5D%2C%5B82.91062%2C55.03264%5D%2C%5B82.91355%2C55.03636%5D%2C%5B82.90925%2C55.04067%5D%2C%5B82.89827%2C55.03687%5D%5D%5D%7D%2C%22properties%22%3A%7B%22c%22%3A%2203ee10%22%2C%22f%22%3A%2203ee10a0%22%7D%7D%5D%7D&key=API_KEY
+```
+
+![GeoJSON](/img/static/geojson.png)
+
+## HD & HiDPI
+
+Для отображения на Retina и других экранах с высокой плотностью пикселей используйте режим HD. В этом режиме карта и все её объекты, кроме кастомных, будут увеличены вдвое, что повысит чёткость изображения при том же визуальном размере.
+
+```plaintext
+https://static.maps.2gis.com/2.0?s=880x450@2x&z=14&pt=55.03652,82.91871&ls=55.03652,82.91871,55.02711,82.92131,55.02470,82.92698~w:5&pt=55.02470,82.92698~k:c~n:1&ls=55.03652,82.91871,55.03758,82.93058,55.04042,82.92996~c:ff0000&pt=55.04042,82.92996~k:c~n:2&pn=55.03687,82.89827,55.04067,82.90925,55.03636,82.91355,55.03264,82.91062,55.03489,82.90021~c:03ee10~f:03ee10a0&pt=55.03484,82.92290~k:c~c:pe&key=API_KEY
+```
+
+![Карта в HD](/img/static/hd.png)
+

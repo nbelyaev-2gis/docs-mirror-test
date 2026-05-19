@@ -1,0 +1,90 @@
+---
+sidebar: iossdk
+---
+# iOS SDK
+
+iOS SDK позволяет добавить [карту <Brand />](https://2gis.ru/) в ваше iOS-приложение. С помощью SDK можно отобразить карту на экране, получать информацию об объектах карты, строить маршруты, использовать навигатор и т. д.
+
+Примеры использования SDK см. в разделе [Примеры](/ios/sdk/examples). Описание всех классов и методов см. в разделе [Справочник API](/ios/sdk/reference/stable/class).
+
+Картографические данные поддерживают [стандарты OGC](https://ru.wikipedia.org/wiki/Open_Geospatial_Consortium).
+
+## Версии SDK {#versions}
+
+Пакеты iOS SDK доступны в двух версиях:
+
+* **Full** — полная версия, которая позволяет:
+  * Добавлять [карту](/ios/sdk/examples/map) в приложение и управлять ей: добавлять маркеры и геометрические фигуры, управлять движением камеры, отображать слои (например, пробки), работать со стилями карты и т. д.
+  * Искать объекты в [справочнике](/ios/sdk/examples/directory): организации, здания, места и другие.
+  * Работать с [навигатором](/ios/sdk/examples/navigation) в приложении в трёх режимах: свободная навигация, ведение по маршруту и симуляция ведения.
+  * Строить оптимальные [маршруты](/ios/sdk/examples/routing) на карте, в том числе внутри зданий.
+  * Использовать [офлайн-данные](/ios/sdk/start#offline-mode).
+* **Map** — облегчённая версия, которая позволяет:
+  * Добавлять [карту](/ios/sdk/examples/map) в приложение и управлять ей: добавлять маркеры и геометрические фигуры, управлять движением камеры, отображать слои (например, пробки), работать со стилями карты и т. д.
+  * Искать объекты в [справочнике](/ios/sdk/examples/directory): организации, здания, места и другие.
+
+:::warning
+
+Не используйте версии **Full** и **Map** вместе: это приведёт к ошибке сборки.
+
+:::
+
+## API для работы SDK {#api-list}
+
+В зависимости от нужных функциональностей, для работы SDK требуются ключи доступа к API карт, поиска и навигации. Доступные возможности зависят от [версии SDK](#versions): **Full** или **Map**.
+
+При использовании ключа оплачивается только доступ к используемым API, в зависимости от количества отправленных запросов (и в некоторых случаях — полученных ответов). Вы можете работать с ключами в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=sdk_ios).
+
+### Карта (для Full и Map)
+
+Подробнее о доступных возможностях см. в инструкции [Карта](/ios/sdk/examples/map).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API |
+| ----------------------------------------------------- | ---------------- |
+| [Создание векторной карты в приложении](/ios/sdk/examples/map#creating-map)<br />(метод [makeMapFactory()](/ios/sdk/reference/stable/class#container/var-marker-view-factory)) | <ul><li>[Map Tiles API](/maps/others/maptiles/overview)</li><li>[Regions API](/api/search/regions/overview)</li></ul> |
+| [Отображение растровой карты в приложении](/ios/sdk/examples/map#add-raster-map)<br />(класс [RasterTileSource](/ios/sdk/reference/stable/class#raster-tile-source)) | [Raster Tiles API](/maps/others/rastertiles/overview) |
+| [Отображение пробок на карте](/ios/sdk/examples/map#traffic)<br />(класс [TrafficSource](/ios/sdk/reference/stable/class#traffic-source)) | [Regions API](/api/search/regions/overview) |
+
+### Справочник (для Full и Map)
+
+Подробнее о доступных возможностях см. в инструкции [Справочник](/ios/sdk/examples/directory).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API |
+| ----------------------------------------------------- | ---------------- |
+| [Создание поискового движка](/ios/sdk/examples/directory#creating-a-search-engine)<br />(класс [SearchManager](/ios/sdk/reference/stable/class#search-manager)) | [Regions API](/api/search/regions/overview) |
+| [Получение результатов поиска](/ios/sdk/examples/directory#get-search-results)<br />(метод [SearchManager.search()](/ios/sdk/reference/stable/class#search-manager/search)) | <ul><li>[Places API](/api/search/places/overview)</li><li>[Markers API](/api/search/markers/overview)</li></ul>Получение некоторой информации об объектах в доступно только при дополнительной настройке ключа за отдельную плату: см. раздел [Структура данных объекта](/ios/sdk/examples/directory#object-data-structure). |
+| [Поиск объектов в справочнике по идентификатору](/ios/sdk/examples/directory#create-search-query)<br />(метод [SearchManager.searchById()](/ios/sdk/reference/stable/class#search-manager/search-by-id)) | <ul><li>[Places API](/api/search/places/overview)</li><li>[Markers API](/api/search/markers/overview)</li></ul> |
+| [Формирование поисковых подсказок](/ios/sdk/examples/directory#search-suggestions)<br />(метод [SearchManager.suggest()](/ios/sdk/reference/stable/class#search-manager/suggest)) | [Suggest API](/api/search/suggest/overview) |
+
+### Маршруты (только для Full)
+
+Подробнее о доступных возможностях см. в инструкции [Маршруты](/ios/sdk/examples/routing).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API |
+| ----------------------------------------------------- | ---------------- |
+| [Поиск оптимального маршрута с учётом пробок](/ios/sdk/examples/routing#building-route)<br />(класс [TrafficRouter](/ios/sdk/reference/stable/class#traffic-router)) | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+| [Отображение маршрутов на карте](/ios/sdk/examples/routing#building-route)<br />(класс [RouteEditorSource](/ios/sdk/reference/stable/class#route-editor-source)) | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+
+### Навигация (только для Full)
+
+Подробнее о доступных возможностях см. в инструкции [Навигация](/ios/sdk/examples/navigation).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API |
+| ----------------------------------------------------- | ---------------- |
+| Запуск навигатора (метод [NavigationManager.start()](/ios/sdk/reference/stable/class#navigation-manager/start)):<ul><li>[в режиме свободной навигации](/ios/sdk/examples/navigation#free-drive-mode),</li><li>[в режиме ведения по маршруту](/ios/sdk/examples/navigation#turn-by-turn-mode).</li></ul> | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+| [Поиск альтернативных маршрутов](/ios/sdk/examples/navigation#alternative-routes)<br />(класс [AlternativeRouteSelector](/ios/sdk/reference/stable/class#alternative-route-selector)) | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+| [Отображение дорожных событий](/ios/sdk/examples/navigation#dynamic-route-data)<br />(класс [RoadEventSource](/ios/sdk/reference/stable/class#road-event-source)) | [Regions API](/api/search/regions/overview) |
+
+## Требования к устройствам {#system-requirements}
+
+* Xcode 14.
+* iOS 16 и выше / iPadOS 16 и выше (это обусловлено использованием [SwiftUI](https://developer.apple.com/documentation/swiftui) в проекте).
+
+## Демонстрационный проект {#demo-project}
+
+Демонстрационное приложение с исходным кодом см. в [GitHub-репозитории](https://github.com/2gis/mobile-sdk-ios-demo/).
+
+## Варианты размещения {#distribution}
+
+- **Облако**: iOS SDK доступен для работы в облачной инфраструктуре <Brand />.
+- **On-Premise**: iOS SDK до версии 12.10 включительно доступен при установке API-платформы <Brand /> в закрытом контуре. Подробнее см. в разделе [API-платформа для сервера](/on-premise-api-platform/overview/summary).

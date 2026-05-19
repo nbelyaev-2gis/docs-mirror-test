@@ -1,0 +1,501 @@
+---
+sidebar: fluttersdk
+---
+# Навигация
+
+С помощью SDK вы можете работать со следующими сценариями навигации:
+
+* Запустить навигатор в разных режимах ([свободная навигация](#free-drive-mode), [ведение по маршруту](#turn-by-turn-mode) и [симуляция ведения](#simulation)), в том числе [внутри зданий](#indoor-navigation).
+* Предлагать пользователю [альтернативные маршруты](#alternative-routes) по пути.
+* Получать [динамические данные маршрута](#dynamic-route-data) в ходе навигации.
+* Настраивать [звуковые оповещения](#sound-notifications) в навигаторе.
+
+Чтобы создать навигатор, используйте готовые элементы интерфейса и класс [NavigationManager](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager-class.html). Вы можете получать данные о текущем местоположении устройства одним из способов:
+
+* Использовать стандартный источник данных и при необходимости включить определение текущего местоположения через [Radar API](#radar-api).
+* Настроить навигатор для работы с [собственным источником геопозиции](#custom-location-source).
+
+## Начало работы {#getting-started}
+
+Создайте объект [NavigationManager](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager-class.html).
+
+Чтобы SDK мог получать данные о текущем местоположении устройства, используйте стандартный источник данных или [собственный источник геопозиции](#custom-location-source).
+
+Добавьте на карту маркер с текущей геопозицией устройства с помощью источника данных [MyLocationMapObjectSource](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/MyLocationMapObjectSource-class.html) и передайте его в метод карты [addSource()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/Map/addSource.html).
+
+```dart
+import 'package:dgis_mobile_sdk_full/dgis.dart' as sdk;
+
+// Создание объекта NavigationManager
+final sdk.Context sdkContext = sdk.DGis.initialize();
+final sdk.NavigationManager navigationManager = sdk.NavigationManager(sdkContext);
+
+navigationManager.mapManager.addMap(map);
+
+// Добавление маркера с текущей геопозицией на карту
+final sdk.MyLocationMapObjectSource locationSource = sdk.MyLocationMapObjectSource(sdkContext);
+map.addSource(locationSource);
+```
+
+Навигатор может работать в трёх режимах: свободная навигация, ведение по маршруту и симуляция ведения.
+
+Настройки навигатора можно изменить через свойства объекта [NavigationManager](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager-class.html).
+
+## Использование Radar API {#radar-api}
+
+Для определения местоположения устройства вы можете дополнительно использовать [Radar API](/api/navigation/radar/overview). Radar API вычисляет местоположение по сотовым вышкам и ближайшим точкам доступа Wi-Fi.
+
+Если включено использование Radar API, то постоянно сравнивается точность геопозиции, полученная из GPS и через Radar API. По умолчанию приоритетной являются геопозиция, вычисленная с помощью GPS. Геопозиция, вычисленная через Radar API, используется в следующих случаях:
+
+* Потеря сигнала GPS.
+* Ухудшение точности GPS до значения параметра `minimalAcceptableGpsAccuracyM`, который передаётся при инициализации `DefaultLocationSource`. При этом точность геопозиции из Radar API должна быть выше, чем у GPS.
+
+Сервис Radar API доступен только для Android, поэтому настройка происходит в Android-части приложения. Сервис работает только со стандартным источником геопозиции, который используется в Android. Если вы переопределили источник геопозиции в Flutter-части приложения, сервис не будет работать. Подробнее о работе Radar API см. в разделе [Использование Radar API](/android/sdk/examples/navigation#radar-api) для Android SDK.
+
+### Разрешения для приложения
+
+Для правильной работы Radar API приложение должно получить разрешения:
+
+* [ACCESS\_FINE\_LOCATION](https://developer.android.com/reference/android/Manifest.permission#ACCESS_FINE_LOCATION);
+* [ACCESS\_WIFI\_STATE](https://developer.android.com/reference/android/Manifest.permission#ACCESS_WIFI_STATE);
+* [CHANGE\_WIFI\_STATE](https://developer.android.com/reference/android/Manifest.permission#CHANGE_WIFI_STATE);
+* [NEARBY\_WIFI\_DEVICES](https://developer.android.com/reference/android/Manifest.permission#NEARBY_WIFI_DEVICES) (опционально) — используется для расчёта расстояния до точки доступа Wi-Fi. Разрешение является чувствительным, поэтому приложение запрашивает и получает его самостоятельно. Сервис может работать без этого разрешения, но в некоторых случаях оно увеличивает точность геопозиции.
+
+### Включение Radar API
+
+Чтобы использовать Radar API:
+
+1. Купите доступ к Radar API и убедитесь, что доступ к нему включён в вашем ключе для работы с SDK. Подробнее о получении ключа для работы с SDK см. в разделе [Начало работы](/flutter/sdk/start).
+
+2. Чтобы сборка прошла успешно, в `build.gradle` приложения в модуле `app` добавьте зависимость сборки, требуемую во время компиляции (`compileOnly`).
+
+   Рекомендуется использовать артефакт, соответствующий используемому пакету. Например:
+
+   * `"ru.dgis.sdk.flutter_plugin:full:<version>"` — для `dgis_mobile_sdk_full`;
+   * `"ru.dgis.sdk.flutter_plugin:map:<version>"` — для `dgis_mobile_sdk_map`.
+
+   Версия (`<version>`) должна соответствовать версии используемого пакета, но не ниже `12.6.0` (первая версия с поддержкой Radar API).
+
+   Пример для Full-сборки:
+
+   ```groovy
+   dependencies {
+       compileOnly("ru.dgis.sdk.flutter_plugin:full:12.6.0")
+   }
+   ```
+
+3. В `MainActivity.kt` переопределите метод `configureFlutterEngine()` и зарегистрируйте в нём провайдер настроек для Radar API.
+
+   ```kotlin
+   import io.flutter.embedding.android.FlutterActivity
+   import io.flutter.embedding.engine.FlutterEngine
+   import ru.dgis.sdk.RadarSettingsProviderRegistry
+   import ru.dgis.sdk.positioning.RadarSettingsProvider
+   import ru.dgis.sdk.positioning.radar.RadarApiSettings
+
+   class MainActivity: FlutterActivity() {
+       override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+           super.configureFlutterEngine(flutterEngine)
+           // Вызов метода register() и передача экземпляра провайдера настроек
+           RadarSettingsProviderRegistry.register(MyRadarSettingsProvider())
+       }
+   }
+
+   // Реализация провайдера без использования Radar API (объект RadarApiSettings.OFF)
+   class MyRadarSettingsProvider(): RadarSettingsProvider() {
+       override fun provideSettings(): RadarApiSettings {
+           return RadarApiSettings.OFF
+       }
+   }
+
+   // Реализация провайдера с использованием Radar API
+   class MyRadarSettingsProvider(): RadarSettingsProvider() {
+       override fun provideSettings(): RadarApiSettings {
+           return RadarApiSettings.ON(apiKey = "your-api-key").
+       }
+   }
+   ```
+
+   Полный список настроек см. в разделе [Подключение Radar API](/android/sdk/examples/navigation#radar-api) для Android SDK.
+
+## Собственный источник геопозиции {#custom-location-source}
+
+В качестве источника данных о текущем местоположении вы можете использовать собственный источник геопозиции. Для этого реализуйте интерфейс [LocationProvider](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/LocationProvider-class.html) и передайте его в параметр `locationProvider` при инициализации SDK.
+
+1. Создайте класс, реализующий интерфейс `LocationProvider`:
+
+   ```dart
+   import 'package:dgis_mobile_sdk/dgis.dart' as sdk;
+
+   class CustomLocationProvider implements sdk.LocationProvider {
+     sdk.Location? _location;
+     sdk.LocationNotifier? _locationNotifier;
+
+     @override
+     sdk.Location? lastLocation() {
+       return _location;
+     }
+
+     // SDK вызывает этот метод для установки notifier-ов,
+     // через которые нужно передавать данные о геопозиции
+     @override
+     void setNotifiers(
+       sdk.LocationNotifier? locationNotifier,
+       sdk.LocationAvailableNotifier? availableNotifier,
+     ) {
+       _locationNotifier = locationNotifier;
+       // Сообщение для SDK, что источник геопозиции доступен
+       availableNotifier?.send(true);
+     }
+
+     // Метод для установки желаемой точности геопозиции
+     @override
+     void setDesiredAccuracy(sdk.DesiredAccuracy desiredAccuracy) {}
+
+     // Метод для передачи новой геопозиции в SDK
+     void updateLocation(sdk.Location location) {
+       _location = location;
+       _locationNotifier?.send([location]);
+     }
+   }
+   ```
+
+2. Создайте контейнер SDK с собственным поставщиком геопозиции:
+
+   ```dart
+    final customLocationProvider = CustomLocationProvider();
+
+    final sdkContext = sdk.DGis.initialize(
+      locationProvider: customLocationProvider,
+    );
+   ```
+
+3. Когда ваше приложение получает новые координаты, передавайте их в SDK через `updateLocation`:
+
+    ```dart
+     final location = sdk.Location(
+       coordinates: sdk.LocationCoordinates(
+         value: sdk.GeoPoint(
+           latitude: sdk.Latitude(55.751244),
+           longitude: sdk.Longitude(37.618423),
+         ),
+         accuracy: 5,
+       ),
+       altitude: null,
+       course: sdk.LocationCourse(
+         value: sdk.Bearing(90),
+         accuracy: sdk.Bearing(5),
+       ),
+       groundSpeed: null,
+       timestamp: Duration.zero,
+     );
+
+     customLocationProvider.updateLocation(location);
+    ```
+
+## Свободная навигация {#free-drive-mode}
+
+В этом режиме маршрут следования отсутствует, но навигатор будет информировать о превышениях скорости, дорожных камерах, авариях и ремонтных работах.
+
+Чтобы запустить навигатор в этом режиме, нужно вызвать метод [startFreeRoam()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager/startFreeRoam.html) без параметров.
+
+```dart
+import 'package:dgis_mobile_sdk_full/dgis.dart' as sdk;
+
+final sdk.Context sdkContext = sdk.DGis.initialize();
+final sdk.NavigationManager navigationManager = sdk.NavigationManager(sdkContext);
+
+navigationManager.startFreeRoam();
+```
+
+## Ведение по маршруту {#turn-by-turn-mode}
+
+В этом режиме на карте будет построен маршрут от текущего местоположения до указанной точки назначения, и пользователь будет получать инструкции по мере движения.
+
+Чтобы запустить навигатор в этом режиме, нужно вызвать метод [start()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager/start.html) и указать объект [RouteBuildOptions](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/RouteBuildOptions-class.html): координаты точки назначения и настройки маршрута.
+
+```dart
+import 'package:dgis_mobile_sdk_full/dgis.dart' as sdk;
+
+final routeBuildOptions = sdk.RouteBuildOptions(
+    finishPoint: sdk.RouteSearchPoint(
+        coordinates: sdk.GeoPoint(
+            latitude: sdk.Latitude(55.757670),
+            longitude: sdk.Longitude(37.660160),
+        ),
+    ),
+    routeSearchOptions: sdk.RouteSearchOptions.car(
+        sdk.CarRouteSearchOptions(),
+    ),
+);
+
+navigationManager.start(routeBuildOptions);
+```
+
+Дополнительно при вызове метода `start()` можно указать объект [TrafficRoute](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/TrafficRoute-class.html) — готовый маршрут для навигации (см. детали в разделе [Маршруты](/flutter/sdk/examples/routing)). В таком случае навигатор не будет пытаться построить маршрут от текущего местоположения, а начнёт ведение по указанному маршруту.
+
+```dart
+navigationManager.start(routeBuildOptions, trafficRoute);
+```
+
+## Симуляция ведения по маршруту {#simulation}
+
+В этом режиме навигатор не будет отслеживать реальное местоположение устройства, а запустит симулированное движение по указанному маршруту. Режим удобно использовать для отладки.
+
+Чтобы запустить навигатор в режиме симуляции, нужно вызвать метод [startSimulation()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager/startSimulation.html), указав готовый маршрут ([TrafficRoute](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/TrafficRoute-class.html)) и его настройки ([RouteBuildOptions](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/RouteBuildOptions-class.html)).
+
+Скорость движения можно изменить с помощью свойства [SimulationSettings.speedMode](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/SimulationSettings-class.html) (метры в секунду).
+
+```dart
+navigationManager.simulationSettings.speedMode = sdk.SimulationSpeedMode.overSpeed(
+  sdk.SimulationAutoWithOverSpeed(10)
+);
+
+navigationManager.startSimulation(routeBuildOptions, trafficRoute);
+```
+
+Остановить симуляцию можно с помощью метода [stop()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager/stop.html).
+
+```dart
+navigationManager.stop();
+```
+
+## Навигация внутри зданий {#indoor-navigation}
+
+<img src="/img/mobile-sdk/first_indoor_ru.png" width="200" /> <img src="/img/mobile-sdk/secoond_indoor_ru.png" width="200" /> <img src="/img/mobile-sdk/third_indoor_ru.png" width="200" />
+
+SDK предоставляет возможность строить маршруты внутри некоторых зданий, для которых существуют этажные планы. Например, можно проложить маршрут до конкретного магазина в торговом центре, составить сложный маршрут между несколькими точками и т. д.
+
+Этот тип навигации включен в набор стандартной поставки Full SDK, однако имеет ряд ограничений:
+
+* Может быть активирован только в режиме пешеходной навигации.
+* Из-за особенностей работы современных систем позиционирования возможности определения позиции внутри зданий сильно ограничены. Когда система определит, что устройство попало в пределы здания, слежение за геопозицией и ее отображение отключится, оставив построенный маршрут и рекомендации по проходу.
+
+### Создание маршрута
+
+Создание маршрута происходит по принципам, описанным в разделе [Ведение по маршруту](#turn-by-turn-mode) с несколькими важными дополнениями. При создании конечной точки маршрута [RouteSearchPoint](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/RouteSearchPoint-class.html) обязательно указать параметры `objectId` и `levelId`.
+
+```dart
+import 'package:dgis_mobile_sdk_full/dgis.dart' as sdk;
+
+// Также необходим объект RouteBuildOptions
+final routeBuildOptions = sdk.RouteBuildOptions(
+    finishPoint: sdk.RouteSearchPoint(
+        coordinates: sdk.GeoPoint(
+            latitude: sdk.Latitude(55.757670),
+            longitude: sdk.Longitude(37.660160),
+        ),
+        objectId: ..., // Можно получить из DgisMapObject
+        levelId: ..., // Можно получить из DirectoryObject или RenderedObjectInfo
+    ),
+     // routeSearchOptions должен иметь тип PedestrianRouteSearchOptions
+    routeSearchOptions: sdk.RouteSearchOptions.pedestrian(
+        sdk.PedestrianRouteSearchOptions(),
+    ),
+);
+```
+
+### Отображение маршрута
+
+Для определения вхождения в режим навигации внутри здания можно пользоваться стандартными возможностями SDK, а именно подпиской на канал [indoorChannel](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/IndoorDetector/indoorChannel.html). Этот канал можно получить из [NavigationManager.indoorDetector](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager/indoorDetector.html).
+
+## Альтернативные маршруты {#alternative-routes}
+
+Во время движения по автомобильному маршруту навигатор периодически ищет другие способы доехать до финишной точки. При поиске альтернативных маршрутов учитываются все заданные параметры маршрута и промежуточные точки (кроме тех, которые пользователь уже посетил). Интервал поиска составляет 1 минуту и не может быть изменён.
+
+Альтернативный маршрут отображается на карте, когда развилка для съезда на него приближается по ходу движения, но при этом у пользователя остается достаточно времени на принятие решения.
+
+Альтернативный маршрут показывается на карте в виде линии с бабликом, на котором показана разница во времени движения: сколько времени сэкономит или потеряет пользователь, если перейдёт на альтернативный маршрут. Для перехода на этот маршрут пользователь может нажать на линию маршрута на экране или просто свернуть на развилке на альтернативный маршрут. Если на развилке пользователь продолжает движение по основному маршруту, альтернативный маршрут исчезает с карты.
+
+Чтобы начать ведение по альтернативному маршруту, используйте [AlternativeRouteSelector](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/AlternativeRouteSelector-class.html):
+
+```dart
+navigationManager.alternativeRouteSelector.selectAlternativeRoute(route);
+```
+
+### «Маршрут лучше»
+
+Среди альтернативных маршрутов может быть выделен особый тип «маршрут лучше», если маршрут соответствует следующим критериям:
+
+* Ожидаемая длительность движения по «маршруту лучше» должна быть существенно меньше, чем по оставшейся части основного маршрута. Разница по умолчанию — 5 минут.
+* «Маршрут лучше» должен существенно отличаться от основного маршрута по геометрии (по дорогам, через которые он проходит). По умолчанию разница в длине отличающихся рёбер маршрута — 500 метров.
+
+Если среди обнаруженных альтернативных маршрутов находится «маршрут лучше», на карте дополнительно отображается отдельный UI-элемент, при нажатии на который пользователь может перейти на движение по «маршруту лучше» или явно отказаться от него. Этот элемент исчезает с экрана через определённое время (по умолчанию 30 секунд), но линия маршрута продолжает отображаться на карте до проезда развилки.
+
+В один и тот же момент времени только один маршрут может быть предложен пользователю как «маршрут лучше». Поиск нового «маршрута лучше» начинается либо после явного отказа пользователя от предыдущего (при нажатии на UI-элемент), либо после проезда развилки с ним.
+
+### Настройки поиска альтернативных маршрутов
+
+Чтобы изменить параметры поиска альтернативных маршрутов, используйте свойство [AlternativeRoutesProviderSettings](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/AlternativeRoutesProviderSettings-class.html) объекта [NavigationManager](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager-class.html).
+
+Например, чтобы отключить поиск альтернативных маршрутов и «маршрута лучше», используйте параметры `alternativeRoutesEnabled` и `betterRouteEnabled` соответственно:
+
+```dart
+// Отключить поиск альтернативных маршрутов
+navigationManager.alternativeRoutesProviderSettings.alternativeRoutesEnabled = false;
+
+// Отключить поиск «маршрута лучше»
+navigationManager.alternativeRoutesProviderSettings.alternativeRoutesEnabled = false;
+```
+
+Поиск «маршрута лучше» не может быть включён самостоятельно, если не включён поиск альтернативных маршрутов в целом.
+
+## Динамическая информация о маршруте {#dynamic-route-data}
+
+В процессе навигации вы можете получать динамическую информацию о маршруте через свойство `uiModel` в [NavigationManager](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager-class.html) и отображать её в UI навигатора. В классе [Model](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/Model-class.html) представлены следующие параметры:
+
+* состояние навигатора (`state` и `stateChannel`);
+* текущая геопозиция, с которой работает навигатор (`location` и `locationChannel`);
+* флаг использования текущей геопозиции для навигации (`locationAvailable` и `locationAvailableChannel`);
+* информация о маршруте с манёврами (`route` и `routeChannel`);
+* дорожные события и пробочные данные на маршруте (`dynamicRouteInfo` и `dynamicRouteInfoChannel`);
+* текущая позиция пользователя на маршруте (`routePosition` и `routePositionChannel`);
+* флаг превышения скорости (`exceedingMaxSpeedLimit` и `exceedingMaxSpeedLimitChannel`);
+* флаг нахождения «маршрута лучше» (`betterRoute` и `betterRouteChannel`);
+* расстояние (`distance`) и время (`duration`) до конца маршрута;
+* флаг режима свободной навигации (`isFreeRoam`).
+
+Информация о маршруте в [Model](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/Model-class.html) изменяется динамически относительно текущей позиции пользователя на маршруте. Чтобы получать актуальную позицию, подпишитесь на канал [routePositionChannel](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/Model/routePositionChannel.html) и затем используйте это значение для получения других данных о маршруте. Подробнее о работе с каналами см. в разделе [Потоки значений](/flutter/sdk/examples/base#data-channels).
+
+Например, получите следующую информацию:
+
+* Расстояние ([distance](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/ModelDistanceDuration/distance.html)) и время ([duration](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/ModelDistanceDuration/duration.html)) от текущей точки до конца маршрута:
+
+  ```dart
+  // Канал для получения позиции на маршруте
+  final positionChannel = navigationManager.uiModel.routePositionChannel;
+
+  final subscription = positionChannel.listen((routePosition) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+
+      // Расстояние до конца маршрута в метрах
+      final distance = navigationManager.uiModel.distance();
+
+      // Время до конца маршрута в секундах
+      final duration = navigationManager.uiModel.duration();
+
+      ...
+      });
+  });
+  ```
+
+* Дорожные события и данные о пробках ([dynamicRouteInfo](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/Model/dynamicRouteInfo.html)). Данные о дорожных событиях хранятся в контейнере [RoadEventRouteAttribute](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/RoadEventRouteAttribute-class.html), откуда элемент можно получить по позиции на маршруте.
+
+  Например, чтобы получить следующее ближайшее дорожное событие на маршруте:
+
+  ```dart
+  // Канал для получения позиции на маршруте
+  final positionChannel = navigationManager.uiModel.routePositionChannel;
+
+  final subscription = positionChannel.listen((routePosition) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+
+      // Получить ближайшее дорожное событие относительно текущей позиции
+      final dynamicInfo = navigationManager.uiModel.dynamicRouteInfo;
+      final nearestEvent = dynamicInfo.roadEvents?.findNearForward(routePosition);
+
+      ...
+      });
+  });
+  ```
+
+* Текущее состояние навигатора. Вы можете получать его через подписку на канал [stateChannel](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/Model/stateChannel.html) или отдельно ([state](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/Model/state.html)):
+
+  ```dart
+  // Получить состояние навигатора вне канала
+  final currentState = navigationManager.uiModel.state;
+  ```
+
+  ```dart
+  // Канал для получения состояния навигатора
+  final stateChannel = navigationManager.uiModel.stateChannel;
+
+  final subscription = stateChannel.listen((state) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+      ...
+      });
+  });
+  ```
+
+  Навигатор может находиться в одном из следующих состояний:
+
+  * `disabled` — неактивен (начальное состояние);
+  * `navigation` — в режиме ведения по маршруту;
+  * `routeSearch` — в поиске нового маршрута;
+  * `finished` — завершил ведение по маршруту (конечная точка достигнута).
+
+## Звуковые оповещения {#sound-notifications}
+
+Вы можете настроить звуковые оповещения в навигаторе:
+
+* Установить уровень громкости через параметр `volume` класса [AudioSettings](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/AudioSettings-class.html). Передаётся в метод [getAudioSettings()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/getAudioSettings.html):
+
+   ```dart
+   final audioSettings = getAudioSettings(sdkContext);
+   audioSettings.volume = 10; // Значение от 0 до 100
+   ```
+
+* Отключить звук через параметр `mute` класса [AudioSettings](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/AudioSettings-class.html). Передаётся в метод [getAudioSettings()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/getAudioSettings.html):
+
+   ```dart
+   final audioSettings = getAudioSettings(sdkContext);
+   audioSettings.mute = true; // Звук отключен
+   ```
+
+* Указать категории звуковых оповещений через параметр `enabledSoundCategories` класса [SoundNotificationSettings](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/SoundNotificationSettings-class.html). Передаётся в свойстве `soundNotificationSettings` объекта [NavigationManager](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager-class.html).
+
+   Примеры категорий событий: дорожные работы (`roadWorks`), платные дороги (`tolls`), препятствия (`obstacles`) и другие (см. полный список в [SoundCategory](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/SoundCategory.html)).
+
+   По умолчанию все категории оповещений включены. Чтобы включить оповещения только для определённых событий, укажите их:
+
+   ```dart
+   import 'package:dgis_mobile_sdk_map/dgis.dart' as sdk;
+
+   final soundSettings = navigationManager.soundNotificationSettings;
+
+   soundSettings.enabledSoundCategories = sdk.SoundCategoryEnumSet({
+         sdk.SoundCategory.crossroadCameras,    // Камеры контроля перекрёстка
+         sdk.SoundCategory.averageSpeedCameras, // Камеры контроля средней скорости
+         sdk.SoundCategory.roadWorks,           // Дорожные работы
+         sdk.SoundCategory.tolls,               // Платные дороги
+         sdk.SoundCategory.obstacles            // Препятствия
+   });
+
+   navigationManager.soundNotificationSettings = soundSettings;
+   ```
+
+* По умолчанию язык озвучки навигатора зависит от [языка приложения](/flutter/sdk/start#application-language). Вы можете установить язык звуковых оповещений только для навигатора. Выберите голосовой пакет навигатора [Voice](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/Voice-class.html) с нужным языком, установите его и передайте объект [NavigationVoice](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationVoice-class.html) в класс [VoiceSelector](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/VoiceSelector-class.html). Передаётся в свойстве `voiceSelector` объекта [NavigationManager](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager-class.html).
+
+   Пример установки звуковых оповещений на английском языке:
+
+   ```dart
+   import 'package:dgis_mobile_sdk_full/dgis.dart' as sdk;
+
+   // Получение списка голосов из VoiceManager
+   final voices = sdk.getVoiceManager(context).voices;
+
+   // Выбор голоса с нужным языком
+   final voice = voices.firstWhere(
+      (voice) => voice.language == 'en',
+   );
+
+   // Установка голосового пакета
+   voice.install();
+   final navigationVoice = voice.navigationVoice;
+
+   // Передача NavigationVoice в NavigationManager
+   navigationManager.voiceSelector.voice = navigationVoice;
+   ```
+
+      Доступные значения языков озвучки (параметр `language`):
+
+      * `ru` — русский;
+      * `en` — английский;
+      * `ar` — арабский;
+      * `hy` — армянский;
+      * `kk` — казахский;
+      * `ky` — киргизский
+      * `uz` — узбекский;
+      * `ka` — грузинский;
+      * `az` — азербайджанский;
+      * `tg` — таджикский.

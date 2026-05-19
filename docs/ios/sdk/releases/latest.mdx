@@ -1,0 +1,633 @@
+---
+sidebar: iossdk
+---
+# Релизы
+
+## 13.4.0 (2026-04-22)
+
+### 🌟 Новые возможности
+
+* [IModernMapViewsFactory](/ios/sdk/reference/stable/interface#imodern-map-views-factory) — фабрика SwiftUI-элементов карты с обновлённым дизайном.
+* [IModernMapUIControlsFactory](/ios/sdk/reference/stable/interface#imodern-map-uicontrols-factory) — фабрика UIKit-элементов карты с обновлённым дизайном.
+* Дашборд в [NavigationView](/ios/sdk/reference/stable/struct#navigation-view) теперь поддерживает изменение состояния через распознаватель жестов.
+* Добавлено отображение ошибок в [RouteEditorView](/ios/sdk/reference/stable/struct#route-editor-view) на основе [RouterErrorInfo](/ios/sdk/reference/stable/struct#router-error-info).
+* Свойство [IndoorControlModel.levelNames](/ios/sdk/reference/stable/class#indoor-control-model/var-level-names) теперь остаётся пустым, если на карте не отображается здание с этажными планами, даже если у здания один этаж.
+* [LocationQuality](/ios/sdk/reference/stable/enumeration#location-quality) — качество определения текущего местоположения.
+* [MyLocationControlModel.locationQuality](/ios/sdk/reference/stable/class#my-location-control-model/var-location-quality) — свойство для получения качества определения текущего местоположения.
+* Увеличено максимальное значение угла наклона камеры [CameraPosition.tilt](/ios/sdk/reference/stable/class#camera-position/var-tilt) до 70.0.
+
+### 🛠 Исправления
+
+* Добавлена поддержка моделей iPhone 17e и iPad Air M4 с учётом их PPI при вычислении DPI.
+* Исправлено отображение UI-элемента полной карточки объекта справочника [DirectoryObjectView](/ios/sdk/reference/stable/struct#directory-object-view) в альбомной ориентации.
+* Исправлена ошибка, при которой свойство [LocationService.lastLocation](/ios/sdk/reference/stable/class#location-service/var-last-location) оставалось пустым, если создать только объект [LocationService](/ios/sdk/reference/stable/class#location-service).
+* Скорректированы значения свойств [WorkStatus.openStatusHint](/ios/sdk/reference/stable/struct#work-status/var-open-status-hint) и [WorkStatus.scheduleHint](/ios/sdk/reference/stable/struct#work-status/var-schedule-hint) для заведений, работающих ночью.
+* Исправлено исчезновение тайлов пробок, полученных через источник [TrafficSource](/ios/sdk/reference/stable/class#traffic-source), при изменении масштаба карты.
+* Исправлены сбои в работе [IndoorManager](/ios/sdk/reference/stable/class#indoor-manager).
+* Улучшено скачивание голосовых пакетов и пакетов территорий через [Package.install()](/ios/sdk/reference/stable/class#package/install).
+
+## 13.3.1 (2026-03-20)
+
+### 🌟 Новые возможности
+
+* Теперь вы можете создать и скачать файл ключа в Менеджере Платформы: см. [Получение ключей доступа](/ios/sdk/start#get-api-key).
+* В манифесте ключа, передаваемого в [Container](/ios/sdk/reference/stable/class#container), теперь необязательно наличие заполненного `restrictions/app_id`, если не планируется работа с офлайн-данными (`offlineRouting`, `offlineMap`, `offlineDirectory`). В противном случае наличие `restrictions/app_id` обязательно.
+* При передаче пустого идентификатора этажа в параметр [IndoorControlModel.activeLevelIndex](/ios/sdk/reference/stable/class#indoor-control-model/var-active-level-index) этажный план здания будет скрываться.
+* [Closed](/ios/sdk/reference/stable/struct#closed) — структура, представляющая статус `Закрыто` у объекта справочника с информацией о причине закрытия и времени до открытия.
+* [ClosedReason](/ios/sdk/reference/stable/enumeration#closed-reason) — причины установки статуса `Закрыто` у объекта справочника.
+* [ClosingHours](/ios/sdk/reference/stable/struct#closing-hours) — структура с информацией о нерабочих интервалах и причине закрытия объекта справочника.
+* [ClosingSoon](/ios/sdk/reference/stable/struct#closing-soon) — структура, представляющая статус `Скоро закроется` у объекта справочника с информацией о причине и времени закрытия.
+* [OpenStatus](/ios/sdk/reference/stable/enumeration#open-status) — класс, описывающий детализированный статус работы объекта справочника в данный момент (`Открыто`, `Скоро откроется`, `Скоро закроется`, `Закрыто`).
+* [Opened](/ios/sdk/reference/stable/struct#opened) — структура, представляющая статус `Открыто` у объекта справочника с информацией о времени до закрытия.
+* [OpeningSoon](/ios/sdk/reference/stable/struct#opening-soon) — структура, представляющая статус `Скоро откроется` у объекта справочника с информацией о времени до открытия.
+* [OpeningHours.weekClosingHours](/ios/sdk/reference/stable/struct#opening-hours/var-week-closing-hours) — свойство для получения списка нерабочих интервалов объекта справочника по каждому дню недели.
+* [OpeningHours.isOpen24x7](/ios/sdk/reference/stable/struct#opening-hours/var-is-open24x7) — свойство для признака круглосуточной работы объекта справочника.
+* [WorkStatus.openStatus](/ios/sdk/reference/stable/struct#work-status/var-open-status) — свойство с детальным статусом `Открыто` у объекта справочника.
+* [WorkStatus.openStatusHint](/ios/sdk/reference/stable/struct#work-status/var-open-status-hint) — свойство текстовой подсказки о статусе `Открыто` у объекта справочника.
+* [WorkStatus.scheduleHint](/ios/sdk/reference/stable/struct#work-status/var-schedule-hint) — свойство текстовой подсказки о расписании работы объекта справочника.
+* [WorkStatus.breakHint](/ios/sdk/reference/stable/struct#work-status/var-break-hint) — свойство текстовой подсказки о текущем или ближайшем перерыве в работе объекта справочника.
+* [Reviews.countWithStars](/ios/sdk/reference/stable/struct#reviews/var-count-with-stars) — свойство для общего количества оценок объекта справочника, включая отзывы без текста.
+
+### ❗ Изменения, влияющие на обратную совместимость
+
+* Обновлен формат офлайн-пакетов для поддержки новых справочных данных.
+
+### 🛠 Исправления
+
+* Запросы тайлов пробок через источник [TrafficSource](/ios/sdk/reference/stable/class#traffic-source) теперь компонуются для оптимизации количества запросов.
+* Оптимизирована отрисовка тайлов карты, чтобы не нагружать все доступные ядра процессора.
+* Увеличен уровень масштабирования для растровых тайлов, добавляемых через источник [RasterTileSource](/ios/sdk/reference/stable/class#raster-tile-source), до 16.
+* Исправлена ошибка при добавлении анимированной модели [ModelMapObject](/ios/sdk/reference/stable/class#model-map-object), из-за которой не перезапускались анимации и не поворачивались модели к камере.
+* Исправлена работа канала готовности карты [Map.dataLoadingStateChannel](/ios/sdk/reference/stable/class#map/var-data-loading-state-channel) в иммерсивном режиме (когда для [Map.graphicsPreset](/ios/sdk/reference/stable/class#map/var-graphics-preset) установлено значение [GraphicsPreset.immersive](/ios/sdk/reference/stable/enumeration#graphics-preset/immersive)).
+* Исправлено поведение значения [TextStyle.textPlacement](/ios/sdk/reference/stable/struct#text-style/var-text-placement) в свойстве [Marker.textStyle](/ios/sdk/reference/stable/class#marker/var-text-style): теперь при изменении значения корректно меняется положение текста относительно маркера.
+* В мини-карточке объектов [SearchResultItemView](/ios/sdk/reference/stable/struct#search-result-item-view) теперь используется корректное значение для количества отзывов ([Reviews.countWithStars](/ios/sdk/reference/stable/struct#reviews/var-count-with-stars)) вместо общего количества отзывов.
+* Исправлены рывки и рассинхронизация отображения маркера геопозиции и линии маршрута при навигации по длительным маршрутам между регионами.
+* Исправлено отображение километров в баблах маршрутов в арабской локали.
+* Обновлены значения по умолчанию настроек [ZoomFollowSettings](/ios/sdk/reference/stable/class#zoom-follow-settings) в навигаторе для корректного отображения видимого пространства на карте.
+* Исправлены UX-ошибки в [RouteEditorView](/ios/sdk/reference/stable/struct#route-editor-view): например улучшена обработка жестов и скроллинга маршрутов в ландшафтном режиме.
+* Теперь для получения маршрутов на общественном транспорте через [PublicTransportRouteSearchOptions](/ios/sdk/reference/stable/struct#public-transport-route-search-options) по умолчанию используется [Routing API](/api/navigation/routing/overview).
+
+## 13.2.0 (2026-01-22)
+
+### 🌟 Новые возможности
+
+* [RouteEditorView](/ios/sdk/reference/stable/struct#route-editor-view) — SwiftUI-элемент для отображения экрана выбора маршрута. Для настройки вы можете использовать [RouteEditorViewTheme](/ios/sdk/reference/stable/struct#route-editor-view-theme).
+* [GestureManager](/ios/sdk/reference/stable/class#gesture-manager) и [IMapFactory.gestureManager](/ios/sdk/reference/stable/interface#imap-factory/var-gesture-manager) — класс для управления обработкой жестов карты.
+* [MapGestureRecognizerUIViewFactory](/ios/sdk/reference/stable/struct#map-gesture-recognizer-uiview-factory) — фабрика UIKit-элементов обработки жестов по умолчанию. Чтобы вернуть предыдущий механизм распознавания жестов карты, используйте фабрику [MapGestureUIViewFactory](/ios/sdk/reference/stable/struct#map-gesture-uiview-factory).
+* [TransformGestureOptionSet](/ios/sdk/reference/stable/struct#transform-gesture-option-set) — типы жестов для управления картой.
+* [ScalingRecognizeSettings](/ios/sdk/reference/stable/struct#scaling-recognize-settings) и [ScalingGestureSettings.recognizeSettings](/ios/sdk/reference/stable/class#scaling-gesture-settings/var-recognize-settings) — класс и свойство для управления настройками распознавания масштабирования.
+* [RotationRecognizeSettings](/ios/sdk/reference/stable/struct#rotation-recognize-settings) и [RotationGestureSettings.recognizeSettings](/ios/sdk/reference/stable/class#rotation-gesture-settings/var-recognize-settings) — класс и свойство для управления настройками распознавания вращения.
+* [MultiTouchRecognizeSettings](/ios/sdk/reference/stable/struct#multi-touch-recognize-settings) и [MultiTouchGestureSettings.recognizeSettings](/ios/sdk/reference/stable/class#multi-touch-gesture-settings/var-recognize-settings) — класс и свойство для управления настройками распознавания касания несколькими пальцами.
+* [TiltRecognizeSettings](/ios/sdk/reference/stable/struct#tilt-recognize-settings) и [TiltGestureSettings](/ios/sdk/reference/stable/class#tilt-gesture-settings) — класс и свойство для управления настройками распознавания наклона.
+* [CommonGestureSettings](/ios/sdk/reference/stable/class#common-gesture-settings) и [GestureManager.commonSettings](/ios/sdk/reference/stable/class#gesture-manager/var-common-settings) — класс и свойство для доступа к общим настройкам жестов карты.
+* [CommonRecognizeSettings](/ios/sdk/reference/stable/struct#common-recognize-settings) — класс с настройками распознавания жестов карты.
+* [ScalingKinematicSettings](/ios/sdk/reference/stable/struct#scaling-kinematic-settings) и [ScalingGestureSettings.kinematicSettings](/ios/sdk/reference/stable/class#scaling-gesture-settings/var-kinematic-settings) — класс и свойство для настройки кинематики масштабирования карты.
+* [RotationKinematicSettings](/ios/sdk/reference/stable/struct#rotation-kinematic-settings) и [RotationGestureSettings.kinematicSettings](/ios/sdk/reference/stable/class#rotation-gesture-settings/var-kinematic-settings) — класс и свойство для настройки кинематики вращения карты.
+* [TiltKinematicSettings](/ios/sdk/reference/stable/struct#tilt-kinematic-settings) и [TiltGestureSettings.kinematicSettings](/ios/sdk/reference/stable/class#tilt-gesture-settings/var-kinematic-settings) — класс и свойство для настройки кинематики наклона карты.
+* [Marker.suppressOnOverlap](/ios/sdk/reference/stable/class#marker/var-suppress-on-overlap) и [MarkerOptions.suppressOnOverlap](/ios/sdk/reference/stable/struct#marker-options/var-suppress-on-overlap) — свойство для управления видимостью иконки маркера при наложении объектов на карте.
+* [SimpleClusterObject.suppressOnOverlap](/ios/sdk/reference/stable/class#simple-cluster-object/var-suppress-on-overlap) и [SimpleClusterOptions.suppressOnOverlap](/ios/sdk/reference/stable/struct#simple-cluster-options/var-suppress-on-overlap) — свойство для управления видимостью иконки кластерного объекта при наложении объектов на карте.
+* [RoadEventFilterData](/ios/sdk/reference/stable/struct#road-event-filter-data) — класс с данными о дорожном событии, которые используются для фильтрации.
+* [RoadEventFilter](/ios/sdk/reference/stable/interface#road-event-filter) и [RoadEventSource.roadEventFilter](/ios/sdk/reference/stable/class#road-event-source/var-road-event-filter) — интерфейс фильтра отображаемых дорожных событий.
+* Добавлена возможность пересоздавать [Container](/ios/sdk/reference/stable/class#container), чтобы освободить неиспользуемые ресурсы (например, кеш после первого создания карты).
+
+### 🛠 Исправления
+
+* Исправлена ошибка построения офлайн-маршрутов между регионами.
+* Исправлена ошибка, из-за которой на карте не отображался активный бабл полосности при показе активного маршрута.
+* Исправлена ошибка при установке онлайн‑источника карты.
+
+### 🗺 Изменения в стилях карты
+
+* Повторно выгрузите стили: исправлено отображение баблов полосности в арабской локали.
+* Исправлены значения максимального уровня масштабирования у всех зданий и деревьев.
+
+## 13.1.0 (2025-12-17)
+
+### 🌟 Новые возможности
+
+* [Container.makeMapFactory()](/ios/sdk/reference/stable/class#container/make-map-factory) — асинхронный метод для создания фабрики [IMapFactory](/ios/sdk/reference/stable/interface#imap-factory).
+* [DirectoryObjectView](/ios/sdk/reference/stable/struct#directory-object-view) — UI-элемент для отображения полной информации об объекте справочника. Для настройки вы можете использовать [DirectoryViewTheme.directoryObjectViewTheme](/ios/sdk/reference/stable/struct#directory-view-theme/var-directory-object-view-theme). Для переопределения внутренних UI-элементов — фабрику [IDirectoryObjectViewsFactory](/ios/sdk/reference/stable/interface#idirectory-object-views-factory).
+* [DirectoryObject.nearestParkingIds](/ios/sdk/reference/stable/class#directory-object/var-nearest-parking-ids) — свойство для получения списка ближайших парковок.
+* [DirectoryObject.nearestStations](/ios/sdk/reference/stable/class#directory-object/var-nearest-stations) — свойство для получения списка ближайших остановок или станций общественного транспорта.
+* [DirectoryObject.nearestPlatforms](/ios/sdk/reference/stable/class#directory-object/var-nearest-platforms) — свойство для получения списка ближайших остановочных платформ.
+* [NearestPlatform](/ios/sdk/reference/stable/struct#nearest-platform) — класс с информацией о ближайшей остановочной платформе.
+* [NearestPlatformTransitionType](/ios/sdk/reference/stable/enumeration#nearest-platform-transition-type) — типы переходов между ближайшими остановочными платформами.
+* [NearestStation](/ios/sdk/reference/stable/struct#nearest-station) — класс с информацией о ближайшей остановке или станции общественного транспорта.
+* [LabelingPriority](/ios/sdk/reference/stable/struct#labeling-priority) — класс для управления приоритетом лейблинга (отображения подписи или иконки на карте).
+* [Marker.labelingPriority](/ios/sdk/reference/stable/class#marker/var-labeling-priority), [MarkerOptions.labelingPriority](/ios/sdk/reference/stable/struct#marker-options/var-labeling-priority) и [SimpleClusterOptions.labelingPriority](/ios/sdk/reference/stable/struct#simple-cluster-options/var-labeling-priority) — свойства для управления приоритетом лейблинга маркера.
+* [TextStyle.labelingPriority](/ios/sdk/reference/stable/struct#text-style/var-labeling-priority) — свойство для управления приоритетом лейблинга подписи маркера.
+* [MiniMapControlModel](/ios/sdk/reference/stable/class#mini-map-control-model) — класс модели для управления мини‑картой в навигационном UI-элементе.
+* [RouteEditorRoutesInfo.error](/ios/sdk/reference/stable/struct#route-editor-routes-info/var-error) — свойство для получения детальной информации об ошибке при поиске маршрута.
+* [RouterErrorInfo](/ios/sdk/reference/stable/struct#router-error-info) — класс для описания ошибки при построении маршрута.
+* [RouterErrorCode](/ios/sdk/reference/stable/enumeration#router-error-code) — категории ошибок при построении маршрута.
+* [RouterErrorSource](/ios/sdk/reference/stable/enumeration#router-error-source) — источники ошибок при построении маршрута.
+* Добавлен голосовой пакет с таджикским языком для навигатора.
+
+### 🛠 Исправления
+
+* Исправлена утечка памяти при отображении пробок на карте.
+* Исправлены отступы, размеры и цвета для SwiftUI-элемента [RoadEventCreatorView](/ios/sdk/reference/stable/struct#road-event-creator-view) и UIKit-элемента [IRoadEventCreatorUIView](/ios/sdk/reference/stable/interface#iroad-event-creator-uiview) для создания дорожных событий.
+* Из сборки удалена библиотека `CallKit`, которая использовалась для отслеживания телефонных вызовов при воспроизведении голосовых инструкций в навигаторе.
+
+### 🗺 Изменения в стилях карты
+
+* Повторно выгрузите стили: исправлено отображение стрелок входов в здание.
+* Добавлен слой `Route camera direction` для отображения луча направления камеры на маршруте.
+
+## 12.10.0 (2025-12-19)
+
+### 🌟 Новые возможности
+
+* [Marker.suppressOnOverlap](/ios/sdk/reference/stable/class#marker/var-suppress-on-overlap) и [MarkerOptions.suppressOnOverlap](/ios/sdk/reference/stable/struct#marker-options/var-suppress-on-overlap) — свойство для управления видимостью иконки маркера при наложении объектов на карте.
+* [SimpleClusterObject.suppressOnOverlap](/ios/sdk/reference/stable/class#simple-cluster-object/var-suppress-on-overlap) и [SimpleClusterOptions.suppressOnOverlap](/ios/sdk/reference/stable/struct#simple-cluster-options/var-suppress-on-overlap) — свойство для управления видимостью иконки кластерного объекта при наложении объектов на карте.
+
+### 🛠 Исправления
+
+* Исправлена ошибка построения офлайн-маршрутов между регионами.
+* Из сборки удалена библиотека `CallKit`, которая использовалась для отслеживания телефонных вызовов при воспроизведении голосовых инструкций в навигаторе.
+
+## 13.0.0 (2025-10-13)
+
+:::note[Обновление с версии 12.x]
+
+Перед обновлением см. [инструкцию по миграции](/ios/sdk/releases/migration#from-12-to-13).
+
+:::
+
+### 🌟 Новые возможности
+
+* [DgisSource.createImmersiveDgisSource](/ios/sdk/reference/stable/class#dgis-source) — источник иммерсивных данных.
+* [BaseCamera.changed](/ios/sdk/reference/stable/class#base-camera) — канал для уведомлений об изменениях состояния камеры.
+* [CameraChange](/ios/sdk/reference/stable/struct#camera-change) — класс с информацией об изменениях состояния камеры.
+* [CameraChangeReason](/ios/sdk/reference/stable/enumeration#camera-change-reason) — причины изменения состояния камеры.
+* [LevelInfo.linkedLevelIds](/ios/sdk/reference/stable/struct#level-info) — идентификаторы связанных этажных планов.
+* [BriefRoadEvent.trustworthy](/ios/sdk/reference/stable/struct#brief-road-event) — флаг достоверности дорожного события.
+* [IndoorBuilding.mode](/ios/sdk/reference/stable/class#indoor-building) и [IndoorBuilding.modeChannel](/ios/sdk/reference/stable/class#indoor-building) — режим отображения зданий с этажными планами.
+* [IndoorBuilding.linkedWith()](/ios/sdk/reference/stable/class#indoor-building) — метод для проверки связи между зданиями с этажными планами.
+* [RoadEvent.elevation](/ios/sdk/reference/stable/class#road-event) — высота дорожного события.
+* [BranchesInfo](/ios/sdk/reference/stable/struct#branches-info) и [DirectoryObject.branchesInfo](/ios/sdk/reference/stable/class#directory-object) — информация о связанных организациях.
+* [FloorsInfo](/ios/sdk/reference/stable/struct#floors-info) и [BuildingInfo.floorsInfo](/ios/sdk/reference/stable/struct#building-info) — информация о количестве этажей в здании.
+* [SearchManager.search()](/ios/sdk/reference/stable/class#search-manager) — метод для поиска объектов справочника по поисковым подсказкам [SuggestQuery](/ios/sdk/reference/stable/class#suggest-query) и настройкам.
+* [SearchSettings](/ios/sdk/reference/stable/struct#search-settings) — настройки поиска объектов справочника.
+* [SearchHistoryKeyStrategy](/ios/sdk/reference/stable/interface#search-history-key-strategy) и [SearchHistory.setKeyStrategy()](/ios/sdk/reference/stable/class#search-history) — метод для установки политики создания ключей для элементов истории поиска.
+* [IncompleteTextHandler.searchQuery](/ios/sdk/reference/stable/class#incomplete-text-handler) — свойство поискового запроса.
+* [RouteCamera.mobility](/ios/sdk/reference/stable/struct#route-camera) — флаг, указывающий на мобильность дорожной камеры.
+* [ObstacleInfo.objectId](/ios/sdk/reference/stable/struct#obstacle-info) — идентификатор объекта препятствия на маршруте.
+* [BicycleRouteSearchOptions.avoidUnpavedRoads](/ios/sdk/reference/stable/struct#bicycle-route-search-options) — флаг для избегания грунтовых дорог на велосипедных маршрутах.
+* [PedestrianRouteSearchOptions.avoidUnpavedRoads](/ios/sdk/reference/stable/struct#pedestrian-route-search-options) — флаг для избегания грунтовых дорог на пешеходных маршрутах.
+* [ScooterRouteSearchOptions.avoidUnpavedRoads](/ios/sdk/reference/stable/struct#scooter-route-search-options) — флаг для избегания грунтовых дорог на маршрутах на самокате.
+* [DataPrefetcher](/ios/sdk/reference/stable/class#data-prefetcher) и [NavigationManager.dataPrefetcher](/ios/sdk/reference/stable/class#navigation-manager) — класс для предварительной загрузки тайлов карты на маршруте.
+* [FinishDetector](/ios/sdk/reference/stable/class#finish-detector) и [NavigationManager.finishDetector](/ios/sdk/reference/stable/class#navigation-manager) — класс для управления контроллером завершения маршрута.
+* [TrafficJamDetector](/ios/sdk/reference/stable/class#traffic-jam-detector) и [NavigationManager.trafficJamDetector](/ios/sdk/reference/stable/class#navigation-manager) — класс для обнаружения пробок на маршруте.
+* [MapLocationController.userControlOverMap](/ios/sdk/reference/stable/class#map-location-controller) — флаг для применения пользовательских значений уровня масштабирования и наклона карты.
+* [CrossingType](/ios/sdk/reference/stable/enumeration#crossing-type) и [Route.crossingTypes](/ios/sdk/reference/stable/class#route) — типы переправ на маршруте.
+* [MotorcycleBriefRouteInfo](/ios/sdk/reference/stable/struct#motorcycle-brief-route-info) — класс с основной информацией о маршруте на мотоцикле.
+* [MotorcycleBriefRouteInfoTrafficSpeed](/ios/sdk/reference/stable/enumeration#motorcycle-brief-route-info-traffic-speed) — скорости движения для маршрутов на мотоцикле.
+* [MotorcycleRouteSearchOptions](/ios/sdk/reference/stable/struct#motorcycle-route-search-options) — класс с параметрами поиска маршрута на мотоцикле.
+* [PublicTransportInfo.routeInfos](/ios/sdk/reference/stable/struct#public-transport-info) — описания маршрутов общественного транспорта.
+* [PublicTransportRouteInfo](/ios/sdk/reference/stable/struct#public-transport-route-info) — класс с информацией о маршруте общественного транспорта.
+* [PublicTransportCostInfo](/ios/sdk/reference/stable/struct#public-transport-cost-info) — класс с информацией о стоимости проезда на общественном транспорте.
+* [RouteTollPaymentPointInfo](/ios/sdk/reference/stable/struct#route-toll-payment-point-info) и [Route.tollPaymentPointInfos](/ios/sdk/reference/stable/class#route) — класс с информацией о пунктах оплаты проезда по платной дороге.
+* [RouteTollPaymentPointType](/ios/sdk/reference/stable/enumeration#route-toll-payment-point-type) — тип оплаты проезда по платной дороге.
+* [TraversalType](/ios/sdk/reference/stable/enumeration#traversal-type) — направление кольцевой линии общественного транспорта.
+* [Package.pause()](/ios/sdk/reference/stable/class#package) — метод для постановки на паузу установки или обновления пакета.
+* [Package.install(InstallFallback)](/ios/sdk/reference/stable/class#package) — метод для установки или обновления пакета с обработчиком ошибок.
+* [InstallFallback](/ios/sdk/reference/stable/interface#InstallFallback) — интерфейс для задания поведения при ошибках установки или обновления пакета.
+* [DefaultInstallFallback](/ios/sdk/reference/stable/class#default-install-fallback) — фабрика для создания стратегий обработки ошибок установки и обновления пакета.
+* [DefaultInstallFallback.noOperation()](/ios/sdk/reference/stable/class#default-install-fallback) — метод для создания `InstallFallback`, не выполняющего операций.
+* [DefaultInstallFallback.retryOnError()](/ios/sdk/reference/stable/class#default-install-fallback) — метод для создания `InstallFallback`, который вызывает повторную установку при ошибке загрузки пакета.
+* [VoiceManager.defaultVoice](/ios/sdk/reference/stable/class#voice-manager) — свойство для получения голосового пакета на основании списка локалей.
+* Добавлена возможность создавать дорожные события в [NavigationView](/ios/sdk/reference/stable/struct#navigation-view) с помощью [RoadEventCreatorView](/ios/sdk/reference/stable/struct#road-event-creator-view) в SwiftUI-элементе дашборда навигатора.
+
+### ❗ Изменения, влияющие на обратную совместимость
+
+* Для изоляции потоков и совместимости с Swift 6 в проект добавлен атрибут `@MainActor` и отмечены протоколы, структуры и функции как `Sendable`.
+* Минимальная поддерживаемая версия iOS обновлена до 16.0.
+
+* Основные изменения в SwiftUI-элементах:
+
+  * Переименован основной слой карты `MapViewOverlay` в [MapView](/ios/sdk/reference/stable/struct#MapView) и переименованы все методы для настройки слоя.
+  * Переименовано свойство `IMapFactory.mapViewOverlay` в [IMapFactory.mapView](/ios/sdk/reference/stable/interface#imap-factory).
+  * Переименована фабрика SwiftUI-элементов управления картой `IMapControlViewFactory` в [IMapViewsFactory](/ios/sdk/reference/stable/interface#imap-views-factory).
+  * Переименованы методы SwiftUI-элементов для создания дорожных событий [RoadEventCreatorView](/ios/sdk/reference/stable/struct#road-event-creator-view).
+  * Переименованы методы SwiftUI-элементов для настройки отображения информации о дорожном событии [RoadEventInfoView](/ios/sdk/reference/stable/struct#road-event-info-view).
+  * Переименованы пользовательские SwiftUI-маркеры и контейнеры на карте `MapMarkerView`, `MapMarkerViewModel` и `MapMarkerViewOverlay` в [MarkerView](/ios/sdk/reference/stable/struct#marker-view), [MarkerViewModel](/ios/sdk/reference/stable/class#marker-view-model) и [MarkerOverlayView](/ios/sdk/reference/stable/struct#marker-overlay-view) соответственно.
+  * Переименовано свойство `IMapFactory.mapMarkerViewOverlay` в [IMapFactory.markerOverlayView](/ios/sdk/reference/stable/interface#imap-factory).
+  * Переименован основной слой навигатора `NavigatorView` в [NavigationView](/ios/sdk/reference/stable/struct#navigation-view).
+  * Переименован метод `NavigatorView.navigatorViewFinishButtonCallback()` в [NavigationView.finishButtonCallback()](/ios/sdk/reference/stable/struct#navigation-view).
+  * Переименована фабрика SwiftUI-элементов управления навигатором `INavigatorViewFactory` в [INavigationViewFactory](/ios/sdk/reference/stable/interface#inavigation-view-factory).
+
+* Основные изменения в UIKit-элементах:
+
+  * Переименован основной слой карты `IMapView` в [IMapUIView](/ios/sdk/reference/stable/interface#imap-uiview).
+  * Переименовано свойство `IMapFactory.mapView` в [IMapFactory.mapUIView](/ios/sdk/reference/stable/interface#imap-factory).
+  * Переименованы интерфейсы слоя обработки жестов `IMapGestureView` и `IMapGestureViewFactory` в [IMapGestureUIView](/ios/sdk/reference/stable/interface#imap-gesture-uiview) и [IMapGestureUIViewFactory](/ios/sdk/reference/stable/interface#imap-gesture-uiview-factory) соответственно.
+  * Переименовано свойство `IMapFactory.gestureView` в [IMapFactory.gestureUIView](/ios/sdk/reference/stable/interface#imap-factory).
+  * Переименованы пользовательские UIKit-маркеры и контейнеры на карте `IMarkerView`, `IMarkerViewFactory` и `IMarkerViewOverlay` в [IMarkerUIView](/ios/sdk/reference/stable/interface#imarker-uiview), [IMarkerUIViewFactory](/ios/sdk/reference/stable/interface#imarker-uiview-factory) и [IMarkerOverlayUIView](/ios/sdk/reference/stable/interface#imarker-overlay-uiview) соответственно.
+  * Переименован объект `IMapFactory.markerViewOverlay` в [IMapFactory.markerOverlayUIView](/ios/sdk/reference/stable/interface#imap-factory).
+  * Переименована фабрика UIKit-элементов управления картой `IMapControlFactory` в [IMapUIControlsFactory](/ios/sdk/reference/stable/interface#imap-uicontrols-factory).
+  * Переименованы все публичные классы UIKit-элементов управления, моделей и их фабрик. Например, `ZoomControl` переименован в [ZoomUIControl](/ios/sdk/reference/stable/class#zoom-uicontrol), `TrafficControl` переименован в [TrafficUIControl](/ios/sdk/reference/stable/class#traffic-uicontrol), `IndoorControl` переименован в [IndoorUIControl](/ios/sdk/reference/stable/class#indoor-uicontrol) и т. д.
+  * Переименована фабрика UIKit-элементов управления карточками дорожных событий `RoadEventCardViewOptions` в [IRoadEventUIViewFactory](/ios/sdk/reference/stable/interface#iroad-event-uiview-factory).
+  * Переименован объект `IRoadEventCardView` в [IRoadEventInfoUIView](/ios/sdk/reference/stable/interface#iroad-event-info-uiview).
+  * Переименован объект `ICreateRoadEventView` в [IRoadEventCreatorUIView](/ios/sdk/reference/stable/interface#iroad-event-creator-uiview).
+  * Переименован объект `RoadEventCardViewOptions` в [RoadEventInfoViewOptions](/ios/sdk/reference/stable/struct#road-event-info-view-options).
+  * Переименован основной слой навигатора `INavigationView` в [INavigationUIView](/ios/sdk/reference/stable/interface#inavigation-uiview).
+  * Переименована фабрика UIKit-элементов управления навигатором `INavigationViewControlsFactory` в [INavigationUIControlsFactory](/ios/sdk/reference/stable/interface#inavigation-uicontrols-factory).
+  * Переименована фабрика UIKit-элементов управления картой `INavigationMapControlsFactory` в [INavigationMapUIControlsFactory](/ios/sdk/reference/stable/interface#inavigation-map-uicontrols-factory).
+
+* Теперь для отслеживания изменений состояний камеры используется единый канал [BaseCamera.changed](/ios/sdk/reference/stable/class#base-camera) вместо отдельных каналов для каждого свойства. Заменены подписки и добавлена дополнительная фильтрация причин изменений.
+
+* Изменён способ создания некоторых классов:
+
+  * Удалена функция `getSystemMemoryManager`. Чтобы получить объект для управления системной памятью, используйте метод [SystemMemoryManager.instance()](/ios/sdk/reference/stable/class#system-memory-manager).
+  * Удалён конструктор [SearchHistory](/ios/sdk/reference/stable/class#search-history). Чтобы получить объект истории поиска, используйте метод [SearchHistory.instance()](/ios/sdk/reference/stable/class#search-history).
+  * Удалён конструктор [RoadEventManager](/ios/sdk/reference/stable/class#road-event-manager). Чтобы получить объект для работы с дорожными событиями, используйте метод [RoadEventManager.instance()](/ios/sdk/reference/stable/class#road-event-manager).
+  * Удалена функция `getHttpCacheManager`. Чтобы получить объект для управления HTTP-кешем, используйте метод [HttpCacheManager.get()](/ios/sdk/reference/stable/class#http-cache-manager).
+  * Удалена функция `getLocaleManager`. Чтобы получить объект для управления локалями приложения, используйте метод [LocaleManager.instance()](/ios/sdk/reference/stable/class#locale-manager).
+  * Удалён конструктор [TrafficCollector](/ios/sdk/reference/stable/class#traffic-collector). Чтобы получить объект для управления сервисом сбора информации о дорожном движении, используйте метод [TrafficCollector.instance()](/ios/sdk/reference/stable/class#traffic-collector).
+  * Удалена функция `getAudioSettings`. Чтобы получить объект для управления звуком приложения, используйте метод [AudioSettings.get()](/ios/sdk/reference/stable/class#audio-settings).
+  * Удалена функция `getPackageManager`. Чтобы получить объект для работы с пакетами, используйте метод [PackageManager.instance()](/ios/sdk/reference/stable/class#package-manager).
+  * Удалена функция `getTerritoryManager`. Чтобы получить объект для работы с территориями, используйте метод [TerritoryManager.instance()](/ios/sdk/reference/stable/class#territory-manager).
+  * Удалена функция `getTerritoriesAlongRouteProvider`. Чтобы получить объект для извлечения списка территорий вдоль маршрута, используйте конструктор [TerritoriesAlongRouteProvider](/ios/sdk/reference/stable/class#territories-along-route-provider).
+  * Удалена функция `getVoiceManager`. Чтобы получить объект для управления голосовыми пакетами, используйте метод [VoiceManager.instance()](/ios/sdk/reference/stable/class#voice-manager).
+
+* Свойство `buildingLevels` для получения этажных планов удалено из [DirectoryObject](/ios/sdk/reference/stable/class#directory-object).
+* Свойство [DirectoryObject.buildingInfo](/ios/sdk/reference/stable/class#directory-object) теперь опциональное.
+* Свойство [BuildingInfo.buildingId](/ios/sdk/reference/stable/struct#building-info) теперь обязательное и не может быть пустым.
+* Свойство [LevelInfo.id](/ios/sdk/reference/stable/struct#level-info) теперь опциональное.
+* Изменён тип свойства [PublicTransportDirectoryRouteInfo.color](/ios/sdk/reference/stable/struct#public-transport-directory-route-info) с `Int?` на `Color?`.
+* Метод [SearchQueryBuilder.setGeoPoint()](/ios/sdk/reference/stable/class#search-query-builder/set-geo-point) теперь принимает опциональный тип значения.
+* Метод [SearchQueryBuilder.setRadius()](/ios/sdk/reference/stable/class#search-query-builder/set-radius) теперь принимает опциональный тип значения.
+* Удалены функция `getRoadMacroGraph` и класс `RoadMacroGraph`. Теперь для построения офлайн-маршрутов между соседними регионами достаточно скачать пакеты нужных регионов.
+* Удалены класс для настройки позиции бабла с полосами на маршруте (`LanesCalloutMapPosition` и `RouteMapObject.lanesCalloutPositions`) и свойство в [RouteMapObject](/ios/sdk/reference/stable/class#route-map-object).
+* Переименован класс `UIntRouteLongAttribute` в [DoubleRouteLongAttribute](/ios/sdk/reference/stable/class#double-route-long-attribute).
+* Изменён тип свойства [Route.trafficLights](/ios/sdk/reference/stable/class#route) с [VoidRouteAttribute](/ios/sdk/reference/stable/class#void-route-attribute) на [StringRouteAttribute](/ios/sdk/reference/stable/class#string-route-attribute).
+* Добавлен новый вид транспорта `motorcycle` (мотоцикл) в [TransportType](/ios/sdk/reference/stable/enumeration#transport-type).
+* Добавлены параметры для настройки уровня масштабирования для стиля в конструктор [SpeedRangeToStyleZoom](/ios/sdk/reference/stable/struct#speed-range-to-style-zoom).
+* Добавлены значения для пандусов `rampDown`, `rampUp`, `smoothRampDown` и `smoothRampUp` в [RoadSubtype](/ios/sdk/reference/stable/enumeration#road-subtype).
+* Добавлены новые значения позиций и ориентиров в [CarInstructionCrossroadLandmark](/ios/sdk/reference/stable/enumeration#car-instruction-crossroad-landmark).
+* Добавлены значения цветов `deepGreen` и `orange` в [TrafficSpeedColor](/ios/sdk/reference/stable/enumeration#traffic-speed-color).
+* Добавлен флаг `crossing` для отображения начала и конца переправы на маршруте в [RouteMapObjectDisplayFlag](/ios/sdk/reference/stable/enumeration#route-map-object-display-flag).
+* Добавлен новый тип точки маршрута `crossing` (начало и конец переправы) в [RoutePointKind](/ios/sdk/reference/stable/enumeration#route-point-kind).
+* Добавлены значения для оповещений о событиях `betterRoute` («маршрут лучше») и `humps` (искусственные дорожные неровности) в [SoundCategory](/ios/sdk/reference/stable/enumeration#sound-category).
+
+### 🛠 Исправления
+
+* Исправлена ошибка, из-за которой падало приложение при работе [SearchManager.createSmartManager()](/ios/sdk/reference/stable/class#search-manager), если не было скачанных территорий.
+* Добавлена поддержка моделей iPhone 17, iPhone 17 Pro, iPhone 17 Pro Max и iPhone Air с учётом их PPI при вычислении DPI.
+* Исправлена ошибка в истории поиска при многократном добавлении одного и того же элемента.
+* Исправлена проблема, из-за которой новые поисковые запросы не сохранялись в истории при достижении установленного лимита.
+* Добавлен фильтр для скрытия этажей зданий на карте, если их площадь на экране меньше определённого порога.
+* Исправлены звуковые оповещения в навигаторе:
+
+  * Исправлена ошибка, из-за которой не озвучивалось предупреждение о камере «в спину».
+  * Исправлена ошибка, из-за которой не озвучивались промофразы (при наличии корректного голосового пакета).
+  * Добавлены звуковые оповещения о лестницах на маршруте.
+  * Исправлена ошибка, при которой камеры контроля перекрёстка озвучивались как камеры контроля скорости.
+  * Добавлены звуковые оповещения о перестроении маршрутов для велосипедов и самокатов.
+
+* Исправлены ошибки в работе навигатора при проблемах с GPS-сигналом:
+
+  * Исправлена ошибка перелёта маркера текущей геопозиции при работе детектора слабого GPS-сигнала.
+  * Исправлены ошибки, возникавшие при приближении пользователя к точке конца маршрута при нестабильном GPS-сигнале.
+  * Добавлено отключение детектирования схода с маршрута при низкой точности GPS-сигнала.
+  * Теперь при резком снижении точности GPS-сигнала во время работы навигатора геопозиция пользователя не переносится в другое место на карте.
+
+* Исправлены проблемы в работе навигатора:
+
+  * Исправлена проблема, из-за которой на экране поиска маршрута не отображался бабл с информацией о времени и длине маршрута, если у одного из маршрутов отсутствовали уникальные отрезки.
+  * Исправлена проблема, из-за которой в бабле альтернативного маршрута не обновлялась разница во времени движения, если при использовании навигатора пользователь не двигался.
+  * Удалены названия съездов в баблах, если не указано направление движения или съезд ведёт к объекту с типом «аэропорт».
+  * Исправлена проблема, из-за которой иконки дорожных событий не реагировали на нажатия.
+  * Добавлена поддержка отображения и цветовой индикации пробок на грунтовых дорогах.
+  * Исправлено дублирование иконок МЦК, МЦД, Аэроэкспресса и электричек в бабле маршрута с пересадками.
+  * Исправлено некорректное отображение линии маршрута на перекрёстках.
+  * Удалено отображение дополнительной иконки с полосами движения для камер, которые фиксируют непредоставление преимущества в движении пешеходам.
+  * Исправлена ошибка притяжки геопозиции пользователя к маршруту при возврате на маршрут.
+  * Исправлена ошибка, при которой падало приложение при перестроении пешеходного маршрута в режиме ведения по маршруту.
+  * Исправлено поведение, при котором дополнительные иконки отображались на маршруте после истечения срока действия дорожного события.
+  * Изменена логика отображения дополнительных иконок с полосами движения для подтверждённых дорожных событий.
+  * Добавлено ограничение, при котором при перестроении маршрута в него не включаются платные дороги, если пользователь выбрал проезд только по бесплатным дорогам.
+  * Добавлено отображение уведомлений о лестницах на панели с предполагаемым временем маршрута.
+  * Теперь навигатор продолжает вести пользователя по маршруту и перестраивает его при необходимости, даже если была закрыта финишная панель (с кнопкой **Завершить маршрут**).
+  * Изменена логика фильтрации полос: полосы, разрешающие движение прямо, не исключаются из баблов с полосами на маршруте.
+  * Добавлена визуализация мигания пробок на маршруте при скорости 80–90 км/ч.
+
+* Исправлена вёрстка всех SwiftUI-элементов в [NavigationView](/ios/sdk/reference/stable/struct#navigation-view).
+* Исправлен возврат к слежению за позицией и уровнем масштабирования в [NavigationView](/ios/sdk/reference/stable/struct#navigation-view). Теперь камера и режим слежения восстанавливаются корректно при выходе из обзора маршрута.
+
+### 🗺 Изменения в стилях карты
+
+* Повторно выгрузите стили: исправлены ошибки отображения пользовательских и иммерсивных объектов.
+* Обновлены все слои групп `Roads` для отображения иммерсивных дорог в основном режиме карты.
+* Добавлена группа `Traffic v13.0.0` для отображения новых цветов тайлов с пробками.
+* Добавлена группа `Car route line v13.0.0` для отображения автомобильных маршрутов на иммерсивных дорогах.
+
+## 12.8.0 (2025-08-14)
+
+### 🌟 Новые возможности
+
+* Добавлена поддержка армянского языка на карте, в справочнике и при построении маршрутов. Также добавлены голосовые пакеты уведомлений на армянском языке.
+* [MiniMapView](/ios/sdk/reference/stable/struct#mini-map-view) и [NavigationMiniMapView](/ios/sdk/reference/stable/struct#mini-map-view) — SwiftUI-элементы мини-карты для отображения на карте и в [NavigatorView](/ios/sdk/reference/stable/NavigatorView).
+* [SearchResultItemView](/ios/sdk/reference/stable/struct#search-result-item-view) — SwiftUI-элемент мини-карточки объекта для поисковой выдачи. Содержит соответствующие темы оформления, локализацию и вспомогательные визуальные элементы и компоненты утилиты.
+* [RoadEventCreatorView](/ios/sdk/reference/stable/struct#road-event-creator-view) — SwiftUI-элемент для создания дорожных событий.
+* [RoadEventInfoView](/ios/sdk/reference/stable/struct#road-event-info-view) — SwiftUI-элемент для отображения информации о дорожном событии.
+* [IRoadEventViewFactory](/ios/sdk/reference/stable/interface#iroad-event-view-factory) — фабрика для создания SwiftUI-элементов дорожных событий.
+* В [TrafficRouter](/ios/sdk/reference/stable/class#traffic-router) добавлена возможность задавать тип поисковика маршрутов (онлайн, офлайн или гибрид) с помощью [RouterType](/ios/sdk/reference/stable/enumeration#router-type).
+* В [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager) и [RouteEditor](/ios/sdk/reference/stable/class#route-editor) добавлена возможность указывать поисковик маршрутов ([TrafficRouter](/ios/sdk/reference/stable/class#traffic-router)).
+
+### 🛠 Исправления
+
+* Данные о пробках через источник [TrafficSource](/ios/sdk/reference/stable/class#traffic-source) теперь не запрашиваются и не обновляются в фоновом режиме приложения.
+* Улучшена вёрстка дашборда управления поездкой в [NavigatorView](/ios/sdk/reference/stable/NavigatorView): обновлены отступы, размеры кнопок, порядок и структура компонентов, а также исправлены значения высот элементов.
+* Изменены отступы блока манёвров в [NavigatorView](/ios/sdk/reference/stable/NavigatorView), чтобы сообщения о потере GPS-сигнала и перестроении маршрута отображались ниже на экране.
+
+## 12.7.2 (2025-06-20)
+
+### 🌟 Новые возможности
+
+* [DirectoryObject.platformIds](/ios/sdk/reference/stable/class#directory-object/var-platform-ids) — информация об идентификаторах платформ общественного транспорта в объекте справочника.
+* [EntranceInfo.entranceNumber](/ios/sdk/reference/stable/struct#entrance-info/val-entrance-number) — номер входа на станцию общественного транспорта.
+
+### 🛠 Исправления
+
+* [DirectoryObject.routeInfos](/ios/sdk/reference/stable/class#directory-object/var-route-infos) теперь возвращает корректную информацию о маршрутах, проходящих через определённую платформу общественного транспорта.
+* [DirectoryObject.entrances](/ios/sdk/reference/stable/class#directory-object/var-entrances) теперь возвращает корректную информацию о входах в метро.
+
+## 12.7.0 (2025-06-03)
+
+### 🌟 Новые возможности
+
+* [DirectoryObject.routeInfos](/ios/sdk/reference/stable/class#directory-object/var-route-infos) — информация о маршрутах общественного транспорта в объекте справочника.
+* [ItemMarkerInfo.tradeLicense](/ios/sdk/reference/stable/class#item-marker-info/var-trade-license) — информация о торговой лицензии организации в маркере.
+* [SearchResult.nearbyRequested](/ios/sdk/reference/stable/class#search-result/var-nearby-requested) — признак в результатах поиска, что при поиске были запрошены объекты поблизости.
+* [TrafficRoute.routeTollPaymentInfos](/ios/sdk/reference/stable/class#traffic-route/var-route-toll-payment-infos) — информация о стоимости проезда по платным участкам маршрута.
+* [RoadMacroGraph](/ios/sdk/reference/stable/RoadMacroGraph) — пакет глобального дорожного графа будет удалён в следующих версиях. Вы можете строить маршруты между регионами на основе скачанных [офлайн-данных](/ios/sdk/start#offline-mode).
+* SwiftUI-элементы для отображения сообщений об ошибках при построении маршрутов и для отображения выбора «маршрута лучше» в [NavigatorView](/ios/sdk/reference/stable/NavigatorView).
+
+### 🗺 Изменения в стилях карты
+
+* Повторно выгрузите стили: в навигаторе исправлено отображение иммерсивных дорог и тумана.
+
+## 12.6.3 (2025-05-13)
+
+### 🛠 Исправления
+
+* Оптимизирована работа [TrafficSource](/ios/sdk/reference/stable/class#traffic-source):
+
+  * Тайлы с пробками запрашиваются при изменении масштаба карты и по таймеру.
+  * Уровень пробок в баллах обновляется при смене региона и по таймеру.
+
+* Улучшена производительность карты при добавлении полигонов с большим количеством вершин через [MapObjectManager](/ios/sdk/reference/stable/class#map-object-manager).
+
+## 12.6.0 (2025-04-17)
+
+### 🌟 Новые возможности
+
+* [TextStyle.suppressOnOverlap](/ios/sdk/reference/stable/struct#text-style/var-suppress-on-overlap) — опция для скрытия текста подписи маркера при пересечении с другими объектами.
+
+### 🛠 Исправления
+
+* Исправлено обновление генерализации при изменении атрибутов объектов, добавленных через метод [MapObjectManager.withGeneralization()](/ios/sdk/reference/stable/class#map-object-manager/with-generalization).
+* Исправлена ошибка, при которой приложение падало при логировании сетевых запросов.
+* Исправлена ошибка, при которой приложение падало при обработке жеста наклона карты.
+
+## 12.5.0 (2025-03-25)
+
+### 🌟 Новые возможности
+
+* [SearchQueryBuilder.setLocale()](/ios/sdk/reference/stable/class#search-query-builder/set-locale) — метод для задания локали, в которой выполняется поисковый запрос.
+* [DirectoryObject.group](/ios/sdk/reference/stable/class#directory-object/var-group) — объединение объектов разного типа в одной карточке. Например, карточка здания суда содержит информацию о здании как геообъекте и о суде как организации в здании.
+* [SearchQueryWithInfo.rubrics](/ios/sdk/reference/stable/class#search-query-with-info/var-rubrics) — список рубрик, по которым производится запрос.
+* [PackedSearchQuery.locale](/ios/sdk/reference/stable/class#packed-search-query/var-locale) — локаль для поискового запроса.
+* [VoiceAssistantView](/ios/sdk/reference/stable/struct#voice-assistant-view) — SwiftUI-элемент для управления голосовым вводом. Чтобы создать элемент, используйте метод [IDirectoryViewsFactory.makeVoiceAssistantView](/ios/sdk/reference/stable/interface#idirectory-views-factory/make-voice-assistant-view).
+
+### 🛠 Исправления
+
+* Исправлена ошибка, при которой маркер местоположения, добавленный через [MyLocationMapObjectSource](/ios/sdk/reference/stable/class#my-location-map-object-source), исчезал при первом перелёте камеры.
+* Исправлено восстановление отображения маркера геопозиции после того, как приложение долго находилось в свернутом состоянии.
+* Исправлено отображение информации о маршруте на карте при направлении текста справа налево (RTL) для источника данных [RouteEditorSource](/ios/sdk/reference/stable/class#route-editor-source).
+* Изменены настройки кеширования данных из источника на маршруте. Теперь данные кешируются на расстоянии 4000 метров впереди от текущей позиции на маршруте вместо 20000.
+
+### 🗺 Изменения в стилях карты
+
+* Повторно выгрузите стили: исправлено отображение информации о маршруте на карте при направлении текста справа налево.
+
+## 12.4.3 (2025-02-19)
+
+### 🌟 Новые возможности
+
+* [Projection.distanceOnMap()](/ios/sdk/reference/stable/class#projection/distance-on-map) — метод для вычисления расстояния между точками на карте, которые соответствуют указанным точкам на экране.
+* [Projection.distanceOnScreen()](/ios/sdk/reference/stable/class#projection/distance-on-screen) — метод для вычисления расстояния между точками на экране, которые соответствуют указанным точкам на карте.
+
+### 🛠 Исправления
+
+* Исправлено отображение окружности на карте при добавлении объекта [Circle](/ios/sdk/reference/stable/class#circle) в [MapObjectManager.withClustering](/ios/sdk/reference/stable/class#map-object-manager/with-generalization) и [MapObjectManager.withGeneralization](/ios/sdk/reference/stable/class#map-object-manager/with-generalization).
+
+## 12.4.0 (2025-01-30)
+
+### 🌟 Новые возможности
+
+* [Container.makeNavigatorViewFactory](/ios/sdk/reference/stable/class#container/make-navigator-view-factory) и [INavigatorViewFactory](/ios/sdk/reference/stable/INavigatorViewFactory) — фабрика для работы со SwiftUI-элементами навигатора.
+* [NavigatorView](/ios/sdk/reference/stable/NavigatorView) — контейнер со SwiftUI-элементами навигатора.
+* [INavigationMapViewsFactory](/ios/sdk/reference/stable/interface#inavigation-map-views-factory) — фабрика SwiftUI-элементов карты для [NavigatorView](/ios/sdk/reference/stable/NavigatorView).
+* [INavigationViewsFactory](/ios/sdk/reference/stable/interface#inavigation-views-factory) — фабрика SwiftUI-элементов навигатора для [NavigatorView](/ios/sdk/reference/stable/NavigatorView).
+* [Map.sublayerAttributes](/ios/sdk/reference/stable/class#map/sublayer-attributes) — возможность переопределения атрибутов конкретного слоя карты.
+* [SearchHistory](/ios/sdk/reference/stable/class#search-history) — класс для работы с историей поисковых запросов: чтения, добавления и удаления записей с информацией о результате работы поиска и поисковых подсказках.
+* [SearchQueryBuilder.fromOrgId()](/ios/sdk/reference/stable/class#search-query-builder/from-org-id) — метод для формирования поискового запроса по идентификатору организации.
+* [SearchQueryBuilder.fromBuildingId()](/ios/sdk/reference/stable/class#search-query-builder/from-building-id) — метод для формирования поискового запроса по идентификатору здания.
+* [SearchQueryBuilder.fromGeoPoint()](/ios/sdk/reference/stable/class#search-query-builder/from-geo-point) — метод для формирования поискового запроса c центром области поиска.
+* [SearchQueryBuilder.setGeoPoint()](/ios/sdk/reference/stable/class#search-query-builder/set-geo-point) и [SearchQueryBuilder.setRadius()](/ios/sdk/reference/stable/class#search-query-builder/set-radius) — методы для установки центра области поиска и радиуса при формировании поискового запроса.
+* [DirectoryObject.orgInfo](/ios/sdk/reference/stable/class#directory-object/var-org-info) — информация об организации в объекте справочника.
+* [MyLocationMapObject.setModelData()](/ios/sdk/reference/stable/class#my-location-map-object) — метод для установки 3D-модели маркера геопозиции.
+* [BaseCamera.viewPoint](/ios/sdk/reference/stable/class#base-camera/var-view-point) — возможность изменения точки обзора камеры относительно размера области видимости карты.
+* [AnimationSettings.animationName](/ios/sdk/reference/stable/class#animation-settings/var-animation-name) — возможность переключения анимации 3D-модели по названию.
+* Добавлена инструкция по [управлению стилевыми слоями](/ios/sdk/examples/map_styles#managing-style-layers) карты.
+
+### 🛠 Исправления
+
+* Теперь положение 3D-модели совпадает с направлением камеры, если значение угла поворота не задано в [ModelMapObject.mapDirection](/ios/sdk/reference/stable/class#model-map-object/var-map-direction).
+* Исправлена некорректная установка атрибутов для генерализуемых объектов, добавленных на карту через [MapObjectManager.withClustering](/ios/sdk/reference/stable/class#map-object-manager/with-generalization). Теперь изменение атрибутов объектов на определённом zoom-уровне распространяется на все уровни.
+* Исправлена работа атрибута для управления видимостью объекта на карте [SimpleMapObject.isVisible](/ios/sdk/reference/stable/class#simple-map-object) при генерализации и кластеризации объектов.
+
+### 🗺 Изменения в стилях карты
+
+* Исправлен приоритет обработки нажатий между маркером геопозиции и зданиями на карте.
+
+## 12.3.0 (2024-12-18)
+
+### 🌟 Новые возможности
+
+* [ModelMapObject](/ios/sdk/reference/12.3/class#model-map-object) и [ModelMapObjectOptions](/ios/sdk/reference/12.3/struct#model-map-object-options) — классы для создания и настройки динамических объектов с 3D-моделями. Вы можете добавить данные объекты на карту с помощью [MapObjectManager](/ios/sdk/reference/12.3/class#map-object-manager).
+* [ModelData](/ios/sdk/reference/12.3/class#model-data) и [IModelFactory](/ios/sdk/reference/12.3/IModelFactory) — возможность загрузки пользовательских 3D-моделей.
+* Теперь при добавлении [TrafficSource](/ios/sdk/reference/12.3/class#traffic-source) на карту тайлы с пробками запрашиваются на основе области видимости экрана независимо от обновления конфигурационного файла SDK.
+* [DirectoryObject.rubricIds](/ios/sdk/reference/12.3/class#directory-object) — идентификаторы рубрик в объекте справочника.
+* [FreeRoamSelector](/ios/sdk/reference/12.3/class#free-roam-selector) и [NavigationManager.freeRoamSelector](/ios/sdk/reference/12.3/class#navigation-manager) — возможность включения и выключения перевода навигатора в режим `FreeRoam` при слишком долгом перестроении маршрута.
+* [RouteRebuilder](/ios/sdk/reference/12.3/class#route-rebuilder) и [NavigationManager.routeRebuilder](/ios/sdk/reference/12.3/class#navigation-manager) — возможность включения и выключения поиска нового маршрута при сходе с текущего маршрута.
+* [TrafficRouter.requestRoute](/ios/sdk/reference/12.3/class#traffic-router) — возможность поиска маршрута по ранее сериализованным параметрам.
+
+### 🛠 Исправления
+
+* Исправлено дублирование числа филиалов для категорий организаций в [Suggest.subtitle](/ios/sdk/reference/12.3/class#suggest).
+* Исправлена ошибка получения координат объекта при обработке клика на [Marker](/ios/sdk/reference/12.3/class#marker), добавленный на карту перед первичной загрузкой карты.
+* Исправлено отображение 3D-модели маркера геопозиции навигатора для всех типов маршрута, кроме пешеходного. Для пешеходного маршрута отображается обычная модель маркера геопозиции.
+* Обновлена конфигурация навигатора для улучшения работы при плохом сигнале GPS.
+* Исправлено отображение следующего манёвра для левостороннего движения при прохождении круговых перекрёстков в [INavigationView](/ios/sdk/reference/12.3/INavigationView).
+
+### 🗺 Изменения в стилях карты
+
+* Добавлен слой для отображения динамических 3D-моделей.
+
+## 12.2.1 (2024-12-03)
+
+### 🛠 Исправления
+
+* Исправлены ошибки, которые приводили к снижению производительности при отображении большого количества объектов на карте.
+
+## 12.2.0 (2024-11-15)
+
+### 🌟 Новые возможности
+
+* [AnimationSettings](/ios/sdk/reference/12.2/class#animation-settings) — класс для настройки анимаций объектов карты. Применяется для объектов с типами слоя `3D model` и `Directional model`.
+* [MyLocationMapObject.animationSettings](/ios/sdk/reference/12.2/class#my-location-map-object) — возможность настройки анимаций для маркера геопозиции, если в качестве модели в стилях загружена анимированная модель.
+* [MyLocationMapObject.objectAttributes](/ios/sdk/reference/12.2/class#my-location-map-object) — возможность настройки атрибутов стилей для маркера геопозиции. Возможные значения атрибутов можно увидеть в стилях для соответствующего слоя.
+* [RoadEventMapObject.animationSettings](/ios/sdk/reference/12.2/class#road-event-map-object) — возможность настройки анимаций для дорожных событий, если в качестве модели в стилях загружена анимированная модель.
+* [RoadEvent.id](/ios/sdk/reference/12.2/class#road-event) — идентификатор дорожного события.
+* [ParkingControlModel](/ios/sdk/reference/12.2/class#parking-control-model) — модель для удобного переключения видимости парковок на карте.
+* [ItemMarkerInfo.rubricIds](/ios/sdk/reference/12.2/class#item-marker-info) — идентификаторы рубрик, к которым относится объект маркера.
+* [TextHorizontalAlignment](/ios/sdk/reference/12.2/enumeration#text-horizontal-alignment) — настройка для выравнивания надписи по горизонтали в [Marker](/ios/sdk/reference/12.2/class#marker) через [TextStyle](/ios/sdk/reference/12.2/struct#text-style).
+* Определены операторы для [Longitude](/ios/sdk/reference/12.2/struct#longitude) и [Latitude](/ios/sdk/reference/12.2/struct#latitude).
+* [MapMarkerView](/ios/sdk/reference/12.2/struct#map-marker-view) и [MapMarkerViewOverlay](/ios/sdk/reference/12.2/struct#map-marker-view-overlay) — SwiftUI-элементы для добавления пользовательских SwiftUI View в качестве маркеров на карту.
+* [SpeedView](/ios/sdk/reference/12.2/struct#speed-view) — SwiftUI-элемент для отображения скорости в режиме навигации.
+* [RouteMapObjectsProvider](/ios/sdk/reference/12.2/class#route-map-objects-provider) и [NavigationManager.routeMapObjectsProvider](/ios/sdk/reference/12.2/class#navigation-manager) — класс для получения объектов маршрута на карте.
+* [RouteMapObject.roadEventObjects](/ios/sdk/reference/12.2/class#route-map-object) — дорожные события на карте для соответствующего маршрута.
+* [MyLocationMapObjectSourceProvider](/ios/sdk/reference/12.2/class#my-location-map-object-source-provider) и [NavigationManager.myLocationMapObjectSourceProvider](/ios/sdk/reference/12.2/class#navigation-manager) — класс для получения источника маркера геопозиции в навигаторе.
+
+### 🛠 Исправления
+
+* Доработан механизм получения названия объекта маркера [ItemMarkerInfo.title](/ios/sdk/reference/12.2/class#item-marker-info). Теперь учитывается, что маркер может быть без названия.
+* Исправлена потенциальная проблема при инициализации карты, когда стиль мог быть установлен раньше, чем завершался процесс инициализации.
+* Исправлено потенциальное зависание в [MapObjectManager](/ios/sdk/reference/12.2/class#map-object-manager) при частом добавлении и удалении объектов через метод [MapObjectManager.removeAndAddObjects](/ios/sdk/reference/12.2/class#map-object-manager/remove-and-add-objects).
+* Добавлена дополнительная проверка на корректность обработки жеста наклона карты, чтобы это не приводило к падению приложения.
+* Исправлена ошибка, при которой приложение падало при логировании сетевых запросов.
+* Исправлена ошибка, при которой [MapViewOverlay](/ios/sdk/reference/12.2/struct#map-view-overlay) работал с прерыванием при взаимодействии с картой.
+* Исправлена работа SwiftUI-элементов для карты, которые пересоздавались при каждом обновлении интерфейса.
+* Исправлена ошибка, при которой для некоторых регионов не работало отображение дорожных событий на карте.
+* Исправлено отображение стрелок маршрута относительно иммерсивных дорог реальной ширины в режиме навигатора.
+* Исправлена потенциальная проблема, при которой не отображались баблы полосности на маршруте в режиме навигатора.
+
+### 🗺 Изменения в стилях карты
+
+* Исправлены ошибки в стилях при отображении маркера геопозиции в режиме навигатора с иммерсивными дорогами реальной ширины.
+* Исправлены ошибки в стилях при отображении этажных планов зданий.
+
+## 12.1.0 (2024-09-24)
+
+### 🌟 Новые возможности
+
+* [ItemMarkerInfo.title](/ios/sdk/reference/12.1/class#item-marker-info) — название объекта маркера.
+* [DirectoryObject.chargingStation](/ios/sdk/reference/12.1/class#directory-object) — информация о станциях зарядки электромобилей в объекте справочника.
+* [Voice.playWelcome()](/ios/sdk/reference/12.1/class#voice) — метод для воспроизведения образца голоса.
+
+### 🛠 Исправления
+
+* [DgisSource.createDgisSource](/ios/sdk/reference/12.1/class#dgis-source/create-dgis-source) теперь возвращает гибридный источник тайлов карты по умолчанию в полной (**Full**) версии SDK.
+* Различные улучшения работы иммерсивных дорог реальной ширины в режиме навигатора.
+
+### 🗺 Изменения в стилях карты
+
+* Исправлены ошибки в стилях при отображении иммерсивных дорог реальной ширины.
+* Исправлено отображение тумана при различных углах наклона карты.
+
+## 12.0.0 (2024-08-19)
+
+:::note[Обновление с версии 10.x]
+
+Перед обновлением см. [инструкцию по миграции](/ios/sdk/releases/migration#from-10-to-12).
+
+:::
+
+### 🌟 Новые возможности
+
+* Иммерсивные дороги реальной ширины отображаются в режиме навигации, если:
+
+  * В поле [Map.graphicsPreset](/ios/sdk/reference/12.0/class#map/var-graphics-preset) установлено значение `IMMERSIVE`.
+  * `HttpCache` включен с помощью [HttpOptions.useCache](/ios/sdk/reference/12.0/HttpOptions#nav-lvl1--val%20useCache).
+
+  На момент релиза дороги реальной ширины доступны только в некоторых крупных городах России.
+
+* Отображение тумана для отсечения отдалённых объектов карты при наклоне камеры.
+
+* [BaseCamera.viewportRestriction](/ios/sdk/reference/12.0/class#base-camera/var-viewport-restriction) — свойство для установки области видимости камеры.
+
+* [MapOptions.graphicsPreset](/ios/sdk/reference/12.0/struct#map-options/var-graphics-preset) — свойство для установки графического режима через [GraphicsPreset](/ios/sdk/reference/12.0/enumeration#graphics-preset) при инициализации карты.
+
+* [Map.graphicsPreset](/ios/sdk/reference/12.0/class#map/var-graphics-preset) — свойство для установки графического режима через [GraphicsPreset](/ios/sdk/reference/12.0/enumeration#graphics-preset) для созданной карты.
+
+* [Map.graphicsPresetHint](/ios/sdk/reference/12.0/class#map/var-graphics-preset-hint) — свойство для получения рекомендуемого режима графики для данного устройства.
+
+* Добавлена возможность наклона карты до 70 градусов, начиная с уровня масштабирования карты 18.
+
+* [RasterUrlTemplate](/ios/sdk/reference/12.0/enumeration#raster-url-template) — возможность задания шаблона URL для запроса растровых тайлов. Может иметь два значения: [DefaultRasterUrlTemplate](/ios/sdk/reference/12.0/struct#default-raster-url-template) для общего шаблона и [WmsRasterUrlTemplate](/ios/sdk/reference/12.0/struct#wms-raster-url-template) для растровых тайлов стандарта WMS.
+
+* [MapLocationController.mapToNorthOrientation](/ios/sdk/reference/12.0/class#map-location-controller) — свойство для включения принудительной ориентации карты на север.
+
+* [RouteCamera.maxSpeedLimit](/ios/sdk/reference/12.0/struct#route-camera/var-max-speed-limit) — свойство для установки скорости в м/с, превышение которой фиксируется камерой.
+
+* [NavigationFollowController.cameraBehaviour](/ios/sdk/reference/12.0/class#navigation-follow-controller/var-camera-behaviour) — режим слежения камеры за маркером геопозиции в навигаторе.
+
+* При отображении дорожных событий и данных о пробках на маршруте теперь учитывается высота рельефа.
+
+* Если текущая позиция на маршруте находится на расстоянии более 500 метров от следующего манёвра, произносится фраза «Двигайтесь прямо».
+
+* Добавлена поддержка звуковых инструкций для велосипедных и самокатных перекрёстков.
+
+* [RouterType](/ios/sdk/reference/12.0/enumeration#router-type) — возможность установки типа поисковика в [AlternativeRoutesProviderSettings](/ios/sdk/reference/12.0/class#alternative-routes-provider-settings) для поиска альтернативных маршрутов.
+
+* `toRoutePoint` в методе [MillisecondsRouteAttribute.calculateDuration()](/ios/sdk/reference/12.0/class#milliseconds-route-attribute/calculate-duration) — параметр для вычисления длительности движения по участку маршрута до конкретной точки.
+
+* [TerritoryManager.findByPoint()](/ios/sdk/reference/12.0/class#territory-manager/find-by-point) и [TerritoryManager.findByRect()](/ios/sdk/reference/12.0/class#territory-manager/find-by-rect) — методы для фильтрации офлайн-регионов, доступных для скачивания, по `GeoPoint` и `GeoRect`.
+
+### ❗ Изменения, влияющие на обратную совместимость
+
+* Удалён параметр `Container.apiKeyOptions`. Теперь вы можете передавать явно источник файл ключа с помощью `KeySource`, `KeyFromAsset`, `KeyFromFile` и `KeyFromString`.
+* Удалён параметр `Container.vendorConfigFile`. Теперь вы можете передавать явно источник файл конфигурационных настроек с помощью `VendorConfig`, `VendorConfigFromAsset`, `VendorConfigFromFile` и `VendorConfigFromString`.
+* Удалены методы `Container.makeStyleFactory()`, `Container.makeSearchManagerFactory()`, `Container.makeSourceFactory()`, `Container.makeImageFactory()` и `Container.makeLocaleManager()`. Вместо них используйте поля `Container.styleFactory`, `Container.searchManagerFactory`, `Container.sourceFactory`, `Container.imageFactory` и `Container.localeManager`.
+* Удалены `IPositioningServicesFactory` и параметр `Container.positioningServices`. Теперь при создании `Container` нужно передавать отдельно `Container.locationProvider` и `Container.magneticHeadingProvider`.
+* Удалён `ILocationService`. Вместо него используйте `LocationService` с аналогичным функционалом.
+* Удалены `MyLocationController` и `MapLocationController.myLocationIndicatorController`. Для настройки источника маркера геопозиции используйте [MyLocationControllerSettings](/ios/sdk/reference/12.0/struct#my-location-controller-settings). В [INavigationView](/ios/sdk/reference/12.0/INavigationView) теперь не происходит подмена источника геопозиции.
+* Структура [HttpOptions](/ios/sdk/reference/12.0/struct#http-options) изменена с сохранением функциональности.
+* В [LogOptions](/ios/sdk/reference/12.0/struct#log-options) переименованы поля: вместо `osLogLevel` и `customLogLevel` теперь `systemLevel` и `customLevel`.
+* В [LogLevel](/ios/sdk/reference/12.0/enumeration#log-level) переименованы значения: вместо `disabled` и `fault` теперь `off` и `fatal`.
+* Удалено значение `CameraState.followPosition`. Вместо него используйте значение [Camera.behaviour](/ios/sdk/reference/12.0/class#camera/var-behaviour).
+* Добавлены значения для [SuggestedType](/ios/sdk/reference/12.0/enumeration#suggested-type), [SuggestorType](/ios/sdk/reference/12.0/enumeration#suggestor-type) и [ObjectType](/ios/sdk/reference/12.0/enumeration#object-type) и теперь соответствуют результатам Places API.
+* Приведены к стандарту именования значения [MyLocationMapObjectMarkerType](/ios/sdk/reference/12.0/enumeration#my-location-map-object-marker-type).
+* Удалён метод `createRasterTileDataSource()`. Добавлен новый источник [RasterTileSource](/ios/sdk/reference/12.0/class#raster-tile-source) с возможностью задания прозрачности растровых тайлов.
+* Удалён `AudioVolume`. Теперь вы можете задавать громкость инструкций от 0 до 100 через [AudioSettings.volume](/ios/sdk/reference/12.0/class#audio-settings/var-volume).
+* Удалены `AudioOptions` и `IAudioSettings`. Используйте `AudioSettings` для настройки звука.
+* [RouteMapObjectDisplayFlag.immersiveRouteParts](/ios/sdk/reference/12.0.0-alpha.8/RouteMapObjectDisplayFlag#nav-lvl1--immersiveRouteParts) — флаг для использования иммерсивной геометрии для отрезков маршрута.
+
+### 🛠 Исправления
+
+* Оптимизировано кеширование дорожных событий при отображении на карте.
+* Исправлена ошибка, при которой варианты проезда не отображались, если среди маршрутов на общественном транспорте предлагался нерабочий вариант.
+* Исправлен учёт пройденного расстояния вдоль альтернативного маршрута.
+* Доработано отображение остановок на маршруте на общественном транспорте.
+* Доработано стирание маршрута при достижении финишной точки маршрута.
+* Исправлено отображение активного маршрута при плохом сигнале GPS.
+* Не озвучиваются голосовые инструкции во время навигации при плохом сигнале GPS.
+* Не озвучивается расстояние до следующей камеры, если оно меньше 150 метров.
+* Не озвучиваются голосовые инструкции при старте навигации.
+* Не озвучивается расстояние до камер контроля перекрёстка, полосы общественного транспорта и разметки.
+* Инструкция навигации «До конца маршрута осталось» не озвучивается, если впереди по маршруту есть другие инструкции.
+* Не озвучиваются пешеходные препятствия и подтипы дорог для непешеходных маршрутов.
+
+### 🗺 Изменения в стилях карты
+
+* Добавлены слои с иммерсивными дорогами реальной ширины.
+* Доработаны различные слои, чтобы они корректно отображались при наличии иммерсивных дорог реальной ширины на карте.
+* Обновлены дизайны маркера геопозиции в обычном режиме и в режиме навигации. Также отображение маркера в дневной и ночной темах приведены к одному виду.
+* Добавлена поддержка новой ветки Московского метро МЦД-4А (литера А).
+* Исправлены стили веток Московского метро МЦД-3, МЦД-4, МЦД-4А и МЦД-5.
+* Добавлены подписи остановок на маршруте общественного транспорта.
+* Добавлены подписи остановок при просмотре полного маршрута выбранного общественного транспорта.

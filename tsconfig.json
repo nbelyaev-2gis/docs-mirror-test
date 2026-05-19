@@ -1,0 +1,20 @@
+{
+  "extends": "@docusaurus/tsconfig",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["src/shared/*"],
+      "@uiKit/*": ["src/shared/uiKit/*"],
+      "@theme/*": ["src/theme/*"],
+      "@config/*": ["src/config/*"],
+      "@types/*": ["./types/*"],
+      "*": ["src/*"],
+      "@tests/*": ["tests/*"],
+      "@docs/*": ["docs/*"],
+      "@i18n/*": ["i18n/*"]
+    }
+  },
+  "exclude": [".docusaurus", "build", "node_modules"]
+}

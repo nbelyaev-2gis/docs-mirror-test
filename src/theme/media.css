@@ -1,0 +1,6 @@
+/* Media-queries */
+@custom-media --media-xs (max-width: 576px);
+@custom-media --media-s (max-width: 768px);
+@custom-media --media-m (max-width: 996px);
+@custom-media --media-l (max-width: 1200px);
+@custom-media --media-xl (max-width: 1440px);

@@ -1,0 +1,651 @@
+---
+sidebar: mapgljsapi
+---
+# Раскрашивание объектов
+
+Вы можете выделять на карте с помощью клика различные объекты: здания, дороги, иконки и т. д. Для обычного и выделенного состояния объекта вы можете задавать разные настройки отображения. Например, здание в обычном состоянии может иметь серый цвет, а в выделенном (при клике на здание) перекрашиваться в красный цвет.
+
+Вы можете настроить цвета объекта в разных состояниях двумя способами:
+
+* [С помощью Редактора стилей](#styles-editor). Вы можете задавать общие настройки цвета для группы объектов, отображение которых настраивается в соответствующем слое в Редакторе стилей. Например, с помощью отдельных слоёв можно задать настройки цветов административных зданий, магистральных дорог и так далее: см. список [готовых слоёв](/maps/styles/layers/configured/mapgl). При клике на объекты они будут раскрашиваться согласно настройкам слоя.
+* [С помощью глобальных переменных стиля карты](#global-style-variables). Вы можете изменять цвета любых объектов при клике на них независимо от слоя, которому они принадлежат.
+
+С помощью глобальных стилевых переменных вы также можете раскрашивать объекты не при клике, а автоматически [при выполнении определённых условий](#conditions) (например, раскрашивать здания с определённым количеством этажей).
+
+## Настройка при клике с помощью Редактора стилей {#styles-editor}
+
+В этом примере при клике на объекты они будут раскрашиваться согласно настройкам цвета для выделенного состояния, которые указаны в стилевых слоях в [Редакторе стилей](https://styles.2gis.com/). Для настроек разных объектов используются соответствующие стилевые слои, например, цвета административных зданий и жилых зданий задаются в разных слоях. Все объекты, принадлежащие одному слою, раскрашиваются одинаково.
+
+В [готовых слоях](/maps/styles/layers/configured/mapgl) цвета объектов в разных состояниях настроены заранее, и при необходимости вы можете изменить их в Редакторе стилей. В этом примере новые настройки цвета задаются только для слоя с промышленными зданиями, а для остальных слоёв используются готовые настройки из базового стиля.
+
+:::note[Ограниченная доступность]
+
+Для некоторых слоёв настройка цвета в разных состояниях недоступна, например, для водоёмов (слой **Water**).
+
+:::
+
+Пример использования:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Выбор объектов на карте" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.629589, 55.746067],
+                zoom: 17,
+                key: 'Your API access key'
+            });
+
+            let selectedIds = [];
+
+            map.on('click', (e) => {
+                if (!e.target) {
+                    return;
+                }
+
+                const { id } = e.target;
+
+                if (selectedIds.includes(id)) {
+                    selectedIds = selectedIds.filter((i) => i !== id);
+                } else {
+                    selectedIds.push(id);
+                }
+
+                map.setSelectedObjects(selectedIds);
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+Чтобы настроить раскрашивание объектов при клике с помощью Редактора стилей:
+
+1. Задайте настройки стилевого слоя в Редакторе стилей:
+
+   1. Откройте [Редактор стилей](https://styles.2gis.com/).
+   2. Откройте нужный стиль.
+   3. Откройте нужный слой. Укажите настройки цвета для обычного и выделенного состояния.
+
+      Пример для промышленных зданий (слой **Industrial buildings**):
+
+       {/* prettier-ignore */}
+
+      <img src="/img/mapgl/coloring/object-states.png" alt="Состояния объекта" width="700"  />
+
+2. Чтобы настроить выделение объектов, добавьте обработчик кликов для карты и передайте ID выделенных объектов в метод `setSelectedObjects()`:
+
+   ```js
+   let selectedIds = [];
+
+   map.on('click', (e) => {
+       if (!e.target) {
+           return;
+       }
+
+       const { id } = e.target;
+
+       if (selectedIds.includes(id)) {
+           selectedIds = selectedIds.filter((i) => i !== id);
+       } else {
+           selectedIds.push(id);
+       }
+
+       map.setSelectedObjects(selectedIds);
+   });
+   ```
+
+   Подробнее о выделении объектов см. в инструкции [Выделение объектов](/mapgl/objects/selection).
+
+## Настройка при клике с помощью глобальных переменных {#global-style-variables}
+
+В этом примере при клике на объекты они будут раскрашиваться согласно настройкам цвета, которые передаются в [глобальных переменных стиля карты](/mapgl/map-style/global-style-variables).
+
+Вы можете выбирать три цвета для раскраски зданий с помощью цветовых палитр: цвет стен, крыши и обводки (рёбер здания). При клике на здания на карте они будут автоматически раскрашиваться в выбранные цвета. Административные здания, жилые здания и другие типы зданий будут иметь одинаковые настройки независимо от слоя, которому они принадлежат.
+
+Пример использования:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Раскрашивание объектов на карте" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<script src="__MAPGL_API_URL__"></script>
+<div id="colors" style="position: absolute; top: 0; left: 0; display: flex; gap:15px; flex-direction: column; height: 100%; padding-top: 15px; padding-left: 15px;">
+    <rgba-color-picker id='wallDown' style="width: 150px; height: 100px;" color='{
+  "r": 143,
+  "g": 219,
+  "b": 126,
+  "a": 1
+}'></rgba-color-picker>
+    <rgba-color-picker id='wallTop' style="width: 150px; height: 100px;" color='{
+  "r": 237,
+  "g": 255,
+  "b": 155,
+  "a": 1
+}'></rgba-color-picker>
+    <rgba-color-picker id='strokeColor' style="width: 150px; height: 100px;" color='{
+  "r": 205,
+  "g": 250,
+  "b": 152,
+  "a": 0.9
+}'></rgba-color-picker>
+</div>
+<script src="__MAPGL_API_URL__"></script>
+<script type="module">
+    import 'https://esm.sh/vanilla-colorful/rgba-color-picker';
+    const colorPicker = document.querySelector('rgba-color-picker');
+    colorPicker.color = { r: 143, g: 219, b: 126, a: 1 };
+</script>
+<script>
+    const building = {
+        id: "wallsSelectLayer",
+        type: "polygonExtrusion",
+        style: {
+            topColor: [
+                "match",
+                ["to-boolean", ["global", "wallColorTop"]],
+                [true],
+                ["to-color", ["global", "wallColorTop"]],
+                "rgba(1,1,1,1)"],
+            sideColor:
+                [
+                    "match",
+                    ["to-boolean", ["global", "wallColorDown"]],
+                    [true],
+                    ["to-color", ["global", "wallColorDown"]],
+                    "rgba(1,1,1,1)"],
+            visibility: "visible",
+            strokeColor:
+                [
+                    "match",
+                    ["to-boolean", ["global", "strokeColor"]],
+                    [true],
+                    ["to-color", ["global", "strokeColor"]],
+                    "rgba(1,1,1,1)"],
+            strokeWidth: 0.1
+        },
+        filter: [
+            "in",
+            ["get", "db_id"], ["global","hoverId"],
+        ]
+    };
+
+    // ID здания, которое будет раскрашено по умолчанию
+    let selectedIds = ["4504235283020869"];
+
+    const map = new mapgl.Map('container', {
+        center: [37.629589, 55.746067],
+        zoom: 17.2,
+        rotation: -40,
+        pitch: 45,
+        key: 'Your API access key',
+    });
+
+    window.map = map;
+
+    map.on("styleload", () => {
+        map.patchStyleState({
+            wallColorDown: "rgba(143,219,126,1)",
+            wallColorTop: "rgba(237,255,155,1)",
+            strokeColor: "rgba(237,255,155,1)",
+            hoverId: selectedIds,
+        });
+        map.setSelectedObjects(selectedIds);
+        map.addLayer(building);
+    });
+
+    map.on("click", (ev) => {
+        const id = ev.target?.id;
+        if (!id) return;
+        selectedIds = selectedIds.includes(id)
+            ? selectedIds.filter((selectId) => selectId !== id)
+            : [...selectedIds, id];
+        map.patchStyleState({ hoverId: selectedIds });
+    });
+
+    function updateColor(pickerId, stateKey) {
+        const picker = document.getElementById(pickerId);
+        picker?.addEventListener("color-changed", (event) => {
+            const v = event.detail?.value;
+            if (!v) return;
+            map.patchStyleState({
+                [stateKey]: \u0060\u0072\u0067\u0062\u0061\u0028\u0024\u007b\u0076\u002e\u0072\u007d\u002c\u0024\u007b\u0076\u002e\u0067\u007d\u002c\u0024\u007b\u0076\u002e\u0062\u007d\u002c\u0024\u007b\u0076\u002e\u0061\u007d\u0029\u0060
+            });
+        });
+    }
+    updateColor("wallDown", "wallColorDown");
+    updateColor("wallTop", "wallColorTop");
+    updateColor("strokeColor", "strokeColor");
+</script>
+</body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+Чтобы настроить раскрашивание объектов при клике с помощью глобальных стилевых переменных:
+
+1. Создайте слой с 3D-зданиями:
+
+   ```js
+   const building = {
+       id: 'wallsSelectLayer',
+       type: 'polygonExtrusion',
+       style: {
+           topColor: [
+               'match',
+               ['to-boolean', ['global', 'wallColorTop']],
+               [true],
+               ['to-color', ['global', 'wallColorTop']],
+               'rgba(1,1,1,1)',
+           ],
+           sideColor: [
+               'match',
+               ['to-boolean', ['global', 'wallColorDown']],
+               [true],
+               ['to-color', ['global', 'wallColorDown']],
+               'rgba(1,1,1,1)',
+           ],
+           visibility: 'visible',
+           strokeColor: [
+               'match',
+               ['to-boolean', ['global', 'strokeColor']],
+               [true],
+               ['to-color', ['global', 'strokeColor']],
+               'rgba(1,1,1,1)',
+           ],
+           strokeWidth: 0.1,
+       },
+       filter: ['in', ['get', 'db_id'], ['global', 'hoverId']],
+   };
+   ```
+
+   Инициализируйте следующие глобальные переменные стиля карты:
+
+   * `wallColorTop` — для настройки цвета крыши;
+   * `wallColorDown` — для настройки цвета стен;
+   * `strokeColor` — для настройки цвета обводки зданий;
+   * `hoverId` — для настройки цвета только для выделенных зданий на карте.
+
+2. Передайте в метод [map.patchStyleState()](/mapgl/reference/class#map/patch-style-state) созданные глобальные переменные. Укажите начальные цвета для `wallColorDown`, `wallColorTop` и `strokeColor`, а также передайте выделенные объекты (массив `selectedIds`) в `hoverId`:
+
+   ```js
+   window.map = map;
+
+   map.on('styleload', () => {
+       map.patchStyleState({
+           wallColorDown: 'rgba(143,219,126,1)',
+           wallColorTop: 'rgba(237,255,155,1)',
+           strokeColor: 'rgba(237,255,155,1)',
+           hoverId: selectedIds,
+       });
+
+       // Выделение объектов
+       map.setSelectedObjects(selectedIds);
+
+       // Добавление слоя со зданиями
+       map.addLayer(building);
+   });
+   ```
+
+3. Чтобы настроить выделение зданий по клику, добавьте обработчик кликов для карты и передайте ID выделенных объектов в метод `map.patchStyleState()`:
+
+   ```js
+   map.on('click', (ev) => {
+       const id = ev.target?.id;
+       if (!id) return;
+       selectedIds = selectedIds.includes(id)
+           ? selectedIds.filter((selectId) => selectId !== id)
+           : [...selectedIds, id];
+       map.patchStyleState({ hoverId: selectedIds });
+   });
+   ```
+
+4. Создайте функцию для обновления цветов зданий, которые будут меняться в зависимости от выбранных цветов в палитрах, и передайте новые значения цвета в метод `map.patchStyleState()`:
+
+   ```js
+   function updateColor(pickerId, stateKey) {
+       const picker = document.getElementById(pickerId);
+       picker?.addEventListener('color-changed', (event) => {
+           const v = event.detail?.value;
+           if (!v) return;
+           map.patchStyleState({
+               [stateKey]: `rgba(${v.r},${v.g},${v.b},${v.a})`,
+           });
+       });
+   }
+   updateColor('wallDown', 'wallColorDown');
+   updateColor('wallTop', 'wallColorTop');
+   updateColor('strokeColor', 'strokeColor');
+   ```
+
+## Настройка по условиям с помощью глобальных переменных {#conditions}
+
+Вы можете раскрашивать объекты не только при клике, а по определённым условиям с помощью [глобальных переменных стиля карты](/mapgl/map-style/global-style-variables). Например, автоматически раскрашивать все здания выше пяти этажей в области видимости карты.
+
+В этом примере здания раскрашиваются в зависимости от количества этажей: сначала выделяются и раскрашиваются здания с наибольшим количеством этажей в области видимости карты, затем раскрашиваются здания с количеством этажей меньше на один и так далее. После того как все здания в области видимости карты раскрашены, автоматически снимается выделение, начиная со зданий с наименьшим количеством этажей. Вы можете выбирать три цвета для раскраски зданий с помощью цветовых палитр: цвет стен, крыши и обводки (рёбер здания).
+
+Пример использования:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '400px' }}>
+{`
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Раскрашивание объектов на карте" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<script src="__MAPGL_API_URL__"></script>
+<div id="colors" style="position: absolute; top: 0; left: 0; display: flex; gap:15px; flex-direction: column; height: 100%; padding-top: 15px; padding-left: 15px;">
+    <rgba-color-picker id='wallDown' style="width: 150px; height: 100px;" color='{
+  "r": 143,
+  "g": 219,
+  "b": 126,
+  "a": 1
+}'></rgba-color-picker>
+    <rgba-color-picker id='wallTop' style="width: 150px; height: 100px;" color='{
+  "r": 237,
+  "g": 255,
+  "b": 155,
+  "a": 1
+}'></rgba-color-picker>
+    <rgba-color-picker id='strokeColor' style="width: 150px; height: 100px;" color='{
+  "r": 205,
+  "g": 250,
+  "b": 152,
+  "a": 0.9
+}'></rgba-color-picker>
+</div>
+<script src="__MAPGL_API_URL__"></script>
+<script type="module">
+    import 'https://esm.sh/vanilla-colorful/rgba-color-picker';
+</script>
+<script>
+    const building = {
+        id: "wallsSelectLayer",
+        type: "polygonExtrusion",
+        style: {
+            topColor: [
+                "match",
+                ["to-boolean", ["global", "wallColorTop"]],
+                [true],
+                ["to-color", ["global", "wallColorTop"]],
+                "rgba(1,1,1,1)"],
+            sideColor:
+                [
+                    "match",
+                    ["to-boolean", ["global", "wallColorDown"]],
+                    [true],
+                    ["to-color", ["global", "wallColorDown"]],
+                    "rgba(1,1,1,1)"],
+            visibility: "visible",
+            strokeColor:
+                [
+                    "match",
+                    ["to-boolean", ["global", "strokeColor"]],
+                    [true],
+                    ["to-color", ["global", "strokeColor"]],
+                    "rgba(1,1,1,1)"],
+            strokeWidth: 0.1
+        },
+        filter: ["all", [">", ["get", "db_height"], ["global", "floorsCurrentHeight"]]]
+    };
+
+    // ID здания, которое будет раскрашено по умолчанию
+    let selectedIds = ["70030076552334291"];
+
+    const map = new mapgl.Map('container', {
+        center: [37.629589, 55.746067],
+        zoom: 17.2,
+        rotation: -40,
+        pitch: 45,
+        key: 'Your API access key',
+    });
+
+    window.map = map;
+
+    map.on("styleload", () => {
+        map.patchStyleState({
+            wallColorDown: "rgba(143,219,126,1)",
+            wallColorTop: "rgba(237,255,155,1)",
+            strokeColor: "rgba(237,255,155,1)",
+            hoverId: selectedIds,
+        });
+        map.setSelectedObjects(selectedIds);
+        map.addLayer(building);
+    });
+
+    map.on("click", async (ev) => {
+
+        const id = ev.target && ev.target.id;
+        if (selectedIds.includes(id)) {
+            selectedIds = selectedIds.filter((selectId) => selectId !== id);
+        } else {
+            selectedIds.push(id);
+        }
+        map.patchStyleState({
+            hoverId: selectedIds,
+        });
+        map.setSelectedObjects(selectedIds);
+    });
+
+    function updateColor(pickerId, stateKey) {
+        const picker = document.getElementById(pickerId);
+        picker?.addEventListener("color-changed", (event) => {
+            const v = event.detail?.value;
+            if (!v) return;
+            map.patchStyleState({
+                [stateKey]: \u0060\u0072\u0067\u0062\u0061\u0028\u0024\u007b\u0076\u002e\u0072\u007d\u002c\u0024\u007b\u0076\u002e\u0067\u007d\u002c\u0024\u007b\u0076\u002e\u0062\u007d\u002c\u0024\u007b\u0076\u002e\u0061\u007d\u0029\u0060
+            });
+        });
+    }
+    updateColor("wallDown", "wallColorDown");
+    updateColor("wallTop", "wallColorTop");
+    updateColor("strokeColor", "strokeColor");
+
+    const MAX_FLOOR_HEIGHT = 8000;
+    let STEP = 500;
+    let currentFloorHeight = MAX_FLOOR_HEIGHT;
+    let isDecreasing = false;
+
+    setInterval(() => {
+        if(isDecreasing){
+            STEP = -500;
+        }else{
+            STEP = 500;
+        }
+
+        if(currentFloorHeight <= 0){
+            isDecreasing = true;
+        }else if(currentFloorHeight > MAX_FLOOR_HEIGHT){
+            isDecreasing = false;
+        }
+
+        currentFloorHeight = currentFloorHeight - STEP;
+        map.patchStyleState({ floorsCurrentHeight: currentFloorHeight });
+    }, 1000);
+</script>
+</body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+Чтобы настроить раскрашивание объектов по условиям с помощью глобальных стилевых переменных:
+
+1. Создайте слой с 3D-зданиями:
+
+   ```js
+   const building = {
+       id: 'wallsSelectLayer',
+       type: 'polygonExtrusion',
+       style: {
+           topColor: [
+               'match',
+               ['to-boolean', ['global', 'wallColorTop']],
+               [true],
+               ['to-color', ['global', 'wallColorTop']],
+               'rgba(1,1,1,1)',
+           ],
+           sideColor: [
+               'match',
+               ['to-boolean', ['global', 'wallColorDown']],
+               [true],
+               ['to-color', ['global', 'wallColorDown']],
+               'rgba(1,1,1,1)',
+           ],
+           visibility: 'visible',
+           strokeColor: [
+               'match',
+               ['to-boolean', ['global', 'strokeColor']],
+               [true],
+               ['to-color', ['global', 'strokeColor']],
+               'rgba(1,1,1,1)',
+           ],
+           strokeWidth: 0.1,
+       },
+       filter: ['all', ['>', ['get', 'db_height'], ['global', 'floorsCurrentHeight']]],
+   };
+   ```
+
+   Инициализируйте следующие глобальные переменные стиля карты:
+
+   * `wallColorTop` — для настройки цвета крыши;
+   * `wallColorDown` — для настройки цвета стен;
+   * `strokeColor` — для настройки цвета обводки зданий;
+   * `floorsCurrentHeight` — для настройки цвета зданий с определённым количеством этажей.
+
+2. Передайте в метод [map.patchStyleState()](/mapgl/reference/class#map/patch-style-state) созданные глобальные переменные. Укажите начальные цвета для `wallColorDown`, `wallColorTop` и `strokeColor`, а также передайте выделенные объекты (массив `selectedIds`) в `hoverId`:
+
+   ```js
+   window.map = map;
+
+   map.on('styleload', () => {
+       map.patchStyleState({
+           wallColorDown: 'rgba(143,219,126,1)',
+           wallColorTop: 'rgba(237,255,155,1)',
+           strokeColor: 'rgba(237,255,155,1)',
+           hoverId: selectedIds,
+       });
+
+       // Выделение объектов
+       map.setSelectedObjects(selectedIds);
+
+       // Добавление слоя со зданиями
+       map.addLayer(building);
+   });
+   ```
+
+3. Чтобы настроить выделение зданий по клику, добавьте обработчик кликов для карты и передайте ID выделенных объектов в метод `map.patchStyleState()`:
+
+   ```js
+   map.on('click', async (ev) => {
+       const id = ev.target && ev.target.id;
+       if (selectedIds.includes(id)) {
+           selectedIds = selectedIds.filter((selectId) => selectId !== id);
+       } else {
+           selectedIds.push(id);
+       }
+       map.patchStyleState({
+           hoverId: selectedIds,
+       });
+       map.setSelectedObjects(selectedIds);
+   });
+   ```
+
+4. Создайте функцию для обновления цветов зданий, которые будут меняться в зависимости от выбранных цветов в палитрах, и передайте новые значения цвета в метод `map.patchStyleState()`:
+
+   ```js
+   function updateColor(pickerId, stateKey) {
+       const picker = document.getElementById(pickerId);
+       picker?.addEventListener('color-changed', (event) => {
+           const v = event.detail?.value;
+           if (!v) return;
+           map.patchStyleState({
+               [stateKey]: `rgba(${v.r},${v.g},${v.b},${v.a})`,
+           });
+       });
+   }
+   updateColor('wallDown', 'wallColorDown');
+   updateColor('wallTop', 'wallColorTop');
+   updateColor('strokeColor', 'strokeColor');
+   ```
+
+5. Задайте условия для раскрашивания зданий в зависимости от количества этажей и передайте количество этажей в метод `map.patchStyleState()`:
+
+   ```js
+   const MAX_FLOOR_HEIGHT = 8000;
+   let STEP = 500;
+   let currentFloorHeight = MAX_FLOOR_HEIGHT;
+   let isDecreasing = false;
+
+   setInterval(() => {
+       if (isDecreasing) {
+           STEP = -500;
+       } else {
+           STEP = 500;
+       }
+
+       if (currentFloorHeight <= 0) {
+           isDecreasing = true;
+       } else if (currentFloorHeight > MAX_FLOOR_HEIGHT) {
+           isDecreasing = false;
+       }
+
+       currentFloorHeight = currentFloorHeight - STEP;
+       map.patchStyleState({ floorsCurrentHeight: currentFloorHeight });
+   }, 1000);
+   ```

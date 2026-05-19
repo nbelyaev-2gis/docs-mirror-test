@@ -1,0 +1,352 @@
+---
+sidebar: mapgljsapi
+---
+# Зацикленная карта
+
+Вы можете управлять режимом зацикленной карты, который позволяет перемещаться через 180-й меридиан (антимеридиан), а также строить геометрии через него. Если режим включен, вы можете бесконечно перемещать карту вдоль экватора. Данная функция доступна для MapGL JS API [версии 1.47.0 и выше](/mapgl/releases#v1470).
+
+Чтобы активировать режим зацикленной карты, передайте значение `true` свойству `loopWorld` в опциях карты [MapOptions](/mapgl/reference/interface#map-options):
+
+```js
+const map = new mapgl.Map('container', {
+    center: [37.615655, 55.768005],
+    zoom: 2,
+    key: 'Your API access key',
+    loopWorld: true,
+});
+```
+
+Также вы можете включать и отключать режим на лету, используя метод [setOption](/mapgl/reference/class#map/set-option) карты:
+
+```js
+// Включение зацикленного режима
+map.setOption('loopWorld', true);
+
+// Выключение зацикленного режима
+map.setOption('loopWorld', false);
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Зацикленная карта" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 2,
+                key: 'Your API access key',
+                loopWorld: true,
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Зацикленность в источниках данных
+
+При включении режима зацикленности геометрии из пользовательских источников данных ([GeoJsonSource](/mapgl/reference/class#geo-json-source), [RasterTileSource](/mapgl/reference/class#raster-tile-source) и т. д.) будут также сразу распространены на все реплики карты за пределами 180-го меридиана.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Зацикленные источники данных на карте" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 2,
+                key: 'Your API access key',
+                loopWorld: true,
+            });
+
+            const data = {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: {
+                            layer: 'line',
+                        },
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [30.3, 60.0],
+                                [37.6, 55.8],
+                                [39.7, 47.2],
+                                [56.0, 54.0],
+                                [73.4, 54.9],
+                                [82.9, 55.0],
+                            ],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {
+                            layer: 'polygon',
+                        },
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: [
+                                [
+                                    [50.0, 65.0],
+                                    [70.0, 68.0],
+                                    [90.0, 67.0],
+                                    [85.0, 55.0],
+                                    [55.0, 57.0],
+                                    [50.0, 65.0],
+                                ],
+                            ],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {
+                            layer: 'marker',
+                            label: 'Маркер',
+                        },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [37.615655, 55.768005],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {
+                            layer: 'marker',
+                            label: 'Другой маркер',
+                        },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [82.9, 55.0],
+                        },
+                    },
+                ],
+            };
+
+            new mapgl.GeoJsonSource(map, {
+                data,
+                attributes: {
+                    type: 'geojson',
+                },
+            });
+
+            new mapgl.RasterTileSource(map, {
+                url: (x, y, zoom) => \`https://tile.openstreetmap.org/\${zoom}/\${x}/\${y}.png\`,
+                attribution:
+                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                attributes: { type: 'raster' },
+            });
+
+            map.on('styleload', () => {
+                map.addLayer({
+                    type: 'raster',
+                    id: 'my-raster-tile-layer',
+                    filter: ['match', ['sourceAttr', 'type'], ['raster'], true, false],
+                    style: {
+                        opacity: 0.75,
+                    },
+                });
+                map.addLayer({
+                    type: 'polygon',
+                    id: 'my-polygon',
+                    filter: [
+                        'all',
+                        ['match', ['sourceAttr', 'type'], ['geojson'], true, false],
+                        ['match', ['get', 'layer'], ['polygon'], true, false],
+                    ],
+                    style: {
+                        color: '#ff000044',
+                    },
+                });
+                map.addLayer({
+                    type: 'line',
+                    id: 'my-line',
+                    filter: [
+                        'all',
+                        ['match', ['sourceAttr', 'type'], ['geojson'], true, false],
+                        ['match', ['get', 'layer'], ['line'], true, false],
+                    ],
+                    style: {
+                        color: '#ffcd17',
+                        width: 7,
+                    },
+                });
+                map.addLayer({
+                    type: 'point',
+                    id: 'my-marker',
+                    filter: [
+                        'all',
+                        ['match', ['sourceAttr', 'type'], ['geojson'], true, false],
+                        ['match', ['get', 'layer'], ['marker'], true, false],
+                    ],
+                    style: {
+                        iconImage: 'ent_i',
+                        iconWidth: 25,
+                        textField: ['get', 'label'],
+                        textFont: ['Noto_Sans'],
+                        textColor: '#0098ea',
+                        textHaloColor: '#fff',
+                        textHaloWidth: 1,
+                        iconPriority: 100,
+                        textPriority: 100,
+                    },
+                });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Зацикленность в объектах на карте
+
+Объекты на карте также распространяются на все реплики карты, за исключением экземпляров [HtmlMarker](/mapgl/reference/class#html-marker), которые не имеют дубликатов и отображаются в зависимости от расстояния до центра карты. Геометрии линий, полигонов и т. д. можно строить через 180-й меридиан.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Зацикленные объекты на карте" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            .popup {
+                position: absolute;
+                transform: translate(-50%, -100%);
+                display: flex;
+                flex-direction: column;
+                min-width: 200px;
+            }
+            .popup-content {
+                padding: 5px;
+                border-radius: 4px;
+                background: #fff;
+                box-shadow: 0 1px 2px 0 rgba(38, 38, 38, 0.2);
+            }
+            .popup-tip {
+                width: 0;
+                height: 0;
+                align-self: center;
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                border-top: 10px solid #fff;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 2,
+                key: 'Your API access key',
+                loopWorld: true,
+            });
+
+            new mapgl.Polygon(map, {
+                coordinates: [[
+                    [50.0, 65.0],
+                    [70.0, 68.0],
+                    [90.0, 67.0],
+                    [85.0, 55.0],
+                    [55.0, 57.0],
+                    [50.0, 65.0],
+                ]],
+                color: '#00FF0044',
+                strokeColor: '#00ff00',
+            });
+
+            new mapgl.Polyline(map, {
+                    coordinates: [
+                        [30.3, 60.0],
+                        [37.6, 55.8],
+                        [39.7, 47.2],
+                        [56.0, 54.0],
+                        [73.4, 54.9],
+                        [82.9, 55.0],
+                        [104.3, 52.3],
+                        [142.7, 47.5],
+                    ],
+                    dashLength: 10,
+            });
+
+            new mapgl.Marker(map, {
+                coordinates: [37.615655, 55.768005],
+                icon: '__BASE_URL__/img/mapgl/marker.svg',
+            });
+
+            new mapgl.Marker(map, {
+                coordinates: [82.9, 55.0],
+                label: {
+                    text: "Подпись маркера",
+                    offset: [0, 25],
+                    relativeAnchor: [0.5, 0],
+                    image: {
+                        url: '__BASE_URL__/img/mapgl/tooltip-top.svg',
+                        size: [100, 50],
+                        stretchX: [
+                            [10, 40],
+                            [60, 90],
+                        ],
+                        stretchY: [[20, 40]],
+                        padding: [20, 10, 10, 10],
+                    },
+                },
+            });
+
+            new mapgl.HtmlMarker(map, {
+                coordinates: [60.0, 56.8],
+                html: '<div class="popup"><div class="popup-content">Это текст всплывающего окна</div><div class="popup-tip"></div></div>',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

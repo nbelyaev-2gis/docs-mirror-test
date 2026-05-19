@@ -1,0 +1,15 @@
+.hiddenOnLargeScreen {
+  display: none;
+
+  @media screen and (--media-xl) {
+    display: inline-block;
+  }
+}
+
+.hiddenOnMediumScreen {
+  display: inline-block;
+
+  @media screen and (--media-xl) {
+    display: none;
+  }
+}

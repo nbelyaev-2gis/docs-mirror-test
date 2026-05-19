@@ -1,0 +1,155 @@
+---
+sidebar: mapgljsapi
+---
+# Пересечение с камерой
+
+Пересечение с камерой позволяет задать границу, при приближении к которой 3D-объект будет плавно растворяться. Такое поведение позволяет пользователям лучше ориентироваться на больших масштабах, когда объекты карты находятся в непосредственной близости к камере.
+
+![Пересечение с камерой](/img/mapgl/camerafade/camerafade-intro.jpg)
+
+## Настройка в стилях
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+2. [Добавьте новый слой](/maps/styles/create#adding-a-layer) или выберите слой одного из следующих типов:
+
+   * Полигон с высотой
+   * Линия с высотой
+   * 3D-модель
+   * 3D-модель здания
+
+3. Перейдите на вкладку **Стиль**.
+
+4. Введите нужное значение в поле **Расстояние до камеры, при котором у объекта появляется прозрачность**. Значение задается в условных единицах и подбирается визуально.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Пересечение с камерой" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.642643, 55.746647],
+                zoom: 19.8,
+                pitch: 43.6,
+                rotation: -89,
+                key: 'Your API access key',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Динамическое управление
+
+Пересечением с камерой можно управлять динамически, при помощи [глобальной переменной стиля](/mapgl/map-style/global-style-variables). Это бывает полезно при необходимости поменять акценты на карте: например, какие-то объекты выделить, а какие-то сделать менее заметными.
+
+1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+2. [Добавьте новый слой](/maps/styles/create#adding-a-layer) или выберите слой одного из следующих типов:
+
+   * Полигон с высотой
+   * Линия с высотой
+   * 3D-модель
+   * 3D-модель здания
+
+3. Перейдите на вкладку **Стиль** и найдите настройку **Расстояние до камеры, при котором у объекта появляется прозрачность**.
+
+4. Нажмите **Редактировать JSON**.
+
+5. Вставьте код, приведенный ниже. В результате значение пересечения с камерой будет поставлено в зависимость от глобальной переменной (`fadeDistance`).
+
+   ```json
+   ["global", "fadeDistance"]
+   ```
+
+   ![Настройка глобальной переменной стилей в редакторе](/img/mapgl/camerafade/stylevar-settings.png)
+
+После этого значением границы можно будет управлять программно, при помощи метода [patchStyleState()](/mapgl/reference/class#map/patch-style-state):
+
+```js
+map.patchStyleState({
+    fadeDistance: 10000,
+});
+```
+
+## Пример использования {#usage-example}
+
+В этом примере при показе этажного комплекса окружающие его здания скрываются, чтобы не мешать обзору. Немного увеличьте масштаб, находясь в центре карты.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Пересечение с камерой" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const triggerZoom = 18;
+
+            const defaultDistance = 2500;
+            const hiddenDistance = 50000;
+
+            const map = new mapgl.Map('container', {
+                center: [37.538939, 55.748836],
+                zoom: 16.5,
+                rotation: -60,
+                pitch: 44.4,
+                style: '91d90926-1d17-44c3-9e5b-26140e44ac4e',
+                key: 'Your API access key',
+                styleState: {
+                    fadeDistance: defaultDistance
+                },
+            });
+
+            map.on('zoom', () => {
+                const zoom = map.getStyleZoom();
+                map.patchStyleState({
+                    fadeDistance: zoom > triggerZoom ? hiddenDistance : defaultDistance
+                });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+:::tip
+
+Вы можете посмотреть настройки стилевого слоя в [готовом стиле](https://styles.2gis.com/preview/91d90926-1d17-44c3-9e5b-26140e44ac4e?allowCopy=1875239495). Для доступа к настройкам авторизуйтесь в Редакторе стилей и нажмите **Создать копию**.
+
+:::
+

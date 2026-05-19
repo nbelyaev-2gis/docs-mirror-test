@@ -1,0 +1,286 @@
+---
+sidebar: mapgljsapi
+---
+# Сценарии использования
+
+Если вы только начинаете работу с картой, узнайте об основах её работы и сценариях использования.
+
+## Данные и стили
+
+Верхнеуровнево карта на MapGL JS API выполняет только одну задачу: отрисовывает **данные** при помощи **стилей**.
+
+**Данные** — информация, которая может быть отображена на карте: здания, дороги, водные объекты, границы областей и многое другое. Это всё, что отвечает на вопрос «Что рисовать?». В большинстве случаев эта информация содержит привязку к какой-либо географической области. Другими словами, это геоданные.
+
+**Стили** — правила, которые определяют в каком порядке и в каком виде отображать данные карты. Это всё, что отвечает на вопрос «Как рисовать?». Без определения стиля данные не появятся на карте.
+
+Данные и стили могут работать в двух вариантах:
+
+* В [динамических объектах](/mapgl/objects) они задаются совместно. Когда вы [создаёте маркер на карте](/mapgl/objects/markers), вы сразу указываете его геопозицию: то есть добавляете данные и указываете настройки их отображения (стиль).
+* В комбинации источника данных со стилевыми слоями стили и данные задаются раздельно:
+
+  * Стили — при программном создании стилевого слоя (см. [пример с тепловой картой](/mapgl/map-style/examples/heatmap)) или при создании слоя в Редакторе (см. [пример с заливкой полигона текстурой](/mapgl/map-style/examples/texturedpolygon)).
+  * Данные — в источниках данных (см. [пример с GeoJSON](/mapgl/geodata/geojson)).
+
+<br />
+
+Вы можете как работать с готовыми данными <Brand />, так и загрузить собственные данные для дополнения информации на карте. Пользовательские данные можно загрузить через [динамические объекты](/mapgl/objects) или [источники данных](/mapgl/geodata/formats).
+
+Подходящий способ добавления пользовательских данных зависит от решаемой вами задачи. Если вам нужно отобразить на карте несколько объектов, которые меняются достаточно часто (например для сценария построения маршрута), лучше подойдут динамические объекты. Если же нужно показать много статичных данных, которые не меняются (например тепловую карту статистики ДТП за год), лучшим выбором будет комбинация стилевых слоев с источниками данных.
+
+Ниже представлены типовые сценарии работы с MapGL JS API, которые помогут вам определить первые шаги для решения вашей задачи.
+
+## Карта + штучные объекты
+
+Используйте этот сценарий, если вам необходимо добавить на карту <Brand /> небольшое количество собственных объектов. Пример: показать на карте места, где в будущем будут открыты новые заведения, и для каждого из них задать уникальный вид иконки.
+
+Шаги:
+
+1. [Инициализируйте карту](/mapgl/start/first-steps).
+2. Добавьте [динамические объекты](/mapgl/objects) и настройте вид каждого из них.
+3. Если необходимо, дополнительно настройте вид карты-подложки в [Редакторе стилей](/maps/styles/overview).
+
+Пример карты с маркерами, добавленными поштучно:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Пример карты с маркерами" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+            const coords = [
+                     [37.615655, 55.768005],
+                     [37.608676, 55.766095],
+                     [37.612247, 55.754607],
+                     [37.634183, 55.754402],
+                     [37.630123, 55.773231]
+            ];
+            coords.forEach((coord) => {
+                const marker = new mapgl.Marker(map, {
+                    coordinates: coord,
+                });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Карта со своим стилем
+
+Если вам не подходят стандартные стили из [Редактора](/maps/styles/overview), вы можете создать свой стиль на их основе и использовать его в карте. Пример: показать на карте только федеральные трассы и выделить их определённым цветом или настроить светлую и тёмную тему для карты.
+
+Шаги:
+
+1. [Инициализируйте карту](/mapgl/start/first-steps).
+2. Настройте отображение нужных слоёв в [Редакторе стилей](/maps/styles/overview).
+
+Пример карты с подключенными стилями для светлой и темной темы:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Пример карты со стилями" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+
+            #dark_theme, #light_theme {
+                margin: 0 10px 10px;
+                padding: 3px 12px;
+                background: #3b3b3b;
+                color: #fff;
+                border: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            Нажмите, чтобы переключить тему:
+            <button id="dark_theme">Переключить на тёмную тему 🌙</button>
+            <button id="light_theme">Переключить на светлую тему 🌞</button>
+        </div>
+
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                styleZoom: 16,
+                pitch: 40,
+                rotation: -45,
+                key: 'Your API access key',
+            });
+
+            document.getElementById('dark_theme').addEventListener('click', function() {
+                map.setStyleById('e05ac437-fcc2-4845-ad74-b1de9ce07555');
+            });
+            document.getElementById('light_theme').addEventListener('click', function() {
+                map.setStyleById('c080bb6a-8134-4993-93a1-5b4d8c36a59b');
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Источник данных и стилевой слой
+
+Используйте этот сценарий, если вам необходимо добавить на карту достаточно большое количество данных (тысячи или миллионы объектов). Пример: отобразить статистику ДТП из внешних данных в виде тепловой карты.
+
+Шаги:
+
+1. [Инициализируйте карту](/mapgl/start/first-steps).
+2. Добавьте [источник данных](/mapgl/geodata/formats).
+3. Настройте стилевой слой при помощи метода [map.addLayer()](/mapgl/reference/class#map/add-layer) и [спецификации стилей](/mapgl/styles-specification) или создайте его в [Редакторе стилей](/maps/styles/overview).
+
+Пример карты с подключенным источником GeoJSON и настроенной стилизацией в виде тепловой карты:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Пример карты со слоем тепловой карты" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.760005],
+                zoom: 13.5,
+                key: 'Your API access key',
+            });
+
+            fetch('/samples/heatmap.csv')
+                .then(r => r.text())
+                .then(text => {
+                    const csv = text.split(/\\r?\\n/).map(s => s.split(','));
+
+                    const geojson = {
+                        type: 'FeatureCollection',
+                        features: []
+                    };
+
+                    const count = csv.length - 1;
+                    console.log(count);
+
+                    csv
+                        .slice(1)
+                        .forEach((row) => {
+                            if (row.length < 4) {
+                                return;
+                            }
+                            geojson.features.push({
+                                type: 'Feature',
+                                properties: { customProperty: 900 / count },
+                                geometry: {
+                                    type: 'Point',
+                                    coordinates: [
+                                        +JSON.parse(row[3]),
+                                        +JSON.parse(row[2])
+                                    ],
+                                },
+                            });
+                        });
+
+                    const source = new mapgl.GeoJsonSource(map, {
+                        data: geojson,
+                        attributes: {
+                            purpose: 'heatmap',
+                        },
+                    });
+                });
+
+            const layer = {
+                id: 'my-heatmap-layer',
+
+                filter: [
+                    'match',
+                    ['sourceAttr', 'purpose'],
+                    ['heatmap'],
+                    true,
+                    false,
+                ],
+
+                type: 'heatmap',
+
+                style: {
+                    color: [
+                        'interpolate',
+                        ['linear'],
+                        ['heatmap-density'],
+                        0,
+                        'rgba(0, 0, 0, 0)',
+                        0.2,
+                        'rgba(172, 32, 135, 1)',
+                        0.4,
+                        'rgba(255, 154, 0, 1)',
+                        0.6,
+                        'rgba(255, 252, 0, 1)',
+                        0.8,
+                        'rgba(255, 255, 63, 1)',
+                        1,
+                        'rgba(255, 255, 255, 1)',
+                    ],
+                    radius: 30,
+                    weight: ["get", "customProperty"],
+                    intensity: 0.4,
+                    opacity: 0.8,
+                    downscale: 1,
+                },
+            };
+
+            map.on('styleload', () => {
+                map.addLayer(layer, '70184');
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

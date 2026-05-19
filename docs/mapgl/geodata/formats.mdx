@@ -1,0 +1,390 @@
+---
+sidebar: mapgljsapi
+---
+# Форматы геоданных
+
+При работе с геоданными вы можете столкнуться с тем, что их невозможно сразу отобразить на карте из-за их разнообразия, больших объёмов и не всегда оптимального представления. Часто необходимо выполнить предварительные расчёты или преобразования, например:
+
+* рассчитать границы расположения геоданных так, чтобы спозиционировать на них карту;
+* упростить геометрии, чтобы получить более плавные контуры и увеличить производительность отрисовки;
+* преобразовать полигон в точки или наоборот.
+
+Карта <Brand /> сама по себе не содержит функциональности по обработке геоданных. Однако вы можете использовать сторонние библиотеки с открытым исходным кодом, чтобы восполнить этот пробел. Базовым обменным форматом, своеобразным *lingua franca*, между этими библиотеками и MapGL JS API выступает **GeoJSON**.
+
+Ниже приведены основные сведения об основных форматах геоданных, о наиболее распространенных проблемах, возникающих при обработке геоданных, и способах их решения.
+
+## GeoJSON {#geojson}
+
+Формат [GeoJSON](https://geojson.org/) (подмножество формата JSON) поддерживается картой напрямую. Геоданные в нём представлены в виде объектов `Feature`, каждый из которых содержит геометрию в поле `geometry` и, опционально, метаданные в поле `properties`.
+
+```js
+{
+   "type": "FeatureCollection",
+   "features": [
+      {
+         "geometry": {
+            "type": "LineString",
+            "coordinates": [
+               [37.615655, 55.768005],
+               [37.625655, 55.778005]
+            ],
+         },
+         "properties": {
+            "title": "Пример линии"
+         }
+      },
+   ]
+}
+```
+
+Подробнее о работе с этим форматом в карте вы можете узнать в разделе [GeoJSON](/mapgl/geodata/geojson).
+
+Формат GeoJSON описывается стандартом [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946).
+
+Так как формат является подмножеством JSON, он не требует каких-либо дополнительных библиотек для кодирования/декодирования.
+
+## Well-known text (WKT)
+
+Well-known text представляет векторные геометрии в виде строки. Формат хранит только геометрии, без метаданных.
+
+Примеры геометрий в данном формате:
+
+```text
+POINT (37.615655 55.768005)
+LINESTRING (37.615655 55.768005, 37.595655 55.788005, 37.645655 55.788005)
+POLYGON ((37.625655 55.758005, 37.645655 55.788005, 37.615655 55.788005, 37.605655 55.768005, 37.625655 55.758005))
+POLYGON ((37.620655 55.758005, 37.630655 55.793005, 37.590655 55.790005, 37.585655 55.770005, 37.620655 55.758005), (37.605655 55.778005, 37.620655 55.781005, 37.615655 55.770005, 37.605655 55.778005))
+```
+
+В вебе вы можете работать с данным форматом при помощи библиотеки [wellknown](https://www.npmjs.com/package/wellknown).
+
+```js
+const wktGeometries = [
+   'POINT (37.615655 55.768005)',
+   'LINESTRING (37.615655 55.768005, 37.595655 55.788005, 37.645655 55.788005)',
+   'POLYGON ((37.625655 55.758005, 37.645655 55.788005, 37.615655 55.788005, 37.605655 55.768005, 37.625655 55.758005))',
+   'POLYGON ((37.620655 55.758005, 37.630655 55.793005, 37.590655 55.790005, 37.585655 55.770005, 37.620655 55.758005), (37.605655 55.778005, 37.620655 55.781005, 37.615655 55.770005, 37.605655 55.778005))'
+];
+
+const geojsonGeometries = wktGeometries.map((wkt) => wellknown.parse(wkt));
+```
+
+Формат WKT описан в стандарте [OGC Simple Feature Access](https://www.ogc.org/standard/sfa/).
+
+Широко используется в API <Brand />, например в [Routing API](/api/navigation/routing/overview) и [Places API](/api/search/places/reference/3.0/items) (см. поля `geometry`).
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Формат геоданных WKT" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const module = {};
+            const wellknownScript = document.createElement('script');
+            wellknownScript.src = 'https://unpkg.com/wellknown@0.5.0/index.js';
+            wellknownScript.onload = function () {
+                const wellknown = module.exports;
+                const geojson = turf.geometryCollection([
+                  'POINT (37.615655 55.768005)',
+                  'LINESTRING (37.615655 55.768005, 37.595655 55.788005, 37.645655 55.788005)',
+                  'POLYGON ((37.625655 55.758005, 37.645655 55.788005, 37.615655 55.788005, 37.605655 55.768005, 37.625655 55.758005))',
+                  'POLYGON ((37.620655 55.758005, 37.630655 55.793005, 37.590655 55.790005, 37.585655 55.770005, 37.620655 55.758005), (37.605655 55.778005, 37.620655 55.781005, 37.615655 55.770005, 37.605655 55.778005))'
+                ].map(wellknown.parse));
+
+                const center = turf.center(geojson);
+                const map = new mapgl.Map('container', {
+                    center: turf.getCoord(center),
+                    zoom: 12,
+                    key: 'Your API access key',
+                });
+
+                new mapgl.GeoJsonSource(map, {
+                    data: geojson,
+                    attributes: {
+                        foo: 'bar'
+                    }
+                });
+                map.on('styleload', () => {
+                    map.addLayer({
+                        id: 'polygons',
+                        type: 'polygon',
+                        filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                        style: {
+                            color: '#00B2DD50'
+                        }
+                    });
+                    map.addLayer({
+                        id: 'lines',
+                        type: 'line',
+                        filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                        style: {
+                            color: '#00B2DDA0',
+                            width: 3
+                        }
+                    });
+                    map.addLayer({
+                        id: 'points',
+                        type: 'point',
+                        filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                        style: {
+                            iconImage: 'ent_i',
+                            iconWidth: 16,
+                            iconPriority: 100
+                        }
+                    });
+                });
+            };
+            document.head.appendChild(wellknownScript);
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Shapefile (shp)
+
+Shapefile содержит геоданные в бинарном формате, что позволяет хранить данные компактно. Формат поддерживает хранение как геометрий, так и метаданных.
+
+```js
+let source = null;
+
+shapefile
+    .open('/geodata/mapgl/ne_110m_coastline.shp')
+    .then(async (source) => {
+        const features = [];
+        let result = await source.read();
+        while (result && !result.done) {
+            features.push(result.value);
+            result = await source.read();
+        }
+        source = new mapgl.GeoJsonSource(map, {
+            data: { type: 'FeatureCollection', features },
+        });
+    })
+    .catch((error) => console.error(error.stack));
+```
+
+Формат поддерживается компанией [Esri](https://www.esri.com/) и описан в стандарте [ESRI Shapefile Technical Description](https://www.esri.com/content/dam/esrisites/sitecore-archive/Files/Pdfs/library/whitepapers/pdfs/shapefile.pdf).
+
+В вебе вы можете работать с данным форматом при помощи библиотеки [shapefile](https://www.npmjs.com/package/shapefile).
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Формат данных Shapefile" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            button {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                z-index: 2;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="https://unpkg.com/shapefile@0.6"></script>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            shapefile.open('https://disk.2gis.com/digital-twin/naturalearth/ne_110m_coastline.shp')
+                .then(async (source) => {
+                    const features = [];
+                    let result = await source.read();
+                    while (result && !result.done) {
+                        features.push(result.value);
+                        result = await source.read();
+                    }
+                    new mapgl.GeoJsonSource(map, {
+                        data: { type: 'FeatureCollection', features },
+                        attributes: { foo: 'bar' }
+                    });
+                })
+                .catch(error => console.error(error.stack));
+
+            const map = new mapgl.Map('container', {
+                center: [60.615655, 71.768005],
+                zoom: 4,
+                key: 'Your API access key',
+            });
+            
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'lines',
+                    type: 'line',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#FF9387',
+                        width: 2
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## О производительности
+
+Карта позволяет работать с достаточно большим объёмом данных. Для работы с GeoJSON она использует библиотеку [geojson-vt](https://github.com/2gis/geojson-vt), которая обеспечивает приемлемое быстродействие на GeoJSON объёмом 100 Мб и содержащем 5.4 млн точек.
+
+Пример ниже загружает и отображает на карте дорожную сеть из данных проекта [Natural Earth Data](https://www.naturalearthdata.com/). Данные представлены в виде shp-файла объемом 15 Мб, содержащего порядка 700 тыс. точек.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Формат данных Shapefile и библиотека geojson-vt" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            button {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                z-index: 2;
+
+                font-family: sans-serif;
+                font-size: 10pt;
+                font-weight: bolder;
+                background: white;
+                border: none;
+                border-radius: 4px;
+                box-shadow: 0 1px 3px 0 rgba(38, 38, 38, 0.5);
+                color: #505050;
+                padding: 8px;
+                margin: 0;
+                box-sizing: border-box;
+            }
+
+            #status {
+                font-family: sans-serif;
+                font-size: 10pt;
+                position: absolute;
+                display: inline-block;
+                background-color: white;
+                padding: 2px;
+                border-radius: 2px;
+                top: 10px;
+                left: 220px;
+                z-index: 2;
+            }
+        </style>
+    </head>
+    <body>
+        <button onclick="loadShp()">Загрузить дорожную сеть</button> <span id="status"></span>
+        <div id="container"></div>
+        <script src="https://unpkg.com/shapefile@0.6"></script>
+        <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const statusEl = document.querySelector('#status');
+            function loadShp () {
+                statusEl.innerText = 'Загрузка...';
+                shapefile.open(
+                    'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/10m_cultural/ne_10m_roads.shp'
+                )
+                .then(async (source) => {
+                    const features = [];
+                    let vertices = 0;
+                    let result = await source.read();
+                    while (result && !result.done) {
+                        features.push(result.value);
+                        vertices += turf.coordAll(result.value).length;
+                        result = await source.read();
+                    }
+                    statusEl.innerText = \`\${features.length} объектов, \${vertices} точек загружено.\`;
+                    new mapgl.GeoJsonSource(map, {
+                        data: { type: 'FeatureCollection', features },
+                        attributes: { foo: 'bar' }
+                    });
+                })
+                .catch(error => console.error(error.stack));
+            }
+            
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 7,
+                key: 'Your API access key',
+            });
+
+            map.on('styleload', () => {
+                map.addLayer({
+                    id: 'polygons',
+                    type: 'polygon',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: '#00B2DD90'
+                    }
+                });
+                map.addLayer({
+                    id: 'lines',
+                    type: 'line',
+                    filter: ['==', ['sourceAttr', 'foo'], 'bar'],
+                    style: {
+                        color: ['match',
+                            ['get', 'type'],
+                            ['Major Highway'], '#FF5733',
+                            ['Secondary Highway'], '#F39C12',
+                            ['Ferry Route', 'Ferry, seasonal'], '#A569BD',
+                            '#85929E'
+                        ],
+                        width: ['interpolate', 
+                            ['exponential', 1.5], ['zoom'],
+                            4, 1,
+                            9, 3
+                        ]
+                    }
+                });
+            })
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Основным ограничением при работе с большими объёмами геоданных является не скорость их обработки или отрисовки, а пропускная способность сети. Передача файлов размером 20–100 МБ может занимать значительное время, особенно при использовании мобильного интернета.
+
+Чтобы эффективно обрабатывать любые объёмы данных, рекомендуется преобразовать их в тайловое представление: разбить на небольшие фрагменты, которые можно загружать для визуализации по отдельности. Для этого вы можете использовать сервис [<Brand /> Про](/pro/start).

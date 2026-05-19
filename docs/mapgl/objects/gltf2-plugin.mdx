@@ -1,0 +1,2265 @@
+---
+sidebar: mapgljsapi
+---
+# glTF-плагин версии 2
+
+Вы можете добавлять glTF-модели на карту, используя glTF-плагин версии 2. Плагин загружает и отрисовывает модели полностью с помощью движка MapGL. Это позволяет применять к моделям эффекты, настройки которых задаются в стиле карты: туман, освещение, тени и другие. Используйте плагин, если на карте нужно показать несколько моделей, не затрагивая при этом базовый картографический стиль.
+
+С помощью плагина вы можете:
+
+* Добавлять glTF-модели на карту, показывать и скрывать их.
+* Настраивать интерактивные сцены: добавлять к зданиям на карте этажные планы, переключать этажи и смотреть информацию о помещениях.
+
+:::note[Различия между версиями]
+
+В отличие от [первой версии](/mapgl/objects/gltf-plugin), glTF-плагин версии 2 не использует библиотеку Three.js. Чтобы перейти на вторую версию плагина, см. раздел [Основные изменения версии 2](#key-changes).
+
+:::
+
+Также вы можете добавлять модели на карту с помощью Редактора стилей и источников данных: см. подробнее в инструкции [3D-модели](/mapgl/map-style/immersive/models).
+
+## Начало работы {#getting-started}
+
+Чтобы начать работу с glTF-плагином версии 2, выполните следующие шаги:
+
+1. Подключите плагин.
+2. Инициализируйте плагин.
+3. (Опционально) Подпишитесь на события плагина.
+
+### 1. Подключите плагин {#add-plugin}
+
+**При помощи тега script**
+
+Чтобы использовать плагин, добавьте строку в код страницы:
+
+```html
+<script src="__MAPGL_PLUGIN_GLTF2_URL__"></script>
+```
+
+Основной класс плагина будет доступен в пространстве имён `mapgl`:
+
+```js
+const plugin = new mapgl.GltfPlugin(map);
+```
+
+**Установка через npm**
+
+Если вы используете npm, подключите библиотеку с помощью пакета [@2gis/mapgl-gltf](https://www.npmjs.com/package/@2gis/mapgl-gltf):
+
+```bash
+npm install @2gis/mapgl-gltf
+```
+
+### 2. Инициализируйте плагин {#initialization}
+
+Чтобы инициализировать плагин, передайте существующий экземпляр карты в конструктор плагина:
+
+```js
+const plugin = new GltfPlugin(map);
+```
+
+В качестве опций плагина [PluginOptions](/mapgl/plugins/gltf2/reference/interface#plugin-options) используются значения по умолчанию. Чтобы настроить плагин, передайте опции вторым аргументом:
+
+```js
+const plugin = new GltfPlugin(map, {
+    hoverOptions: {
+        color: '#ff000088',
+    },
+    labelGroupDefaults: {
+        fontSize: 16,
+    },
+    modelsBaseUrl: 'https://example.com/s3_storage/gltf_models',
+    modelsLoadStrategy: 'dontWaitAll',
+    floorsControl: {
+        position: 'centerLeft',
+    },
+    groundCoveringColor: '#000000CC',
+    zIndex: 5,
+});
+```
+
+Укажите:
+
+* `hoverOptions` — состояние моделей при наведении на них курсора. Доступна только опция `color`. Значение по умолчанию — `#FFFFFF`. Цвет к модели применяется путём перемножения всех компонентов.
+
+* `labelGroupDefaults` — значения по умолчанию для группы подписей, если не заданы [LabelGroupOptions](/mapgl/plugins/gltf2/reference/interface#label-group-options):
+
+  * `fontSize` — размер шрифта подписей. Значение по умолчанию — `14`.
+  * `fontColor` — цвет шрифта подписей. Значение по умолчанию — `#000000`.
+  * `image` — опции подложки текста подписей. Применяется к группе, если в [LabelGroupOptions](/mapgl/plugins/gltf2/reference/interface#label-group-options) значение `image` задано как `default`. Значение по умолчанию:
+
+    ```js
+    {
+        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgiIGhlaWdodD0iMjgiIHZpZXdCb3g9IjAgMCAyOCAyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjgiIGhlaWdodD0iMjgiIHJ4PSI0IiBmaWxsPSIjZWFlYWVhIi8+PHJlY3QgeD0iMSIgeT0iMSIgd2lkdGg9IjI2IiBoZWlnaHQ9IjI2IiByeD0iMyIgZmlsbD0id2hpdGUiLz48L3N2Zz4=',
+        size: [38, 38],
+        stretchX: [[4, 24]],
+        stretchY: [[4, 24]],
+        padding: [5, 10, 5, 10],
+    }
+    ```
+
+* `modelsBaseUrl` — URL-адрес для определения относительного пути модели. Если URL модели задан без протокола (`http://` или `https://`) и доменного имени, модели будут загружаться относительно этого параметра. Значение по умолчанию — `''`, то есть модели загружаются относительно хоста веб-приложения.
+
+* `modelsLoadStrategy` — стратегию загрузки и отображения моделей:
+
+  * `waitAll` — все модели загружаются, а затем отображаются на карте одновременно (значение по умолчанию). Для интерактивных сцен: загружаются сразу все модели из конфигурации сцены, включая модели этажных планов. Это увеличивает объём загружаемых данных и время появления сцены на карте. При переключении планов нет задержки из-за их дозагрузки. Модели сцены недвижимости появляются на карте синхронно.
+  * `dontWaitAll` — модели отображаются по отдельности по мере готовности каждой. Для интерактивных сцен: загружаются только главные модели зданий (и этажный план, если задано начальное состояние сцены). Это позволяет снизить объём загружаемых данных и показать сцену как можно быстрее. Модели при этом отображаются асинхронно, по мере загрузки каждой. При переключении этажных планов целевой этаж появляется с задержкой, если до этого он не был загружен.
+
+* `floorsControl` — настройки UI-элемента с кнопками этажей на интерактивной сцене недвижимости. Доступна только опция `position`. Значение по умолчанию — `centerLeft`. Возможные значения описаны см. в [ControlPosition](/mapgl/plugins/gltf2/reference/typeAlias#control-position).
+
+* `groundCoveringColor` — цвет подложки карты при отображении подземного этажного плана. Значение по умолчанию — `#F8F8EBCC`.
+
+* `zIndex` — порядок отрисовки объектов плагина (моделей и подписей) относительно других объектов ([Objects](/mapgl/objects)) на карте.
+
+### 3. Подпишитесь на события плагина {#events}
+
+Чтобы подписаться на события плагина, которые возникают при взаимодействии с моделями и подписями:
+
+```js
+plugin.on('click', (event) => {
+    console.log(event);
+});
+```
+
+См. список событий, на которые можно подписаться, в [GltfPluginEventTable](/mapgl/plugins/gltf2/reference/interface#gltf-plugin-event-table). В зависимости от того, какой объект вызывает событие, в аргумент функции-обработчика передаётся событие модели ([GltfPluginModelEvent](/mapgl/plugins/gltf2/reference/interface#gltf-plugin-model-event)) или подписи ([GltfPluginLabelEvent](/mapgl/plugins/gltf2/reference/interface#gltf-plugin-label-event)).
+
+<br />
+
+## Работа с моделями {#models}
+
+Чтобы добавить модель на карту, нужно её загрузить и отобразить. Способ отображения модели зависит от опции `modelsLoadStrategy`, которую вы указали при [инициализации плагина](#initialization).
+
+### Добавление одной модели
+
+1. Перед загрузкой убедитесь, что модель соответствует [требованиям](/mapgl/map-style/immersive/models#requirements).
+
+2. Чтобы загрузить модель, используйте метод `addModel()` и передайте опции модели [ModelOptions](/mapgl/plugins/gltf2/reference/interface#model-options) первым аргументом (второй аргумент не задаётся):
+
+   ```js
+   plugin.addModel({
+       modelId: '03a234cb',
+       modelUrl: 'http://example.com/models/model1.glb',
+       coordinates: [47.24528, 56.13474],
+       rotateZ: -15,
+       scale: 2,
+       interactive: true,
+   });
+   ```
+
+   Укажите:
+
+   * `modelId` — уникальный идентификатор модели.
+   * `modelUrl` — URL для загрузки модели.
+   * `coordinates` — географические координаты модели (долгота и широта).
+   * `rotateZ` — поворот модели относительно оси Z в градусах.
+   * `scale` — масштаб модели. Задаётся в относительных единицах от изначального размера модели.
+   * `interactive` — флаг интерактивности модели.
+
+     :::tip
+
+     Чтобы не подбирать настройки позиционирования модели (координаты, поворот и масштаб) вручную, используйте [инструмент для позиционирования моделей на карте](https://2gis.github.io/mapgl-examples/gltf-models-placement/). Вы можете спозиционировать модель и скопировать значения настроек: см. подробнее в разделе [Размещение моделей на карте](#models-placement).
+
+     :::
+
+3. Если необходимо загрузить модель в кеш, но не отображать её сразу, передайте в метод `addModel()` вторым аргументом значение `true`.
+
+4. Чтобы отобразить модель, используйте метод `showModel()` и передайте её идентификатор:
+
+   ```js
+   plugin.showModel('03a234cb');
+   ```
+
+<br/>
+<br/>
+
+### Добавление нескольких моделей
+
+1. Перед загрузкой убедитесь, что модели соответствуют [требованиям](/mapgl/map-style/immersive/models#requirements).
+
+2. Чтобы загрузить модели, используйте метод `addModels()` и передайте массив опций моделей [ModelOptions](/mapgl/plugins/gltf2/reference/interface#model-options) первым аргументом (второй аргумент не задаётся):
+
+   ```js
+   const models = [
+       {
+           modelId: '03a234cb',
+           modelUrl: 'http://example.com/models/model1.glb',
+           coordinates: [47.24528, 56.13474],
+           rotateZ: -15,
+           scale: 2,
+           interactive: true,
+       },
+       {
+           modelId: '1ba234cb',
+           modelUrl: 'http://example.com/models/model2.glb',
+           coordinates: [47.24528, 56.13474],
+           rotateZ: -15,
+           scale: 2,
+       },
+   ];
+
+   plugin.addModels(models);
+   ```
+
+   Укажите:
+
+   * `modelId` — уникальный идентификатор модели.
+   * `modelUrl` — URL для загрузки модели.
+   * `coordinates` — географические координаты модели (долгота и широта).
+   * `rotateZ` — поворот модели относительно оси Z в градусах.
+   * `scale` — масштаб модели. Задаётся в относительных единицах от изначального размера модели.
+   * `interactive` — флаг интерактивности модели.
+
+     :::tip
+
+     Чтобы не подбирать настройки позиционирования модели (координаты, поворот и масштаб) вручную, используйте [инструмент для позиционирования моделей на карте](https://2gis.github.io/mapgl-examples/gltf-models-placement/). Вы можете спозиционировать модель и скопировать значения настроек: см. подробнее в разделе [Размещение моделей на карте](#models-placement).
+
+     :::
+
+3. Если необходимо загрузить модели в кеш, но отобразить только часть из них, передайте в метод `addModels()` вторым аргументом массив их идентификаторов:
+
+   ```js
+   plugin.addModels(models, ['03a234cb']);
+   ```
+
+   Чтобы загрузить модели в кеш, но не отображать их сразу, передайте вторым аргументом пустой массив:
+
+   ```js
+   plugin.addModels(models, []);
+   ```
+
+4. Чтобы отобразить модели, используйте методы `showModels()` или `showModel()` и передайте их идентификаторы:
+
+   ```js
+   plugin.showModels(['03a234cb', '1ba234cb']);
+   ```
+
+   Или:
+
+   ```js
+   plugin.showModel('1ba234cb');
+   ```
+
+Пример добавления моделей на карту:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Использование glTF-плагина версии 2" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="__MAPGL_API_URL__"></script>
+    <script src="__MAPGL_PLUGIN_GLTF2_URL__"></script>
+
+    <div id="container"></div>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [47.245286302641034, 56.134743473834099],
+            zoom: 18.0,
+            key: 'Your API access key',
+            pitch: 45,
+            rotation: 310,
+            enableTrackResize: true,
+        });
+
+        const plugin = new mapgl.GltfPlugin(map, {
+            modelsLoadStrategy: 'dontWaitAll',
+            modelsBaseUrl: 'https://disk.2gis.com/digital-twin/models_s3/realty_ads/zgktechnology/',
+        });
+
+        plugin
+            .addModels([
+                {
+                    modelId: '03a234cb',
+                    coordinates: [47.245286302641034, 56.134743473834099],
+                    modelUrl: 'zgktechnology1.glb',
+                    rotateZ: -15.1240072739039,
+                    linkedIds: ['70030076555823021'],
+                    interactive: true,
+                },
+                {
+                    modelId: '1ba234cb',
+                    coordinates: [47.245286302641034, 56.134743473834099],
+                    modelUrl: 'zgktechnology2.glb',
+                    rotateZ: -15.1240072739039,
+                    linkedIds: ['70030076555821177'],
+                    interactive: true,
+                }
+            ]);
+    </script>
+</body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+<br/>
+<br/>
+
+### Замена объекта на карте моделью
+
+Если необходимо отобразить модель вместо объекта на карте (например, здания), который пересекается с моделью, скройте его:
+
+1. Получите идентификаторы объектов:
+
+   1. Настройте логирование идентификаторов объектов на карте по клику:
+
+      ```js
+      map.on('click', (e) => {
+          console.log(e);
+      });
+      ```
+
+   2. Откройте Инструменты разработчика браузера (клавиша **F12**) и нажмите на объекты, которые необходимо скрыть. Скопируйте идентификатор из поля `target.id` события клика. Например:
+
+      ```js
+      {
+          "originalEvent": {
+              "isTrusted": true
+          },
+          "lngLat": [47.24528, 56.13474],
+          "point": [420, 231],
+          "target": {
+              "id": "70030076555823021"
+          },
+          "targetData": {
+              "type": "default",
+              "id": "70030076555823021"
+          }
+      }
+      ```
+
+2. Передайте массив идентификаторов объектов в поле `linkedIds` опций модели [ModelOptions](/mapgl/plugins/gltf2/reference/interface#model-options):
+
+   ```js
+   plugin.addModel({
+       modelId: '03a234cb',
+       modelUrl: 'http://example.com/models/model1.glb',
+       linkedIds: ['70030076555823021'],
+       coordinates: [47.24528, 56.13474],
+   });
+   ```
+
+<br/>
+<br/>
+
+### Добавление подписей
+
+Вы можете разместить дополнительный текст на карте с помощью подписей с привязкой к модели и без привязки. Подписи могут содержать любую информацию, например характеристики здания, площадь квартиры, сведения о месте на карте, а также ссылки. Настройки подписей добавляются в поле `target` события подписи плагина [GltfPluginLabelEvent](/mapgl/plugins/gltf2/reference/interface#gltf-plugin-label-event).
+
+Чтобы добавить подписи на карту, используйте метод `addLabelGroup()` и передайте [LabelGroupOptions](/mapgl/plugins/gltf2/reference/interface#label-group-options) в качестве аргумента:
+
+```js
+const labelGroup = {
+    id: '722ea9',
+    image: 'default',
+    minZoom: 17,
+    elevation: 30,
+    interactive: true,
+    labels: [
+        {
+            coordinates: [47.24528, 56.13474],
+            text: '10 м²',
+            userData: {},
+        },
+        {
+            coordinates: [47.24528, 56.13474],
+            text: '20 м²',
+            elevation: 33,
+            interactive: false,
+        },
+    ],
+};
+
+plugin.addLabelGroup(labelGroup);
+```
+
+Укажите:
+
+* `minZoom` — минимальный масштаб, при котором отображаются подписи в группе.
+* `elevation` — высоту подписей в группе.
+* `interactive` — флаг интерактивности подписей в группе.
+* `labels` — массив с настройками ([LabelOptions](/mapgl/plugins/gltf2/reference/interface#label-options)) каждой подписи. Если указаны настройки для подписи (например, `elevation` или `interactive`), то приоритет отдаётся значению из подписи, а не общему значению для группы:
+  * `coordinates` — географические координаты подписи (долгота и широта).
+  * `text` — текст подписи.
+  * `userData` — пользовательские параметры.
+  * `elevation` — высоту подписи.
+  * `interactive` — флаг интерактивности подписи.
+
+Чтобы привязать группу подписей к модели (например, зданию), передайте опции модели [BuildingState](/mapgl/plugins/gltf2/reference/interface#building-state) вторым аргументом:
+
+```js
+plugin.addLabelGroup(labelGroup, {
+    buildingId: '03a234cb',
+});
+```
+
+Чтобы привязать группу подписей к этажу здания, укажите `floorId`:
+
+```js
+plugin.addLabelGroup(labelGroup, {
+    buildingId: '03a234cb',
+    floorId: '235034',
+});
+```
+
+<br/>
+<br/>
+
+### Удаление подписей
+
+Чтобы удалить группу подписей с карты, используйте метод `removeLabelGroup()` и передайте идентификатор группы в качестве аргумента:
+
+```js
+plugin.removeLabelGroup('722ea9');
+```
+
+<br/>
+<br/>
+
+### Скрытие моделей
+
+Чтобы скрыть одну модель с карты, используйте метод `hideModel()` и передайте её идентификатор:
+
+```js
+plugin.hideModel('03a234cb');
+```
+
+Чтобы скрыть несколько моделей с карты, используйте метод `hideModels()` и передайте массив их идентификаторов:
+
+```js
+plugin.hideModels(['03a234cb', '1ba234cb']);
+```
+
+<br/>
+<br/>
+
+### Удаление моделей
+
+Чтобы удалить одну модель с карты и из кеша, используйте метод `removeModel()` и передайте её идентификатор:
+
+```js
+plugin.removeModel('03a234cb');
+```
+
+Чтобы удалить несколько моделей с карты и из кеша, используйте метод `removeModels()` и передайте массив их идентификаторов:
+
+```js
+plugin.removeModels(['03a234cb', '1ba234cb']);
+```
+
+<br />
+
+## Работа с интерактивными сценами {#realty-scenes}
+
+Вы можете создать интерактивную сцену недвижимости, чтобы представить на карте здания с этажными планами и подписями. Со зданиями на сцене можно взаимодействовать, например, переключать этажи и смотреть информацию о помещениях. Способ отображения моделей на карте зависит от опции `modelsLoadStrategy`, которую вы указали при [инициализации плагина](#initialization).
+
+### Настройка главной модели здания {#main-building}
+
+Чтобы настроить главную модель здания (фасад), укажите опции [BuildingOptions](/mapgl/plugins/gltf2/reference/interface#building-options):
+
+```js
+const facade = {
+    modelId: '03a234cb',
+    modelUrl: 'http://example.com/models/model1.glb',
+    coordinates: [47.24528, 56.13474],
+    rotateZ: -15,
+    scale: 2,
+    interactive: true,
+    linkedIds: ['70030076555823021'],
+    mapOptions: {
+        center: [47.24547737708662, 56.134591508663135],
+        pitch: 40,
+        zoom: 19,
+        rotation: -41.4,
+    },
+    popupOptions: {
+        coordinates: [47.24511721603574, 56.13451456056651],
+        title: 'Корпус 1. 11 этажей',
+        description: 'Срок сдачи: IV кв. 2024 г. <br />15 мин. пешком до ст. м. Московская',
+    },
+};
+```
+
+Укажите:
+
+* `modelId` — уникальный идентификатор модели.
+* `modelUrl` — URL для загрузки модели.
+* `coordinates` — географические координаты модели (долгота и широта).
+* `rotateZ` — поворот модели относительно оси Z в градусах.
+* `scale` — масштаб модели. Задаётся в относительных единицах от изначального размера модели.
+* `linkedIds` — массив идентификаторов объектов на карте, которые нужно скрыть.
+* `interactive` — флаг интерактивности модели. Подробнее см. в разделе [Интерактивность](#interactivity).
+* `mapOptions` — настройки карты ([MapOptions](/mapgl/plugins/gltf2/reference/interface#map-options)). Применяются, когда фасад становится активным. Подробнее см. в разделе [Настройки карты](#map-options).
+* `popupOptions` — опции всплывающей подсказки ([PopupOptions](/mapgl/plugins/gltf2/reference/interface#popup-options)). Отображается при наведении курсора на фасад. Подробнее см. в разделе [Всплывающие подсказки](#popups).
+
+:::tip
+
+Чтобы не подбирать настройки позиционирования модели (координаты, поворот и масштаб) вручную, используйте [инструмент для позиционирования моделей на карте](https://2gis.github.io/mapgl-examples/gltf-models-placement/). Вы можете спозиционировать модель и скопировать значения настроек: см. подробнее в разделе [Размещение моделей на карте](#models-placement).
+
+:::
+
+<br/>
+<br/>
+
+### Настройка этажных планов {#floors}
+
+Чтобы добавить этажные планы к главной модели здания, укажите опции [BuildingFloorOptions](/mapgl/plugins/gltf2/reference/interface#building-floor-options) в массиве `floors`.
+
+Для каждого здания этажи указываются от самого нижнего этажа (в том числе, этажа с отрицательным номером или паркинга) до самого верхнего. Конфигурации этажных планов переиспользуют опции моделей главного здания, поэтому не требуется определять координаты, поворот и масштаб для этажных планов одного здания.
+
+```js
+const buildingOptions = {
+    ...facade,
+    floors: [
+        {
+            id: '235034',
+            modelUrl: 'http://example.com/models/model1_floor1.glb',
+            text: '1-10',
+            mapOptions: {
+                center: [47.24524342863023, 56.13449524271827],
+                pitch: 40,
+                zoom: 20,
+                rotation: -57.5,
+            },
+            labelGroups: [
+                {
+                    id: '1111',
+                    image: 'default',
+                    minZoom: 19.5,
+                    elevation: 5,
+                    fontSize: 12,
+                    fontColor: '#3a3a3a',
+                    interactive: true,
+                    labels: [
+                        {
+                            coordinates: [47.245048150280994, 56.134470449142164],
+                            text: '3к\\n78.4 м²',
+                            userData: {
+                                url: 'https://docs.2gis.com',
+                            },
+                        },
+                        {
+                            coordinates: [47.24520807647288, 56.13443854463778],
+                            text: '2к\\n67 м²',
+                            userData: {
+                                url: 'https://docs.2gis.com',
+                            },
+                        },
+                        ...
+                    ],
+                },
+            ],
+        },
+    ],
+};
+```
+
+Укажите:
+
+* `id` — уникальный идентификатор этажа в здании.
+* `modelUrl` — путь до файла с моделью этажа. Если задан относительный путь, то итоговый URL будет строиться на основе параметра `modelsBaseUrl`, который указан в опциях плагина [PluginOptions](/mapgl/plugins/gltf2/reference/interface#plugin-options).
+* `text` — название этажа, которое отображается в UI-элементе с кнопками этажей. Например, для паркинга вы можете задать название `P` или `-1`.
+* `mapOptions` — настройки карты ([MapOptions](/mapgl/plugins/gltf2/reference/interface#map-options)). Применяются, когда этажный план становится активным. Подробнее см. в разделе [Настройки карты](#map-options).
+* `labelGroups` — группы подписей этажного плана ([LabelGroupOptions](/mapgl/plugins/gltf2/reference/interface#label-group-options)), с помощью которых можно отображать дополнительную информацию о помещениях на этаже (например, задавать разные группы для проданных апартаментов и находящихся в продаже). Подробнее см. в разделе [Подписи на этажах](#floor-labels).
+
+<br/>
+<br/>
+
+### Настройка подземных этажей {#underground-floors}
+
+Чтобы отобразить подземный этаж, в опциях этажного плана [BuildingFloorOptions](/mapgl/plugins/gltf2/reference/interface#building-floor-options) добавьте свойство `isUnderground` со значением `true`:
+
+```js
+{
+    ...
+    floors: [{
+        id: '235034',
+        text: '1-10',
+        modelUrl: 'http://example.com/models/model1_floor1.glb',
+        isUnderground: true,
+    }],
+}
+```
+
+При отображении подземного этажного плана появится подложка, перекрывающая остальные объекты на карте, а другие объекты интерактивной сцены будут скрыты и не будут перекрывать отображённый подземный этажный план.
+
+Цвет подложки по умолчанию — `#F8F8EBCC`. Чтобы изменить цвет, задайте значение свойства `groundCoveringColor` в опциях плагина [PluginOptions](/mapgl/plugins/gltf2/reference/interface#plugin-options). Чтобы менять цвет «на лету», используйте метод `setOptions()` (может быть полезен при изменении стиля карты).
+
+<br/>
+<br/>
+
+### Добавление интерактивной сцены
+
+Чтобы добавить интерактивную сцену на карту, используйте метод `addRealtyScene()` (метод автоматически настраивает все необходимые обработчики событий для корректной работы сцены) и передайте настроенные опции [BuildingOptions](/mapgl/plugins/gltf2/reference/interface#building-options):
+
+```js
+plugin.addRealtyScene([buildingOptions]);
+```
+
+Чтобы указать, какой фасад и этаж будут активными после добавления сцены на карту, передайте состояние сцены [BuildingState](/mapgl/plugins/gltf/reference/interface#building-state) вторым аргументом:
+
+```js
+plugin.addRealtyScene([buildingOptions], { modelId: '03a234cb', floorId: '235034' });
+```
+
+Пример добавления интерактивной сцены на карту:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Добавление интерактивной сцены с помощью плагина glTF версии 2" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="__MAPGL_API_URL__"></script>
+    <script src="__MAPGL_PLUGIN_GLTF2_URL__"></script>
+
+    <div id="container"></div>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [47.245286302641034, 56.134743473834099],
+            zoom: 17.9,
+            key: 'Your API access key',
+            pitch: 45,
+            rotation: 330,
+            enableTrackResize: true,
+        });
+
+        const plugin = new mapgl.GltfPlugin(map, {
+            modelsLoadStrategy: 'waitAll',
+            modelsBaseUrl: 'https://disk.2gis.com/digital-twin/models_s3/realty_ads/zgktechnology/',
+            labelGroupDefaults: {
+                fontSize: 14,
+            },
+            hoverOptions: {
+                color: '#FFF3F3',
+            },
+        });
+
+        const realtyScene = [
+            {
+                modelId: '03a234cb',
+                coordinates: [47.245286302641034, 56.134743473834099],
+                modelUrl: 'zgktechnology1.glb',
+                rotateZ: -15.1240072739039,
+                linkedIds: ['70030076555823021'],
+                interactive: true,
+                mapOptions: {
+                    center: [47.24547737708662, 56.134591508663135],
+                    pitch: 40,
+                    zoom: 19,
+                    rotation: -41.4,
+                },
+                popupOptions: {
+                    coordinates: [47.24511721603574, 56.13451456056651],
+                    title: 'Корпус 1. 11 этажей',
+                    description: 'Срок сдачи: IV кв. 2024 г. <br />15 мин. пешком до ст. м. Московская',
+                },
+                floors: [
+                    {
+                        id: '235034',
+                        text: '1-10',
+                        modelUrl: 'zgktechnology1_floor2.glb',
+                        mapOptions: {
+                            center: [47.24524342863023, 56.13449524271827],
+                            pitch: 40,
+                            zoom: 20,
+                            rotation: -57.5,
+                        },
+                        labelGroups: [
+                            {
+                                id: '1111',
+                                image: 'default',
+                                minZoom: 19.5,
+                                elevation: 5,
+                                fontSize: 12,
+                                fontColor: '#3a3a3a',
+                                interactive: true,
+                                labels: [
+                                    {
+                                        coordinates: [47.245048150280994, 56.134470449142164],
+                                        text: '3к\\n78.4 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/',
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24520807647288, 56.13443854463778],
+                                        text: '2к\\n67 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/',
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.245350349632965, 56.134414208205776],
+                                        text: '1к\\n40 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24542896512635, 56.13448965532694],
+                                        text: '3к\\n90 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24510451854659, 56.134541185948585],
+                                        text: '3к\\n77.2 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        id: '000034',
+                        text: '11',
+                        modelUrl: 'zgktechnology1_floor11.glb',
+                        mapOptions: {
+                            center: [47.24556663327373, 56.13456998211929],
+                            pitch: 40,
+                            zoom: 19.5,
+                            rotation: -62.6,
+                        },
+                        labelGroups: [
+                            {
+                                id: '1111',
+                                image: 'default',
+                                minZoom: 19,
+                                elevation: 35,
+                                fontSize: 12,
+                                fontColor: '#3a3a3a',
+                                interactive: true,
+                                labels: [
+                                    {
+                                        coordinates: [47.245048150280994, 56.134470449142164],
+                                        text: '3к\\n78.4 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24520807647288, 56.13443854463778],
+                                        text: '2к\\n67 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.245350349632965, 56.134414208205776],
+                                        text: '1к\\n40 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24542896512635, 56.13448965532694],
+                                        text: '3к\\n90 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24510451854659, 56.134541185948585],
+                                        text: '3к\\n77.2 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                modelId: '1ba234cb',
+                coordinates: [47.245286302641034, 56.134743473834099],
+                modelUrl: 'zgktechnology2.glb',
+                rotateZ: -15.1240072739039,
+                linkedIds: ['70030076555821177'],
+                interactive: true,
+                mapOptions: {
+                    center: [47.245008950283065, 56.1344698491912],
+                    pitch: 45,
+                    zoom: 18.7,
+                    rotation: -129,
+                },
+                popupOptions: {
+                    coordinates: [47.24448882381944, 56.13468481517748],
+                    title: 'Корпус 1. 16 этажей',
+                    description: 'Срок сдачи: IV кв. 2024 г. <br /> 15 мин. пешком до ст. м. Московская',
+                },
+                floors: [
+                    {
+                        id: 'aaa777',
+                        text: '2-15',
+                        modelUrl: 'zgktechnology2_floor2.glb',
+                        mapOptions: {
+                            center: [47.24463456947374, 56.134675042798094],
+                            pitch: 35,
+                            zoom: 20,
+                            rotation: -130,
+                        },
+                        labelGroups: [
+                            {
+                                id: '1111',
+                                image: 'default',
+                                minZoom: 19.7,
+                                elevation: 7,
+                                fontSize: 12,
+                                fontColor: '#3a3a3a',
+                                interactive: true,
+                                labels: [
+                                    {
+                                        coordinates: [47.24452417991248, 56.13469284843933],
+                                        text: '1к\\n27 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24457199258783, 56.13477179423035],
+                                        text: '2к\\n54.4 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.244491707517696, 56.13463324895681],
+                                        text: '1к\\n27 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.244467722972786, 56.13455859493207],
+                                        text: '3к\\n67 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24459718584492, 56.13483803780593],
+                                        text: '1к\\n30 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24474865936005, 56.13481340001352],
+                                        text: '2к\\n45 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.244714550432995, 56.13474141463477],
+                                        text: '3к\\n54.4 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24464159162246, 56.134578465378226],
+                                        text: '1к\\n33 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24461054223749, 56.13451937931448],
+                                        text: '2к\\n45 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        id: 'bbb555',
+                        text: '16',
+                        modelUrl: 'zgktechnology2_floor16.glb',
+                        mapOptions: {
+                            center: [47.24498428988907, 56.134514900849325],
+                            pitch: 35,
+                            zoom: 19.2,
+                            rotation: -130,
+                        },
+                        labelGroups: [
+                            {
+                                id: '1111',
+                                image: 'default',
+                                minZoom: 18.9,
+                                elevation: 53,
+                                fontSize: 12,
+                                fontColor: '#3a3a3a',
+                                interactive: true,
+                                labels: [
+                                    {
+                                        coordinates: [47.24452417991248, 56.13469284843933],
+                                        text: '1к\\n27 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24457199258783, 56.13477179423035],
+                                        text: '2к\\n54.4 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.244491707517696, 56.13463324895681],
+                                        text: '1к\\n27 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.244467722972786, 56.13455859493207],
+                                        text: '3к\\n67 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24459718584492, 56.13483803780593],
+                                        text: '1к\\n30 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24474865936005, 56.13481340001352],
+                                        text: '2к\\n45 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.244714550432995, 56.13474141463477],
+                                        text: '3к\\n54.4 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24464159162246, 56.134578465378226],
+                                        text: '1к\\n33 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24461054223749, 56.13451937931448],
+                                        text: '2к\\n45 м²',
+                                        userData: {
+                                            url: 'https://2gis.ru/'
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                modelId: 'eda234cb',
+                coordinates: [47.245286302641034, 56.134743473834099],
+                modelUrl: 'zgktechnology_construction.glb',
+                rotateZ: -15.1240072739039,
+                linkedIds: ['70030076561388553'],
+                interactive: false,
+            },
+        ];
+
+        plugin.addRealtyScene(realtyScene);
+    </script>
+</body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Когда модели отобразятся на карте, нажмите на одну из них для отображения этажных планов.
+
+<br/>
+<br/>
+
+### Пример создания интерактивной сцены {#scene-example}
+
+Вы можете создать интерактивную сцену недвижимости для glTF-плагина версии 2 с помощью [инструмента для позиционирования моделей на карте](https://2gis.github.io/mapgl-examples/gltf-models-placement/). В инструменте вы можете разместить и спозиционировать модели на карте, а файл с предварительной конфигурацией интерактивной сцены сформируется автоматически.
+
+Чтобы создать интерактивную сцену:
+
+1. [Разместите модели на карте](#models-placement).
+2. [Настройте этажные планы](#floors-settings).
+3. [Добавьте интерактивную сцену на карту](#add-scene).
+
+#### 1. Разместите модели на карте {#models-placement}
+
+1. Убедитесь, что модели соответствуют [требованиям](/mapgl/map-style/immersive/models#requirements).
+
+2. Откройте [инструмент для позиционирования моделей на карте](https://2gis.github.io/mapgl-examples/gltf-models-placement/).
+
+3. Откройте область карты в месте, в которое вы будете добавлять модели:
+
+    {/*  prettier-ignore  */}
+
+   ![Перемещение карты](/img/mapgl/gltf-model-placement/ru/locate_place.jpg)
+
+4. Нажмите **Добавить модель** и выберите модель из списка файлов:
+
+    {/*  prettier-ignore  */}
+
+   ![Добавление модели](/img/mapgl/gltf-model-placement/ru/add_model.jpg)
+
+   Чтобы добавить на карту одну модель в нескольких экземплярах (например, при типовой застройке), добавьте модель из одного и того же файла нужное количество раз.
+
+5. Нажмите на добавленную модель. Она будет выделена зелёным цветом, откроется панель с её настройками позиционирования:
+
+    {/*  prettier-ignore  */}
+
+   ![Выбор модели](/img/mapgl/gltf-model-placement/ru/select_model.jpg)
+
+6. Чтобы скрыть объект на карте, который пересекается с моделью, нажмите на него или добавьте ID здания в поле **ID зданий**:
+
+    {/*  prettier-ignore  */}
+
+   ![Связанные объекты](/img/mapgl/gltf-model-placement/ru/link_building.jpg)
+
+7. Спозиционируйте добавленную модель на карте:
+
+   1. Укажите точные координаты модели в блоке **Координаты** в полях **Долгота** и **Широта**. Также вы можете переместить модель вручную: используйте клавиши стрелок на клавиатуре или зажмите и перетащите модель с помощью мыши.
+   2. Укажите значения поворота модели для каждой оси в блоке **Поворот** в полях **X**, **Y**, **Z**. Также вы можете вращать модель вокруг оси Z: зажмите клавишу `R`, дождитесь пока курсор изменится на значок ![Поворот](/img/mapgl/gltf-model-placement/rotate-cursor.svg), зажмите и вращайте модель с помощью мыши.
+   3. Укажите значение масштаба модели в блоке **Масштаб** в поле **X, Y, Z**. Также вы можете изменить масштаб модели вручную: зажмите клавишу `S`, дождитесь пока курсор изменится на значок ![Масштаб](/img/mapgl/gltf-model-placement/scale-cursor.svg), зажмите модель с помощью мыши и перемещайте её по направлению от модели (для увеличения) или к центру (для уменьшения).
+
+    {/*  prettier-ignore  */}
+
+   ![Позиционирование модели](/img/mapgl/gltf-model-placement/ru/place_model.jpg)
+
+8. Если на сцене необходимо разместить несколько моделей, добавьте их и повторите пункты выше для каждой добавленной модели:
+
+    {/*  prettier-ignore  */}
+
+   ![Несколько моделей на сцене](/img/mapgl/gltf-model-placement/ru/more_models.jpg)
+
+   Если необходимо удалить модель со сцены, нажмите значок ![Удалить](/img/mapgl/gltf-model-placement/remove-model.svg) рядом с именем модели и подтвердите удаление.
+
+9. Чтобы посмотреть итоговую сцену, снимите выделение с последней редактируемой модели. Для этого закройте панель параметров модели или нажмите клавишу `Esc`. Проверьте отображение модели, вращая и масштабируя карту:
+
+    {/*  prettier-ignore  */}
+
+   ![Пример результата](/img/mapgl/gltf-model-placement/ru/ready_scene.jpg)
+
+10. Нажмите **Получить конфиг сцены** и скачайте конфигурационный файл `mapgl-gltf-config.json`. Файл содержит предварительную конфигурацию интерактивной сцены и массив настроек для каждой модели.
+
+Пример конфигурационного файла:
+
+<details>
+<summary><code>mapgl-gltf-config.json</code></summary>
+
+```js
+[
+    {
+        modelId: 'zgktechnology1_47751f926b1e34b8d54a7f190ad32229e244db18',
+        coordinates: [47.2452901373195, 56.13477598609533],
+        modelUrl: 'zgktechnology1.glb',
+        interactive: true,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: -14.6,
+        scale: 1,
+        linkedIds: ['70030076555823021'],
+        floors: [],
+    },
+    {
+        modelId: 'zgktechnology2_9543522e9e5935374df317c931022f23803cc5ef',
+        coordinates: [47.24528548642873, 56.13477629396983],
+        modelUrl: 'zgktechnology2.glb',
+        interactive: true,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: -13.91,
+        scale: 1,
+        linkedIds: ['70030076555821177'],
+        floors: [],
+    },
+    {
+        modelId: 'zgktechnology_construction_2a6fef6a371fb7643e26b9d8f999806804e14dcf',
+        coordinates: [47.24528460953851, 56.134769314919964],
+        modelUrl: 'zgktechnology_construction.glb',
+        interactive: true,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: -14.379999999999997,
+        scale: 1,
+        linkedIds: ['70030076561388553'],
+        floors: [],
+    },
+];
+```
+
+</details>
+
+#### 2. Настройте этажные планы {#floors-settings}
+
+1. В конфигурационный файл `mapgl-gltf-config.json` добавьте массив `floors` для каждой модели. Для каждого здания этажи указываются от самого нижнего этажа (в том числе, этажа с отрицательным номером или паркинга) до самого верхнего.
+
+   Например, чтобы добавить этаж к первому зданию из файла, добавьте в массив `floors` объект с основными параметрами этажа:
+
+   ```js
+   {
+       modelId: 'zgktechnology1_47751f926b1e34b8d54a7f190ad32229e244db18',
+       coordinates: [47.2452901373195, 56.13477598609533],
+       modelUrl: 'zgktechnology1.glb',
+       interactive: true,
+       rotateX: 0,
+       rotateY: 0,
+       rotateZ: -14.6,
+       scale: 1,
+       linkedIds: ['70030076555823021'],
+       floors: [{
+           id: '123abc',
+           text: '1-10',
+           modelUrl: 'zgktechnology1_floor2.glb',
+       }],
+   }
+   ```
+
+   Подробное описание параметров см. в разделе [Настройка этажных планов](#floors).
+
+2. Чтобы отобразить подземный этаж, добавьте свойство `isUnderground` со значением `true`:
+
+   ```js
+   {
+       ...
+       floors: [{
+           id: '123abc',
+           text: '1-10',
+           modelUrl: 'zgktechnology1_floor2.glb',
+           isUnderground: true,
+       }],
+   }
+   ```
+
+3. Добавьте другие этажи к зданию:
+
+   ```js
+   {
+       ...
+       floors: [
+           {
+               id: '123abc',
+               text: '1-10',
+               modelUrl: 'zgktechnology1_floor2.glb',
+               isUnderground: true,
+           },
+           {
+               id: '456def',
+               text: '11',
+               modelUrl: 'zgktechnology1_floor11.glb',
+           },
+       ],
+   }
+   ```
+
+4. При необходимости добавьте этажи к другим зданиям и повторите пункты выше для каждого здания.
+
+Пример конфигурационного файла с настройкой этажных планов:
+
+<details>
+<summary><code>mapgl-gltf-config.json</code></summary>
+
+```js
+[
+    {
+        modelId: 'zgktechnology1_47751f926b1e34b8d54a7f190ad32229e244db18',
+        coordinates: [47.2452901373195, 56.13477598609533],
+        modelUrl: 'zgktechnology1.glb',
+        interactive: true,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: -14.6,
+        scale: 1,
+        linkedIds: ['70030076555823021'],
+        floors: [
+            {
+                id: '123abc',
+                text: '1-10',
+                modelUrl: 'zgktechnology1_floor2.glb',
+                isUnderground: true,
+            },
+            {
+                id: '456def',
+                text: '11',
+                modelUrl: 'zgktechnology1_floor11.glb',
+            },
+        ],
+    },
+    {
+        modelId: 'zgktechnology2_9543522e9e5935374df317c931022f23803cc5ef',
+        coordinates: [47.24528548642873, 56.13477629396983],
+        modelUrl: 'zgktechnology2.glb',
+        interactive: true,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: -13.91,
+        scale: 1,
+        linkedIds: ['70030076555821177'],
+        floors: [
+            {
+                id: 'qwerty',
+                text: '2-15',
+                modelUrl: 'zgktechnology2_floor2.glb',
+            },
+            {
+                id: '123456',
+                text: '16',
+                modelUrl: 'zgktechnology2_floor16.glb',
+            },
+        ],
+    },
+    {
+        modelId: 'zgktechnology_construction_2a6fef6a371fb7643e26b9d8f999806804e14dcf',
+        coordinates: [47.24528460953851, 56.134769314919964],
+        modelUrl: 'zgktechnology_construction.glb',
+        interactive: true,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: -14.379999999999997,
+        scale: 1,
+        linkedIds: ['70030076561388553'],
+        floors: [],
+    },
+];
+```
+
+</details>
+
+#### 3. Добавьте интерактивную сцену на карту {#add-scene}
+
+Чтобы добавить интерактивную сцену с данными из конфигурационного файла на карту, используйте метод `addRealtyScene()`:
+
+```js
+plugin.addRealtyScene([
+    {
+        modelId: 'zgktechnology1_47751f926b1e34b8d54a7f190ad32229e244db18',
+        coordinates: [47.2452901373195, 56.13477598609533],
+        modelUrl: 'zgktechnology1.glb',
+        interactive: true,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: -14.6,
+        scale: 1,
+        linkedIds: ['70030076555823021'],
+        floors: [
+            {
+                id: '123abc',
+                text: '1-10',
+                modelUrl: 'zgktechnology1_floor2.glb',
+                isUnderground: true,
+            },
+            {
+                id: '456def',
+                text: '11',
+                modelUrl: 'zgktechnology1_floor11.glb',
+            },
+        ],
+    },
+    {
+        modelId: 'zgktechnology2_9543522e9e5935374df317c931022f23803cc5ef',
+        coordinates: [47.24528548642873, 56.13477629396983],
+        modelUrl: 'zgktechnology2.glb',
+        interactive: true,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: -13.91,
+        scale: 1,
+        linkedIds: ['70030076555821177'],
+        floors: [
+            {
+                id: 'qwerty',
+                text: '2-15',
+                modelUrl: 'zgktechnology2_floor2.glb',
+            },
+            {
+                id: '123456',
+                text: '16',
+                modelUrl: 'zgktechnology2_floor16.glb',
+            },
+        ],
+    },
+    {
+        modelId: 'zgktechnology_construction_2a6fef6a371fb7643e26b9d8f999806804e14dcf',
+        coordinates: [47.24528460953851, 56.134769314919964],
+        modelUrl: 'zgktechnology_construction.glb',
+        interactive: true,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: -14.379999999999997,
+        scale: 1,
+        linkedIds: ['70030076561388553'],
+        floors: [],
+    },
+]);
+```
+
+Пример добавления интерактивной сцены на карту:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Добавление интерактивной сцены с помощью glTF-плагина версии 2" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="__MAPGL_API_URL__"></script>
+    <script src="__MAPGL_PLUGIN_GLTF2_URL__"></script>
+
+    <div id="container"></div>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [47.245286302641034, 56.134743473834099],
+            zoom: 17.9,
+            key: 'Your API access key',
+            pitch: 45,
+            rotation: 330,
+            enableTrackResize: true,
+        });
+
+        const plugin = new mapgl.GltfPlugin(map, {
+            modelsLoadStrategy: 'waitAll',
+            modelsBaseUrl: 'https://disk.2gis.com/digital-twin/models_s3/realty_ads/zgktechnology/',
+            labelGroupDefaults: {
+                fontSize: 14,
+            },
+            hoverOptions: {
+                color: '#FFF3F3',
+            },
+        });
+
+        plugin.addRealtyScene([
+            {
+                modelId: 'zgktechnology1_47751f926b1e34b8d54a7f190ad32229e244db18',
+                coordinates: [47.2452901373195, 56.13477598609533],
+                modelUrl: 'zgktechnology1.glb',
+                interactive: true,
+                rotateX: 0,
+                rotateY: 0,
+                rotateZ: -14.6,
+                scale: 1,
+                linkedIds: ['70030076555823021'],
+                floors: [
+                    {
+                        id: '123abc',
+                        text: '1-10',
+                        modelUrl: 'zgktechnology1_floor2.glb',
+                        isUnderground: true,
+                    },
+                    {
+                        id: '456def',
+                        text: '11',
+                        modelUrl: 'zgktechnology1_floor11.glb',
+                    },
+                ],
+            },
+            {
+                modelId: 'zgktechnology2_9543522e9e5935374df317c931022f23803cc5ef',
+                coordinates: [47.24528548642873, 56.13477629396983],
+                modelUrl: 'zgktechnology2.glb',
+                interactive: true,
+                rotateX: 0,
+                rotateY: 0,
+                rotateZ: -13.91,
+                scale: 1,
+                linkedIds: ['70030076555821177'],
+                floors: [
+                    {
+                        id: 'qwerty',
+                        text: '2-15',
+                        modelUrl: 'zgktechnology2_floor2.glb',
+                    },
+                    {
+                        id: '123456',
+                        text: '16',
+                        modelUrl: 'zgktechnology2_floor16.glb',
+                    },
+                ]
+            },
+            {
+                modelId: 'zgktechnology_construction_2a6fef6a371fb7643e26b9d8f999806804e14dcf',
+                coordinates: [47.24528460953851, 56.134769314919964],
+                modelUrl: 'zgktechnology_construction.glb',
+                interactive: true,
+                rotateX: 0,
+                rotateY: 0,
+                rotateZ: -14.379999999999997,
+                scale: 1,
+                linkedIds: ['70030076561388553'],
+                floors: [],
+            },
+        ]);
+    </script>
+</body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+<br/>
+<br/>
+
+### Опциональные настройки {#optional-settings}
+
+Вы можете указать опциональные настройки сцены:
+
+* [интерактивность](#interactivity);
+* [всплывающие подсказки](#popups);
+* [настройки карты](#map-options): ракурс камеры, центр карты и масштаб карты;
+* [подписи на этажах](#floor-labels).
+
+#### Интерактивность {#interactivity}
+
+Вы можете добавлять на сцену здания-заглушки, придомовые территории, объекты городской инфраструктуры и окружающей среды, с которыми не предполагается взаимодействовать. Например, в сцене есть строящееся здание без этажей. Чтобы со зданием на карте нельзя было взаимодействовать (например, просматривать этажи), измените значение свойства `interactive` на `false`:
+
+```js
+{
+    modelId: 'model',
+    modelUrl: 'model.glb',
+    coordinates: [47.24528, 56.13474],
+    interactive: false,
+    ...
+}
+```
+
+<br/>
+<br/>
+
+#### Всплывающие подсказки {#popups}
+
+Чтобы при наведении курсора на здание отображалась дополнительная информация, добавьте свойство `popupOptions`:
+
+```js
+{
+    modelId: 'model',
+    modelUrl: 'model.glb',
+    coordinates: [47.24528, 56.13474],
+    interactive: true,
+    popupOptions: {
+        coordinates: [47.24498128610925, 56.13451011334241],
+        title: 'Корпус 1. 11 этажей',
+        description: 'Срок сдачи: IV кв. 2024 г. <br />15 мин. пешком до ст. м. Московская',
+    },
+    ...
+}
+```
+
+Укажите:
+
+* `coordinates` — географические координаты всплывающей подсказки (долгота и широта).
+* `title` — заголовок всплывающей подсказки.
+* `description` — текст во всплывающей подсказке.
+
+Если у здания отключена опция интерактивности (`interactive: false`), при наведении курсора на здание всплывающая подсказка не отображается.
+
+
+<br/>
+<br/>
+
+#### Настройки карты {#map-options}
+
+Вы можете указать настройки карты: ракурс камеры при активации здания или этажного плана, центр и масштаб карты. Добавьте в опции каждого здания и этажного плана свойство `mapOptions` с настройками карты.
+
+1. Чтобы получить параметры карты, откройте Инструменты разработчика браузера (клавиша **F12**), найдите подходящий ракурс камеры для здания или этажа и выполните в консоли код:
+
+   ```js
+   console.log(`mapOptions: {
+       center: [${map.getCenter()}],
+       pitch: ${map.getPitch()},
+       zoom: ${map.getZoom()},
+       rotation: ${map.getRotation()},
+   }`);
+   ```
+
+2. Добавьте настройки карты для здания и его этажей:
+
+   ```js
+   {
+       modelId: 'model',
+       modelUrl: 'model.glb',
+       coordinates: [47.24528, 56.13474],
+       interactive: true,
+       mapOptions: {
+           center: [47.24547737708662, 56.134591508663135],
+           pitch: 40,
+           zoom: 19,
+           rotation: -41.4,
+       },
+       floors: [
+           {
+               id: '123abc',
+               text: '1-10',
+               modelUrl: 'model_floor1.glb',
+               isUnderground: true,
+               mapOptions: {
+                   center: [47.24524342863023, 56.13449524271827],
+                   pitch: 40,
+                   zoom: 20,
+                   rotation: -57.5,
+               },
+           },
+           {
+               id: '456def',
+               text: '11',
+               modelUrl: 'model_floor2.glb',
+               mapOptions: {
+                   center: [47.24556663327373, 56.13456998211929],
+                   zoom: 19.5,
+                   pitch: 40,
+                   rotation: -62.6,
+               },
+           },
+       ],
+   }
+   ```
+
+   Укажите:
+
+   * `center` — географические координаты центра карты (долгота и широта).
+   * `zoom` — масштаб карты.
+   * `pitch` — угол наклона камеры в градусах.
+   * `rotation` — угол поворота камеры в градусах.
+
+<br/>
+<br/>
+
+#### Подписи на этажах {#floor-labels}
+
+Вы можете разместить подписи на этажном плане, например с информацией о помещениях. Для этого настройте группы подписей для каждого этажа и укажите координаты и высоту подписей.
+
+1. Чтобы получить координаты, откройте Инструменты разработчика браузера (клавиша **F12**) и выполните в консоли код:
+
+   ```js
+   map.on('click', ({ lngLat }) => {
+       console.log(lngLat);
+   });
+
+   plugin.on('click', ({ lngLat }) => {
+       console.log(lngLat);
+   });
+   ```
+
+   Теперь при клике на карту или любую модель в консоли будут отображаться координаты клика.
+
+2. Чтобы сделать активным этаж, на котором вы хотите добавить подписи, нажмите на здание и выберите этаж. Например, для первого здания и этажа с именем `11` определите места, в которых будут размещены подписи, и нажимайте на них, чтобы получить координаты.
+
+    {/*  prettier-ignore  */}
+
+   ![Получение координат](/img/mapgl/gltf-model-placement/ru/choose_coords.jpg)
+
+   :::note[Возможны перспективные искажения]
+
+   При клике на карту или здание возвращаются координаты плоской карты, поэтому при размещении подписей для высоких этажей будут возникать искажения перспективной проекции (т.к. при просмотре сверху объект кажется больше).
+
+   :::
+
+3. Чтобы добавить подписи в опции этажа, заполните массив групп подписей [LabelGroupOptions](/mapgl/plugins/gltf2/reference/interface#label-group-options) в опции `labelGroups` этажного плана:
+
+   ```js
+   {
+       modelId: 'model',
+       modelUrl: 'model.glb',
+       coordinates: [47.24528, 56.13474],
+       ...
+       floors: [
+           ...,
+           {
+               id: '456def',
+               text: '11',
+               modelUrl: 'model_floor2.glb',
+               mapOptions: {
+                   center: [47.24556663327373, 56.13456998211929],
+                   pitch: 40,
+                   zoom: 19.5,
+                   rotation: -62.6,
+               },
+               labelGroups: [
+                   {
+                       id: '123abc',
+                       image: {
+                           url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PGcgaWQ9IlBhZ2UtMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGcgaWQ9ImV4aXQiIGZpbGw9IiM2MDVFNTAiIGZpbGwtcnVsZT0ibm9uemVybyI+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNSI+PC9yZWN0PjwvZz48L2c+PC9zdmc+',
+                           size: [38, 38],
+                           stretchX: [[4, 24]],
+                           stretchY: [[4, 24]],
+                           padding: [5, 10, 5, 10],
+                       },
+                       minZoom: 19,
+                       elevation: 35,
+                       interactive: true,
+                       labels: [
+                           {
+                               coordinates: [47.245048150280994, 56.134470449142164],
+                               text: '3к\\n78.4 м²',
+                               userData: {
+                                   url: 'https://docs.2gis.ru',
+                               },
+                           },
+                           {
+                               coordinates: [47.24520807647288, 56.13443854463778],
+                               text: '2к\\n67 м²',
+                               userData: {
+                                   url: 'https://docs.2gis.ru',
+                               },
+                           },
+                       ],
+                   },
+                   ...
+               ],
+           },
+       ],
+   }
+   ```
+
+   Укажите:
+
+   * `image` — подложку подписи. По умолчанию имеет белый цвет. Чтобы настроить подложку, укажите:
+     * `url` — URL изображения в формате data-URL. Изображение подложки подписи должно быть в формате `.svg`
+     * `size` — размер изображения.
+     * `stretchX` и `stretchY` — области растяжения.
+     * `padding` — отступы от краёв для текста внутри подписи.
+   * `minZoom` — минимальный масштаб, при котором отображаются подписи в группе.
+   * `elevation` — высоту подписей в группе. Укажите у группы или у каждой подписи, чтобы поднять подписи на высоту этажа.
+   * `interactive` — флаг интерактивности подписей в группе.
+   * `labels` — массив с настройками ([LabelOptions](/mapgl/plugins/gltf2/reference/interface#label-options)) каждой подписи. Если указаны настройки для подписи (например, `elevation` или `interactive`), то приоритет отдаётся значению из подписи, а не общему значению для группы:
+     * `coordinates` — географические координаты подписи (долгота и широта).
+     * `text` — текст подписи.
+     * `userData` — пользовательские параметры.
+     * `elevation` — высоту подписи.
+     * `interactive` — флаг интерактивности подписи.
+
+   Если необходимо добавить на этаже несколько групп подписей (например, если необходимо отделить проданные помещения от тех, что в продаже), добавьте вторую группу в массив `labelGroups`.
+
+<br/>
+<br/>
+
+#### Пример интерактивной сцены с опциональными настройками
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Добавление интерактивной сцены с опциональными настройками с помощью glTF-плагина версии 2" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="__MAPGL_API_URL__"></script>
+    <script src="__MAPGL_PLUGIN_GLTF2_URL__"></script>
+
+    <div id="container"></div>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [47.245286302641034, 56.134743473834099],
+            zoom: 17.9,
+            key: 'Your API access key',
+            pitch: 45,
+            rotation: 330,
+            enableTrackResize: true,
+        });
+
+        const plugin = new mapgl.GltfPlugin(map, {
+            modelsLoadStrategy: 'waitAll',
+            modelsBaseUrl: 'https://disk.2gis.com/digital-twin/models_s3/realty_ads/zgktechnology/',
+            labelGroupDefaults: {
+                fontSize: 14,
+            },
+            hoverOptions: {
+                color: '#FFF3F3',
+            },
+        });
+
+        plugin.addRealtyScene([
+            {
+                modelId: 'zgktechnology1_47751f926b1e34b8d54a7f190ad32229e244db18',
+                coordinates: [47.2452901373195, 56.13477598609533],
+                modelUrl: 'zgktechnology1.glb',
+                interactive: true,
+                rotateX: 0,
+                rotateY: 0,
+                rotateZ: -14.6,
+                scale: 1,
+                linkedIds: ['70030076555823021'],
+                popupOptions: {
+                    coordinates: [47.24498128610925, 56.13451011334241],
+                    title: 'Корпус 1. 11 этажей',
+                    description: 'Срок сдачи: IV кв. 2024 г. <br />15 мин. пешком до ст. м. Московская',
+                },
+                mapOptions: {
+                    center: [47.24547737708662, 56.134591508663135],
+                    pitch: 40,
+                    zoom: 19,
+                    rotation: -41.4,
+                },
+                floors: [
+                    {
+                        id: '123abc',
+                        text: '1-10',
+                        modelUrl: 'zgktechnology1_floor2.glb',
+                        isUnderground: true,
+                        mapOptions: {
+                            center: [47.24524342863023, 56.13449524271827],
+                            pitch: 40,
+                            zoom: 20,
+                            rotation: -57.5,
+                        },
+                    },
+                    {
+                        id: '456def',
+                        text: '11',
+                        modelUrl: 'zgktechnology1_floor11.glb',
+                        mapOptions: {
+                            center: [47.24556663327373, 56.13456998211929],
+                            pitch: 40,
+                            zoom: 19.5,
+                            rotation: -62.6,
+                        },
+                        labelGroups: [
+                            {
+                                id: '123abc',
+                                image: {
+                                    url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PGcgaWQ9IlBhZ2UtMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGcgaWQ9ImV4aXQiIGZpbGw9IiM2MDVFNTAiIGZpbGwtcnVsZT0ibm9uemVybyI+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNSI+PC9yZWN0PjwvZz48L2c+PC9zdmc+',
+                                    size: [38, 38],
+                                    stretchX: [[4, 24]],
+                                    stretchY: [[4, 24]],
+                                    padding: [5, 10, 5, 10],
+                                },
+                                minZoom: 19,
+                                elevation: 35,
+                                interactive: true,
+                                labels: [
+                                    {
+                                        coordinates: [47.245048150280994, 56.134470449142164],
+                                        text: '3к\\n78.4 м²',
+                                        userData: {
+                                            url: 'https://a101.ru/kvartiry/360810/',
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24520807647288, 56.13443854463778],
+                                        text: '2к\\n67 м²',
+                                        userData: {
+                                            url: 'https://a101.ru/kvartiry/360810/',
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                id: '456def',
+                                image: 'default',
+                                minZoom: 19,
+                                elevation: 35,
+                                interactive: true,
+                                labels: [
+                                    {
+                                        coordinates: [47.245350349632965, 56.134414208205776],
+                                        text: '1к\\n40 м²',
+                                        userData: {
+                                            url: 'https://a101.ru/kvartiry/360810/',
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24542896512635, 56.13448965532694],
+                                        text: '3к\\n90 м²',
+                                        userData: {
+                                            url: 'https://a101.ru/kvartiry/360810/',
+                                        },
+                                    },
+                                    {
+                                        coordinates: [47.24510451854659, 56.134541185948585],
+                                        text: '3к\\n77.2 м²',
+                                        userData: {
+                                            url: 'https://a101.ru/kvartiry/360810/',
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                modelId: 'zgktechnology2_9543522e9e5935374df317c931022f23803cc5ef',
+                coordinates: [47.24528548642873, 56.13477629396983],
+                modelUrl: 'zgktechnology2.glb',
+                interactive: true,
+                rotateX: 0,
+                rotateY: 0,
+                rotateZ: -13.91,
+                scale: 1,
+                linkedIds: ['70030076555821177'],
+                popupOptions: {
+                    coordinates: [47.24448882381944, 56.13468481517748],
+                    title: 'Корпус 2. 16 этажей',
+                    description: 'Срок сдачи: IV кв. 2024 г. <br /> 15 мин. пешком до ст. м. Московская',
+                },
+                mapOptions: {
+                    center: [47.245008950283065, 56.1344698491912],
+                    pitch: 45,
+                    zoom: 18.7,
+                    rotation: -129,
+                },
+                floors: [
+                    {
+                        id: 'qwerty',
+                        text: '2-15',
+                        modelUrl: 'zgktechnology2_floor2.glb',
+                        mapOptions: {
+                            center: [47.24463456947374, 56.134675042798094],
+                            pitch: 35,
+                            zoom: 20,
+                            rotation: -130,
+                        },
+                    },
+                    {
+                        id: '123456',
+                        text: '16',
+                        modelUrl: 'zgktechnology2_floor16.glb',
+                        mapOptions: {
+                            center: [47.24498428988907, 56.134514900849325],
+                            pitch: 35,
+                            zoom: 19.2,
+                            rotation: -130,
+                        },
+                    },
+                ]
+            },
+            {
+                modelId: 'zgktechnology_construction_2a6fef6a371fb7643e26b9d8f999806804e14dcf',
+                coordinates: [47.24528460953851, 56.134769314919964],
+                modelUrl: 'zgktechnology_construction.glb',
+                interactive: false,
+                rotateX: 0,
+                rotateY: 0,
+                rotateZ: -14.379999999999997,
+                scale: 1,
+                linkedIds: ['70030076561388553'],
+                floors: [],
+            },
+        ]);
+    </script>
+</body>
+
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+<br />
+
+### Скрытие интерактивных сцен
+
+Чтобы скрыть интерактивную сцену с карты, используйте метод `hideRealtyScene()` (загруженные модели сохранятся в кеше):
+
+```js
+plugin.hideRealtyScene();
+```
+
+Чтобы снова отобразить сцену, используйте метод `showRealtyScene()`:
+
+```js
+plugin.showRealtyScene();
+```
+
+<br/>
+<br/>
+
+### Удаление интерактивных сцен
+
+Чтобы удалить интерактивную сцену с карты, используйте метод `removeRealtyScene()`:
+
+```js
+plugin.removeRealtyScene();
+```
+
+<br/>
+<br/>
+
+## Основные изменения версии 2 {#key-changes}
+
+Во второй версии плагина не используется библиотека ThreeJS, поэтому необходимо подобрать параметры размера, поворота и смещения моделей заново: см. подробнее в разделе [Настройка позиционирования модели](/mapgl/map-style/immersive/models#positioning).
+
+### Изменения в опциях плагина
+
+* Из интерфейса [PluginOptions](/mapgl/plugins/gltf2/reference/interface#plugin-options) удалены опции:
+
+  * `dracoScriptsUrl` — теперь загрузка осуществляется силами движка карты.
+  * `ambientLight` — теперь освещение задаётся через стили карты, которые вы можете настроить в [Редакторе стилей](https://styles.2gis.com/).
+
+* Опция `hoverHighlight` заменена на опцию `hoverOptions`, в которой можно настроить цвет состояния модели, когда на неё наведён курсор. Цвет применяется путём перемножения каждого компонента, поэтому нельзя выделить модель белым цветом.
+
+* Опция `poiConfig` заменена на опцию `labelGroupDefaults`, которая содержит настройки по умолчанию для каждой группы подписей без разделения на `primary` и `secondary`. В версии 1 эти типы применяются для разделения подписей с подложкой и без. В версии 2 подложка для текста задается в [LabelGroupOptions](/mapgl/plugins/gltf2/reference/interface#label-group-options), а пользовательскую подложку по умолчанию можно задать через опцию `image` в `labelGroupDefaults`.
+
+```js
+// Пример опций плагина версии 1
+{
+    dracoScriptsUrl: 'https://unpkg.com/@2gis/mapgl-gltf@^1/dist/libs/draco/',
+    poiConfig: {
+        primary: {
+            fontSize: 14,
+            fontColor: '#000000',
+        },
+        secondary: {
+            fontSize: 14,
+            fontColor: '#000000',
+        },
+    },
+    ambientLight: {
+        color: '#ffffff',
+        intencity: 3,
+    },
+    hoverHighlight: {
+        color: '#ff000088',
+        intencity: 0.0,
+    },
+}
+
+// Пример опций плагина версии 2
+{
+    labelGroupDefaults: {
+        fontSize: 14,
+        fontColor: '#000000',
+    },
+    hoverOptions: {
+        color: '#ff000088',
+    },
+}
+```
+
+### Изменения в событиях плагина
+
+* Изменения в интерфейсе [`ModelTarget`](/mapgl/plugins/gltf2/reference/interface#model-target):
+
+  * Опция `modelId` стала обязательной и теперь принимает только тип `string`.
+  * Опция `floorId` удалена.
+
+* Интерфейс `PoiTarget` переименован в [LabelTarget](/mapgl/plugins/gltf2/reference/interface#label-target):
+
+  * Значение опции `type` заменено на `label`.
+  * Опция `data` теперь принимает значение [LabelOptions](/mapgl/plugins/gltf2/reference/interface#label-options).
+  * Опция `modelId` переименована в `buildingId`, которая теперь принимает только тип `string`.
+  * Опция `floorId` теперь принимает только тип `string`.
+
+* Интерфейс `GltfPluginPoiEvent` заменён на [GltfPluginLabelEvent](/mapgl/plugins/gltf2/reference/interface#gltf-plugin-label-event).
+
+### Изменения в методах плагина
+
+* Метод `addModelsPartially` удалён. Частичное добавление моделей на карту доступно в методе `addModels`:
+
+```js
+// Пример использования в версии 1
+plugin.addModelsPartially(
+    [
+        {
+            modelId: '347da1',
+            coordinates: [82.88651, 54.98092],
+            modelUrl: 'http://example.com/models/model1.glb',
+        },
+        {
+            modelId: 'f932d2',
+            coordinates: [82.88659, 54.98101],
+            modelUrl: 'http://example.com/models/model2.glb',
+        },
+    ],
+    ['347da1'],
+);
+
+// Пример использования в версии 2
+plugin.addModels(
+    [
+        {
+            modelId: '347da1',
+            coordinates: [82.88651, 54.98092],
+            modelUrl: 'http://example.com/models/model1.glb',
+            interactive: true,
+        },
+        {
+            modelId: 'f932d2',
+            coordinates: [82.88659, 54.98101],
+            modelUrl: 'http://example.com/models/model2.glb',
+            interactive: true,
+        },
+    ],
+    ['347da1'],
+);
+```
+
+* В методах `removeModel` и `removeModels` удалён второй аргумент `preserveCache`. Чтобы скрыть модель с карты, используйте методы `hideModel` или `hideModels`:
+
+```js
+// Пример использования в версии 1
+plugin.removeModel('ea234f1', true);
+// Или
+plugin.removeModels(['ea234f1', 'abc354', ..., 'def123'], true);
+
+// Пример использования в версии 2
+plugin.hideModel('ea234f1');
+// Или
+plugin.hideModels(['ea234f1', 'abc354', ..., 'def123']);
+```
+
+* Метод `addPoiGroup` заменён на метод `addLabelGroup`:
+
+```js
+// Пример использования в версии 1
+plugin.addPoiGroup({
+    id: '722ea9',
+    type: 'primary',
+    elevation: 30,
+    data: [
+        {
+            coordinates: [82.886554, 54.980988],
+            label: '10 м²',
+        },
+    ],
+});
+
+plugin.addPoiGroup({
+    id: '456qwe',
+    type: 'secondary',
+    elevation: 33,
+    data: [
+        {
+            coordinates: [82.886, 54.98],
+            label: '20 м²',
+        },
+    ],
+});
+
+// Пример использования в версии 2
+plugin.addPoiGroup({
+    id: '722ea9',
+    image: 'default',
+    elevation: 30,
+    labels: [
+        {
+            coordinates: [82.886554, 54.980988],
+            text: '10 м²',
+        },
+    ],
+});
+
+plugin.addPoiGroup({
+    id: '456qwe',
+    elevation: 33,
+    labels: [
+        {
+            coordinates: [82.886, 54.98],
+            text: '20 м²',
+        },
+    ],
+});
+```
+
+* Метод `removePoiGroup` заменён на метод `removeLabelGroup`.
+* В методе `removeRealtyScene` удалён аргумент `preserveCache`. Чтобы скрыть сцену недвижимости с карты, а затем показать, используйте методы `hideRealtyScene` и `showRealtyScene` соответственно:
+
+```js
+// Пример использования в версии 1
+plugin.removeRealtyScene(true);
+plugin.addRealtyScene([ ... ]);
+
+// Пример использования в версии 2
+plugin.hideRealtyScene();
+plugin.showRealtyScene();
+```
+
+### Изменения в остальных интерфейсах
+
+* Изменения в интерфейсе [ModelOptions](/mapgl/plugins/gltf2/reference/interface#model-options):
+  * Опция `modelId` теперь принимает только тип `string`;
+  * Опция `interactive` теперь содержит значение `false` по умолчанию.
+
+```js
+// Пример использования в версии 1
+plugin.addModel({
+    modelId: 1234,
+    coordinates: [55.27087, 25.19668],
+    modelUrl: 'http://example.com/models/model1.glb',
+});
+
+// Пример использования в версии 2
+plugin.addModel({
+    modelId: '1234',
+    coordinates: [55.27087, 25.19668],
+    modelUrl: 'http://example.com/models/model1.glb',
+    interactive: true,
+});
+```
+
+* Изменения в интерфейсе [BuildingFloorOptions](/mapgl/plugins/gltf2/reference/interface#building-floor-options):
+  * Опция `id` теперь принимает только тип `string`.
+  * Опция `poiGroups` переименована в `labelGroups`, которая теперь принимает массив [LabelGroupOptions](/mapgl/plugins/gltf2/reference/interface#label-group-options).
+* Интерфейс `PoiGroupOptions` переименован в интерфейс [LabelGroupOptions](/mapgl/plugins/gltf2/reference/interface#label-group-options):
+  * Опция `id` теперь принимает только тип `string`.
+  * Удалена опция `type`. Используйте опцию `image`, которая принимает настройки подложки для текста подписей в группе.
+  * Опция `data` переименована в `labels` и теперь принимает массив [LabelOptions](/mapgl/plugins/gltf2/reference/interface#label-options).
+* Интерфейс `PoiOptions` переименован в [LabelOptions](/mapgl/plugins/gltf2/reference/interface#label-options):
+  * Опция `label` переименована в `text`.
+
+```js
+// Пример использования в версии 1
+plugin.addRealtyScene([{
+    ...,
+    floors: [{
+        id: 235034,
+        text: '1-10',
+        modelUrl: 'http://example.com/models/model1_floor1.glb',
+        poiGroups: [
+            {
+                id: 1111,
+                type: 'primary',
+                elevation: 5,
+                data: [{
+                    coordinates: [47.245048150280994, 56.134470449142164],
+                    label: '3к\\n78.4 м²',
+                }],
+            },
+            {
+                id: 2222,
+                type: 'secondary',
+                elevation: 5,
+                data: [{
+                    coordinates: [47.2451, 56.1344],
+                    label: '2к\\n60 м²',
+                }],
+            },
+        ],
+    }],
+}]);
+
+// Пример использования в версии 2
+plugin.addRealtyScene([{
+    ...,
+    floors: [{
+        id: '235034',
+        text: '1-10',
+        modelUrl: 'http://example.com/models/model1_floor1.glb',
+        labelGroups: [
+            {
+                id: '1111',
+                image: 'default',
+                elevation: 5,
+                interactive: true,
+                labels: [{
+                    coordinates: [47.245048150280994, 56.134470449142164],
+                    text: '3к\\n78.4 м²',
+                }],
+            },
+            {
+                id: '2222',
+                elevation: 5,
+                interactive: true,
+                labels: [{
+                    coordinates: [47.2451, 56.1344],
+                    text: '2к\\n60 м²',
+                }],
+            },
+        ],
+    }],
+}]);
+```
+
+* Изменения в интерфейсе [BuildingState](/mapgl/plugins/gltf2/reference/interface#building-state):
+  * Опция `modelId` заменена на опцию `buildingId`, которая теперь принимает только тип `string`.
+  * Опция `floorId` теперь принимает только тип `string`.
+
+```js
+// Пример использования в версии 1
+plugin.addPoiGroup({ ... }, {
+    modelId: 1111,
+    floorId: 2222,
+});
+// Или
+plugin.addRealtyScene([ ... ], {
+    modelId: 'abc123',
+    floorId: 'def456',
+});
+
+// Пример использования в версии 2
+plugin.addLabelGroup({ ... }, {
+    buildingId: '1111',
+    floorId: '2222',
+});
+// Или
+plugin.addRealtyScene([ ... ], {
+    buildingId: 'abc123',
+    floorId: 'def456',
+});
+```

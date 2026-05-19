@@ -1,0 +1,73 @@
+---
+sidebar: androidsdk
+---
+# Android Compose
+
+[Android Compose (Jetpack Compose)](https://developer.android.com/compose) — это набор инструментов для создания UI в Android-приложениях на языке программирования Kotlin. Основное отличие фреймворка от Android View — декларативный подход к описанию интерфейса.
+
+Вы можете использовать [модули для Android Compose](https://2gis.github.io/android-compose-docs/index.html) от <Brand />, чтобы добавить в свой проект стандартные UI-элементы:
+
+- `compose-map` для управления картой. Модуль доступен для обеих (**Full** и **Map**) версий SDK.
+- `compose-navigation` для создания навигатора. Модуль доступен только для полной (**Full**) версии SDK.
+
+Чтобы подключить модуль в своё приложение, добавьте следующие элементы в `app/build.gradle` и укажите номер и тип версии SDK (оба параметра обязательны):
+
+```groovy
+dependencies {
+
+      def sdkVersion = "13.0.0" // Номер версии SDK
+
+      implementation("ru.dgis.sdk:sdk-map:$sdkVersion") // Укажите sdk-map или sdk-full
+      implementation("ru.dgis.sdk:compose-map:$sdkVersion") // Модуль для карты
+      implementation("ru.dgis.sdk:compose-navigation:$sdkVersion") // Модуль для навигатора
+}
+```
+
+Пример готового `app/build.gradle` см. в [демо-проекте на GitHub](https://github.com/2gis/mobile-sdk-android-demo/blob/master/app/build.gradle).
+
+## Карта {#map}
+
+Получите карту через [MapComposable](https://2gis.github.io/android-compose-docs/compose-map/ru.dgis.sdk.compose.map/-map-composable.html), чтобы в дальнейшем использовать её при добавлении UI-элементов. См. [пример подготовки карты](https://github.com/2gis/mobile-sdk-android-demo/blob/master/app/src/main/java/ru/dgis/sdk/demo/compose/screens/ControlsScreen.kt).
+
+Стандартный набор элементов включает в себя:
+
+1. [IndoorComposable](https://2gis.github.io/android-compose-docs/compose-map/ru.dgis.sdk.compose.map.controls/-indoor-composable.html) для переключения этажей.
+2. [TrafficComposable](https://2gis.github.io/android-compose-docs/compose-map/ru.dgis.sdk.compose.map.controls/-traffic-composable.html) для показа текущего уровня пробок и для управления видимостью пробок на карте.
+3. [ZoomComposable](https://2gis.github.io/android-compose-docs/compose-map/ru.dgis.sdk.compose.map.controls/-zoom-composable.html) для масштабирования (приближения и отдаления) карты.
+4. [CompassComposable](https://2gis.github.io/android-compose-docs/compose-map/ru.dgis.sdk.compose.map.controls/-compass-composable.html) для отображения текущего угла поворота карты относительно севера.
+5. [MyLocationComposable](https://2gis.github.io/android-compose-docs/compose-map/ru.dgis.sdk.compose.map.controls/-my-location-composable.html) для перелёта к текущему местоположению пользователя. Этот UI-элемент отображает текущее состояние слежения камеры ([`CameraFollowState`](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.map.camera-follow-state)) и позволяет изменять его.
+
+<img src="/img/mobile-sdk/android_map_controls_1.jpg" width="250" />
+
+6. [MinimapComposable](https://2gis.github.io/android-compose-docs/compose-map/ru.dgis.sdk.compose.map.minimap/-minimap-composable.html) для отображения мини-карты во время навигации.
+
+<img src="/img/mobile-sdk/android_minimap.png" width="250" />
+
+## Навигатор {#navigator}
+
+Полная версия (**Full**) поставки SDK содержит набор UI-элементов для отображения и управления навигацией. Для удобства все элементы объединены в [NavigationControlsComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.defaultcontrols.navigation/-navigation-controls-composable.html), который вы можете настраивать через [DefaultNavigationControlsContent](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.defaultcontrols.navigation/-default-navigation-controls-content/index.html).
+
+Стандартный набор элементов включает в себя:
+
+1. [TrafficLineComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.trafficline/-traffic-line-composable.html) для отображения уровня пробок на маршруте.
+2. [ManeuverComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.maneuver/-maneuver-composable.html) для отображения информации о следующем манёвре.
+3. [SpeedInfoComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.speedinfo/-speed-info-composable.html) для отображения текущей скорости и скоростного ограничения.
+4. [TrafficAndParkingComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.trafficandparking/-traffic-and-parking-composable.html) — контейнер для UI-элементов управления видимостью пробок ([NavigatorTrafficComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.navigatortraffic/-navigator-traffic-composable.html)) и парковок ([ParkingComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.parking/-parking-composable.html)) на карте.
+5. [NavigationZoomComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.mapcontrols.zoom/-navigation-zoom-composable.html) для масштабирования (приближения и отдаления) карты.
+6. [NavigationCompassComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.mapcontrols.compass/-navigation-compass-composable.html) для отображения текущего угла поворота карты относительно севера.
+7. [NavigationFollowComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.mapcontrols.follow/-navigation-follow-composable.html) для управления слежением за маркером местоположения.
+8. [NavigationDashboardComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.dashboard/-navigation-dashboard-composable.html) для отображения информации в режиме [ведения по маршруту](/android/sdk/examples/navigation#turn-by-turn-mode).
+
+<img src="/img/mobile-sdk/android_navi_controls_4.jpg" width="250" /> <img src="/img/mobile-sdk/android_navi_controls_1.jpg" width="250" />
+
+9. [NavigationDashboardComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.dashboard/-navigation-dashboard-composable.html) для отображения информации в режиме [свободной навигации](/android/sdk/examples/navigation#free-drive-mode).
+10. [NavigationDashboardComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.dashboard/-navigation-dashboard-composable.html) для отображения информации в режиме [навигации внутри зданий](/android/sdk/examples/navigation#indoor-navigation).
+11. [NavigationIndoorComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.indoor/-navigation-indoor-composable.html) для управления списком этажей при навигации внутри здания.
+
+<img src="/img/mobile-sdk/android_navi_controls_2.jpg" width="250" /> <img src="/img/mobile-sdk/android_navi_controls_3.jpg" width="250" /> <img src="/img/mobile-sdk/android_navi_controls_5.jpg" width="250" />
+
+12. [BetterRoutePromptComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.betterrouteprompt/-better-route-prompt-composable.html) для отображения предложения о переходе на [«маршрут лучше»](/android/sdk/examples/navigation#better-route).
+13. [FinishRouteComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.finishroute/-finish-route-composable.html) для отображения информации о завершении маршрута.
+14. [RouteOverviewComposable](https://2gis.github.io/android-compose-docs/compose-navigation/ru.dgis.sdk.compose.navigation.controls.routeoverview/-route-overview-composable.html) для отображения общей информации о маршруте во время навигации.
+
+<img src="/img/mobile-sdk/android_navi_controls_6.png" width="250" /><img src="/img/mobile-sdk/android_navi_controls_7.png" width="250" /><img src="/img/mobile-sdk/android_navi_controls_8.png" width="250" />

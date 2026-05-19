@@ -1,0 +1,765 @@
+---
+sidebar: mapgljsapi
+---
+# GeoJSON
+
+Для показа GeoJSON данных на карте:
+
+1. Подключите источник этих данных в карту.
+2. Добавьте слой в стиль карты, который объяснит, как рисовать эти данные.
+
+## Подключение источника данных
+
+Возьмем простейший пример данных в формате [GeoJSON](https://ru.wikipedia.org/wiki/GeoJSON):
+
+```js
+const data = {
+    type: 'FeatureCollection',
+    features: [
+        {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+                type: 'Polygon',
+                coordinates: [
+                    [
+                      [37.615655, 55.762005],
+                      [37.625655, 55.762005],
+                      [37.621655, 55.772005],
+                      [37.615655, 55.762005],
+                    ],
+                ],
+            },
+        },
+    ],
+};
+```
+
+Для их подключения в качестве источника данных карты нужно использовать класс [GeoJsonSource](/mapgl/reference/class#geo-json-source):
+
+```js
+const source = new mapgl.GeoJsonSource(map, {
+    data,
+});
+```
+
+Так мы добавили полигон только в данные карты. Однако отрисовать этот полигон не получится, поскольку его нельзя связать с конкретным слоем стиля карты. Полигон добавился в общий массив данных карты, а там его невозможно отличить от других полигонов.
+
+Чтобы полигон отличался от других, можно добавить ему уникальное свойство в `properties`:
+
+```js
+const data = {
+    type: 'FeatureCollection',
+    features: [
+        {
+            type: 'Feature',
+            properties: {
+                foo: 'qwe', // Уникальное свойство
+            },
+            geometry: {
+                type: 'Polygon',
+                coordinates: [
+                    [
+                      [37.615655, 55.762005],
+                      [37.625655, 55.762005],
+                      [37.621655, 55.772005],
+                      [37.615655, 55.762005],
+                    ],
+                ],
+            },
+        },
+    ],
+};
+```
+
+Либо добавить уникальное свойство всему источнику данных через поле `attributes`:
+
+```js
+const source = new mapgl.GeoJsonSource(map, {
+    data,
+    attributes: {
+        bar: 'asd', // Уникальное свойство
+    },
+});
+```
+
+Теперь такой полигон можно связать с новым слоем стилем карты, а значит и отрисовать.
+
+## Добавление слоя в стиль карты
+
+Стиль карты — это конфигурационный файл, который описывает, как рисовать данные карты. Стиль состоит из слоев. Каждый слой содержит:
+
+* в поле `filter` — логику фильтрации данных карты для определения, какие именно данные будут рисоваться этим слоем;
+* в поле `style` — описание внешнего вида объектов отрисовки (цвет, ширина, шрифт и пр.).
+
+Подробнее про стиль карты можно узнать в [Спецификации стиля](/mapgl/styles-specification).
+
+### Добавление через API
+
+Выше мы добавили полигон в качестве источника данных карты, теперь его нужно связать с новым слоем стиля.
+
+Для начала создадим новый слой:
+
+```js
+const layer = {
+    id: 'my-polygons-layer', // ID каждого слоя должен быть уникальным
+
+    // Фильтрация или выбор данных для этого слоя
+    filter: [
+        'match',
+        ['sourceAttr', 'bar'],
+        ['asd'],
+        true, // Значение при совпадении атрибута 'bar' источника со значением 'asd'
+        false, // Значение при несовпадении
+    ],
+
+    // Тип объекта отрисовки
+    type: 'polygon',
+
+    // Стиль объекта отрисовки
+    style: {
+        color: '#0000ff',
+    },
+};
+```
+
+Здесь в `filter` используются:
+
+* `SourceAttrExpression` — для получения значений из свойства `bar` источника данных;
+* `MatchExpression` — для сопоставления полученного свойства из атрибута `bar` со строковым значением `"asd"`.
+
+Если при добавлении данных был выбран вариант не со свойством источника данных, а с добавление свойства только одному объекту GeoJSON в `properties`, то вместо `SourceAttrExpression` нужно использовать `GetExpression`.
+
+В конце созданный слой нужно добавить в стиль карты с помощью `map.addLayer(layer)`, и карта перерисуется уже вместе с новым полигоном:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Полигон GeoJSON" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13.5,
+                key: 'Your API access key',
+            });
+
+            const data = {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: [
+                                [
+                                    [37.615655, 55.762005],
+                                    [37.625655, 55.762005],
+                                    [37.621655, 55.772005],
+                                    [37.615655, 55.762005],
+                                ],
+                            ],
+                        },
+                    },
+                ],
+            };
+
+            const source = new mapgl.GeoJsonSource(map, {
+                data,
+                attributes: {
+                    bar: 'asd',
+                },
+            });
+
+            const layer = {
+                id: 'my-polygons-layer',
+
+                filter: [
+                    'match',
+                    ['sourceAttr', 'bar'],
+                    ['asd'],
+                    true,
+                    false,
+                ],
+
+                type: 'polygon',
+
+                style: {
+                    color: '#0000ff',
+                },
+            };
+
+            map.on('styleload', () => {
+                map.addLayer(layer);
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+### Добавление после загрузки стиля
+
+Сразу после создания карты её стиль будет пустым, до тех пор пока он не загрузится с сервера. Важно дождаться его загрузки, прежде чем добавлять новый слой, поскольку загруженный стиль полностью затрет старый. Для этого в примере выше используется событие `styleload`, которое всплывает каждый раз после установки нового стиля:
+
+```js
+map.on('styleload', () => {
+    map.addLayer(layer);
+});
+```
+
+Если вы меняете стиль карты с помощью метода `map.setStyleById()`, то вместо события вы также можете использовать [Promise](https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Promise), который возвращает метод:
+
+```js
+map.setStyleById('e05ac437-fcc2-4845-ad74-b1de9ce07555').then(() => {
+    map.addLayer(layer);
+});
+```
+
+### Добавление перед другим слоем
+
+Слои стиля упорядочены относительно друг друга. Порядок слоев определяет то, в какой последовательности они будут рисоваться на карте.
+
+По умолчанию метод `map.addLayer(layer)` добавляет слой в конец списка, т.е. новый слой будет рисоваться последним. Если нужно добавить новый слой не в конец, а перед другим слоем, то нужно в методе указать вторым параметром ID другого слоя:
+
+```js
+map.addLayer(anotherLayer, 'my-polygons-layer');
+```
+
+Вставить новый слой можно также перед слоями, которые настраиваются в [Редакторе стилей](https://styles.2gis.com/):
+
+```js
+map.addLayer(layer, '577315');
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Полигон GeoJSON перед другим слоем" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13.5,
+                key: 'Your API access key',
+            });
+
+            const data = {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: [
+                                [
+                                    [37.615655, 55.762005],
+                                    [37.625655, 55.762005],
+                                    [37.621655, 55.772005],
+                                    [37.615655, 55.762005],
+                                ],
+                            ],
+                        },
+                    },
+                ],
+            };
+
+            const source = new mapgl.GeoJsonSource(map, {
+                data,
+                attributes: {
+                    bar: 'asd',
+                },
+            });
+
+            const layer = {
+                id: 'my-polygons-layer',
+
+                filter: [
+                    'match',
+                    ['sourceAttr', 'bar'],
+                    ['asd'],
+                    true,
+                    false,
+                ],
+
+                type: 'polygon',
+
+                style: {
+                    color: '#0000ff',
+                },
+            };
+
+            map.on('styleload', () => {
+                map.addLayer(layer, '577315');
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+### Добавление через редактор стилей
+
+Для отображения источника данных необязательно добавлять слой через API, можно также добавить его в [Редакторе стилей](https://styles.2gis.com/) в свой стиль карты.
+
+Для этого там при создании нового слоя на этапе выбора данных нужно нажать на кнопку **JSON — добавить вручную** и добавить `MatchExpression`, который нужно было бы указать в `filter` при добавлении слоя через API:
+
+<img src="/img/mapgl/geojson-editor.png" alt="GeoJSON styles from editor" style={{"width":"680px"}} />
+
+## События
+
+Чтобы подписаться на клик по объекту GeoJSON или на другие события [MapEventTable](/mapgl/reference/interface#map-event-table), надо использовать метод on() у карты. Для объектов GeoJSON в событиях в поле `targetData` приходит специальный тип [GeoJsonEventTargetData](/mapgl/reference/interface#geo-json-event-target-data), который содержит все исходные данные объекта.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Обработка событий GeoJSON" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <script src="__MAPGL_API_URL__"></script>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [37.618655, 55.7643005],
+            zoom: 16.5,
+            pitch: 40,
+            key: 'Your API access key',
+        });
+
+        const data = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    properties: {
+                        type: 'star',
+                        name: 'Полигон GeoJSON — звезда A'
+                    },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [
+                            [
+                                [37.614801, 55.764680],
+                                [37.615455, 55.765000],
+                                [37.616067, 55.764632],
+                                [37.615766, 55.765204],
+                                [37.616367, 55.765505],
+                                [37.615724, 55.765534],
+                                [37.615531, 55.766096],
+                                [37.615241, 55.765553],
+                                [37.614555, 55.765572],
+                                [37.615134, 55.765233],
+                                [37.614801, 55.764680],
+                            ],
+                        ],
+                    },
+                },
+                {
+                    type: 'Feature',
+                    properties: {
+                        type: 'star',
+                        name: 'Полигон GeoJSON — звезда B'
+                    },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [
+                            [
+                                [37.621215, 55.764191],
+                                [37.621869, 55.764511],
+                                [37.622481, 55.764143],
+                                [37.622180, 55.764715],
+                                [37.622781, 55.765016],
+                                [37.622138, 55.765045],
+                                [37.621945, 55.765607],
+                                [37.621655, 55.765064],
+                                [37.620969, 55.765083],
+                                [37.621548, 55.764744],
+                                [37.621215, 55.764191],
+                            ],
+                        ],
+                    },
+                },
+                {
+                    type: 'Feature',
+                    properties: {
+                        type: 'marker',
+                        label: 'Звезда A',
+                        color: 'blue',
+                        name: 'Маркер GeoJSON — звезда A'
+                    },
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [37.615464, 55.765201],
+                    },
+                },
+                {
+                    type: 'Feature',
+                    properties: {
+                        type: 'marker',
+                        label: 'Звезда B',
+                        color: 'blue',
+                        name: 'Маркер GeoJSON — звезда B'
+                    },
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [37.621878, 55.764812],
+                    },
+                },
+            ],
+        };
+
+        const source = new mapgl.GeoJsonSource(map, {
+            data,
+            attributes: {
+                bar: 'asd',
+            },
+        });
+
+        map.on('styleload', () => {
+            map.addLayer(
+                {
+                    type: 'polygon',
+                    id: 'my-stars',
+                    filter: [
+                        'all',
+                        ['match', ['sourceAttr', 'bar'], ['asd'], true, false],
+                        ['match', ['get', 'type'], ['star'], true, false],
+                    ],
+                    style: {
+                        color: '#fcc9ff',
+                    },
+                },
+            );
+
+            map.addLayer({
+                type: 'point',
+                id: 'my-marker',
+                filter: [
+                    'all',
+                    ['match', ['sourceAttr', 'bar'], ['asd'], true, false],
+                    ['match', ['get', 'type'], ['marker'], true, false],
+                ],
+                style: {
+                    iconImage: ['match', ['get', 'color'], ['blue'], 'ent_i', 'ent'],
+                    iconWidth: 25,
+                    textField: ['get', 'label'],
+                    textFont: ['Noto_Sans'],
+                    textColor: '#0098ea',
+                    textHaloColor: '#fff',
+                    textHaloWidth: 1,
+                    iconPriority: 100,
+                    textPriority: 100,
+                },
+            });
+        });
+        map.on('click', (e) => { if (e.targetData.type === 'geojson') { alert('Вы нажали на объект GeoJSON: ' + e.targetData.feature.properties.name) } })
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+## Комплексный пример
+
+Ниже представлен сложный пример использования GeoJSON, в нем одновременно:
+
+* подключаются разные типы данных GeoJSON (`Point`, `Polygon`, `LineString`);
+* показываются разные объекты отрисовки (`line`, `dashedLine`, `point`, `polygon`);
+* используются составные выражения в `filter`;
+* используются выражения внутри стилевых свойств.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Комплексный пример использования GeoJSON" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.763005],
+                zoom: 16,
+                pitch: 40,
+                key: 'Your API access key',
+            });
+
+            const data = {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: {
+                            type: 'topLine',
+                        },
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [37.60942240223848, 55.76183831269183],
+                                [37.61301369755446, 55.76308508983205],
+                                [37.61466422601754, 55.76125513286570],
+                                [37.61763397749637, 55.76283913279379],
+                                [37.61845776376963, 55.76149550448702],
+                            ],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {
+                            type: 'star',
+                        },
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: [
+                                [
+                                    [37.614801, 55.764680],
+                                    [37.615455, 55.765000],
+                                    [37.616067, 55.764632],
+                                    [37.615766, 55.765204],
+                                    [37.616367, 55.765505],
+                                    [37.615724, 55.765534],
+                                    [37.615531, 55.766096],
+                                    [37.615241, 55.765553],
+                                    [37.614555, 55.765572],
+                                    [37.615134, 55.765233],
+                                    [37.614801, 55.764680],
+                                ],
+                            ],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {
+                            type: 'star',
+                        },
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: [
+                                [
+                                    [37.621215, 55.764191],
+                                    [37.621869, 55.764511],
+                                    [37.622481, 55.764143],
+                                    [37.622180, 55.764715],
+                                    [37.622781, 55.765016],
+                                    [37.622138, 55.765045],
+                                    [37.621945, 55.765607],
+                                    [37.621655, 55.765064],
+                                    [37.620969, 55.765083],
+                                    [37.621548, 55.764744],
+                                    [37.621215, 55.764191],
+                                ],
+                            ],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {
+                            type: 'bottomLine',
+                        },
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [37.61717540585658, 55.7640034777889],
+                                [37.62009981134984, 55.7641244588529],
+                                [37.62021640427935, 55.7616265696595],
+                            ],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {
+                            type: 'marker',
+                            label: 'Звезда A',
+                            color: 'blue',
+                        },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [37.615464, 55.765201],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {
+                            type: 'marker',
+                            label: 'Звезда B',
+                            color: 'blue',
+                        },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [37.621878, 55.764812],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {
+                            type: 'marker',
+                            color: 'gray',
+                        },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [37.619155, 55.764785],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: {
+                            type: 'marker',
+                            color: 'gray',
+                        },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [37.609929, 55.764616],
+                        },
+                    },
+                ],
+            };
+
+            const source = new mapgl.GeoJsonSource(map, {
+                data,
+                attributes: {
+                    bar: 'asd',
+                },
+            });
+
+            map.on('styleload', () => {
+                map.addLayer(
+                    {
+                        type: 'polygon',
+                        id: 'my-stars',
+                        filter: [
+                            'all',
+                            ['match', ['sourceAttr', 'bar'], ['asd'], true, false],
+                            ['match', ['get', 'type'], ['star'], true, false],
+                        ],
+                        style: {
+                            color: '#fcc9ff',
+                        },
+                    },
+                    '31871',
+                );
+                map.addLayer(
+                    {
+                        type: 'dashedLine',
+                        id: 'my-dashedline',
+                        filter: [
+                            'all',
+                            ['match', ['sourceAttr', 'bar'], ['asd'], true, false],
+                            ['match', ['get', 'type'], ['topLine'], true, false],
+                        ],
+                        style: {
+                            color: '#0baf08',
+                            width: 10,
+                            dashLength: 10,
+                            gapLength: 5,
+                        },
+                    },
+                    '595890',
+                );
+                map.addLayer(
+                    {
+                        type: 'line',
+                        id: 'my-line',
+                        filter: [
+                            'all',
+                            ['match', ['sourceAttr', 'bar'], ['asd'], true, false],
+                            ['match', ['get', 'type'], ['bottomLine'], true, false],
+                        ],
+                        style: {
+                            color: '#ffcd17',
+                            width: 7,
+                        },
+                    },
+                    '595890',
+                );
+                map.addLayer({
+                    type: 'point',
+                    id: 'my-marker',
+                    filter: [
+                        'all',
+                        ['match', ['sourceAttr', 'bar'], ['asd'], true, false],
+                        ['match', ['get', 'type'], ['marker'], true, false],
+                    ],
+                    style: {
+                        iconImage: ['match', ['get', 'color'], ['blue'], 'ent_i', 'ent'],
+                        iconWidth: 25,
+                        textField: ['get', 'label'],
+                        textFont: ['Noto_Sans'],
+                        textColor: '#0098ea',
+                        textHaloColor: '#fff',
+                        textHaloWidth: 1,
+                        iconPriority: 100,
+                        textPriority: 100,
+                    },
+                });
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

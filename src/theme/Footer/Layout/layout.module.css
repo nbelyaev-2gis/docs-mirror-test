@@ -1,0 +1,30 @@
+.footer {
+  padding: 0 var(--gap-5m);
+  border-top: 1px solid var(--shape-level-2);
+  background-color: var(--shape-base);
+}
+
+.contentWrapper {
+  display: flex;
+  flex-flow: row;
+  gap: var(--gap-12m);
+  padding: 32px 0;
+  max-width: unset !important;
+
+  @media screen and (--media-m) {
+    flex-flow: column;
+    gap: var(--gap-4m);
+  }
+
+  &.singleRowWrapper {
+    @media screen and (--media-m) {
+      flex-flow: row;
+      gap: var(--gap-4m);
+    }
+
+    @media screen and (--media-xs) {
+      flex-flow: column;
+      gap: var(--gap-2m);
+    }
+  }
+}

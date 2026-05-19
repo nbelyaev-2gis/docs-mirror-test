@@ -1,0 +1,446 @@
+---
+sidebar: mapgljsapi
+---
+# Элементы управления
+
+Элементы управления — это кнопки и другие элементы, которые располагаются поверх карты. Они остаются на месте, когда вы двигаете карту.
+
+К элементам управления также относится [копирайт](#copyright-position), и вы можете изменить его позицию на карте. Согласно [лицензионному соглашению](https://law.2gis.ru/licensing-agreement/) копирайт всегда должен быть виден на карте и не должен быть закрыт другими элементами.
+
+## Кнопки масштабирования {#zoom-control}
+
+Кнопки масштабирования (плюс и минус) отображаются на карте по умолчанию. Чтобы их скрыть, нужно при создании карты указать параметр `zoomControl` со значением `false`.
+
+```js
+const map = new mapgl.Map('container', {
+    ...
+    zoomControl: false,
+});
+```
+
+Чтобы изменить расположение кнопок, нужно указать в качестве значения `zoomControl` одно из возможных расположений (см. [ControlPosition](/mapgl/reference/typeAlias#control-position)).
+
+```js
+const map = new mapgl.Map('container', {
+    ...
+    zoomControl: 'bottomLeft',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Кнопки масштабирования" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+                zoomControl: 'bottomLeft',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Показ пробок {#traffic-control}
+
+На карту можно добавить кнопку, которая будет показывать информацию о загруженности дорог. Чтобы это сделать, при создании карты укажите параметр `trafficControl` с нужным [расположением](/mapgl/reference/typeAlias#control-position) или со значением `true` (расположение по умолчанию).
+
+```js
+const map = new mapgl.Map('container', {
+    ...
+    trafficControl: 'topRight',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Показ пробок" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+                zoomControl: false,
+                trafficControl: 'topRight',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+При этом слой пробок может быть включен сразу при инициализации карты. Чтобы это сделать, нужно указать параметр `trafficOn` со значением `true`.
+
+Добавлять UI-элемент для управления пробками не обязательно, т. к. переключением видимости пробок можно управлять через методы карты [showTraffic](/mapgl/reference/class#map/show-traffic) и [hideTraffic](/mapgl/reference/class#map/hide-traffic), а состояние слоя можно узнать через метод [isTrafficOn](/mapgl/reference/class#map/is-traffic-on).
+
+В дополнение к методам и UI-элементу пробок в карте есть три события: [trafficshow](/mapgl/reference/interface#map-event-table/trafficshow), [traffichide](/mapgl/reference/interface#map-event-table/traffichide), [trafficscore](/mapgl/reference/interface#map-event-table/trafficscore).
+
+```js
+const map = new mapgl.Map('container', {
+    ...
+    trafficOn: true,
+    trafficControl: 'topRight',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Показ пробок" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            button {
+                margin: 16px;
+            }
+        </style>
+    </head>
+    <body>
+        <button id="traffic-toggle">Включить показ пробок</button>
+
+        <div id="container"></div>
+
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+                zoomControl: false,
+                trafficOn: true,
+                trafficControl: true,
+            });
+
+            const trafficToggle = document.getElementById('traffic-toggle');
+            trafficToggle.addEventListener('click', () => {
+                if (map.isTrafficOn()) {
+                    map.hideTraffic();
+                } else {
+                    map.showTraffic();
+                }
+            });
+
+            map.on('trafficshow', () => {
+                trafficToggle.textContent = 'Выключить показ пробок';
+            });
+
+            map.on('traffichide', () => {
+                trafficToggle.textContent = 'Включить показ пробок';
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Масштабная линейка {#scale-bar}
+
+Масштабная линейка не отображается на карте по умолчанию. Чтобы ее показать, нужно при создании карты указать параметр `scaleControl` со значением `true`.
+
+```js
+const map = new mapgl.Map('container', {
+    ...
+    scaleControl: true,
+});
+```
+
+Чтобы изменить расположение масштабной линейки, нужно указать в качестве значения `scaleControl` одно из возможных расположений (см. [ControlPosition](/mapgl/reference/typeAlias#control-position)).
+
+```js
+const map = new mapgl.Map('container', {
+    ...
+    scaleControl: 'topLeft',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Масштабная линейка" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+                scaleControl: 'topLeft',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Кнопки этажей {#floor-control}
+
+Чтобы добавить на карту набор кнопок для отображения разных этажей здания, нужно при создании карты указать параметр `floorControl` с нужным [расположением](/mapgl/reference/typeAlias#control-position) или со значением `true` (расположение по умолчанию).
+
+```js
+const map = new mapgl.Map('container', {
+    ...
+    floorControl: 'bottomLeft',
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Кнопки этажей" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.625245, 55.759986],
+                styleZoom: 18,
+                rotation: -3,
+                pitch: 45,
+                key: 'Your API access key',
+                floorControl: 'bottomLeft',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Произвольные элементы {#custom-control}
+
+В качестве элементов управления можно использовать любые HTML-элементы. Чтобы добавить на карту произвольный элемент, нужно создать объект [Control](/mapgl/reference/class#control), указав нужную HTML-разметку:
+
+```js
+const control = new mapgl.Control(map, '<button>Произвольный элемент управления</button>', {
+    position: 'topLeft',
+});
+```
+
+Чтобы добавить обработчик событий для произвольного элемента управления, нужно сначала вызвать метод [getContainer()](/mapgl/reference/class#control/get-container), который вернет содержимое элемента, и затем добавить обработчик для нужного HTML-элемента:
+
+```js
+control
+    .getContainer()
+    .querySelector('button')
+    .addEventListener('click', (ev) => {
+        alert('Вы нажали произвольную кнопку');
+    });
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Произвольный элемент управления" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+            const control = new mapgl.Control(map, '<button>Произвольный элемент управления</button>', {
+                position: 'topLeft',
+            });
+            control
+                .getContainer()
+                .querySelector('button')
+                .addEventListener('click', () => {
+                    alert('Вы нажали произвольную кнопку');
+                });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Расположение копирайта {#copyright-position}
+
+Чтобы изменить позицию копирайта, нужно указать параметр `copyright` при создании карты. См. [ControlPosition](/mapgl/reference/typeAlias#control-position) для списка возможных значений.
+
+```js
+const map = new mapgl.Map('container', {
+    ...
+    copyright: 'bottomLeft'
+});
+```
+
+Кроме этого, у элементов управления можно изменить отступ от края с помощью метода [setControlsLayoutPadding()](/mapgl/reference/class#map/set-controls-layout-padding). Отступ указывается отдельно для каждой из четырех сторон.
+
+Например, чтобы поднять копирайт, если он закрыт снизу каким-то дополнительным элементом, нужно вызвать метод с параметром `bottom`:
+
+```js
+map.setControlsLayoutPadding({
+    bottom: 80,
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Положение копирайта" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            body {
+                position: relative;
+            }
+            #custom-bar {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                top: auto;
+                margin: 10px;
+                padding: 20px;
+                border-radius: 4px;
+                background-color: white;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div>
+            <div id="custom-bar">Пользовательский контент</div>
+        </div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            map.setControlsLayoutPadding({
+                bottom: 80,
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Добавление элементов управления после создания карты {#controls-after-init}
+
+Чтобы добавить элемент управления после инициализации карты, создайте соответствующий объект и укажите нужное [расположение](/mapgl/reference/typeAlias#control-position):
+
+* `mapgl.ZoomControl` — кнопки масштабирования;
+* `mapgl.TrafficControl` — кнопка показа пробок;
+* `mapgl.FloorControl` — кнопки этажей;
+* `mapgl.ScaleControl` — масштабная линейка.
+
+Например, чтобы добавить кнопки этажей на существующую карту `map`, можно использовать следующий код:
+
+```js
+const floorControl = new mapgl.FloorControl(map, {
+    position: 'bottomLeft',
+});
+```

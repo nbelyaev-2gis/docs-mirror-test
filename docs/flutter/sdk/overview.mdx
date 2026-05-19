@@ -1,0 +1,84 @@
+---
+sidebar: fluttersdk
+---
+# Flutter SDK
+
+Flutter SDK позволяет добавить [карту <Brand />](https://2gis.ru/) в ваше приложение. С помощью SDK можно отобразить карту на экране, получать информацию об объектах карты, строить маршруты, использовать навигатор и т. д.
+
+Примеры использования SDK см. в разделе [Примеры](/flutter/sdk/examples).
+
+Картографические данные поддерживают [стандарты OGC](https://ru.wikipedia.org/wiki/Open_Geospatial_Consortium).
+
+Вы можете использовать Flutter SDK на устройствах с операционными системами iOS, Android и Аврора.
+
+## Версии SDK {#versions}
+
+Пакеты Flutter SDK доступны в `pub.dev` в двух версиях:
+
+* [Full](https://pub.dev/packages/dgis_mobile_sdk_full) — полная версия, которая позволяет:
+  * Добавлять [карту](/flutter/sdk/examples/map) в приложение и управлять ей: добавлять маркеры и геометрические фигуры, управлять движением камеры, отображать слои (например, пробки), работать со стилями карты и т. д.
+  * Искать объекты в [справочнике](/flutter/sdk/examples/directory): организации, здания, места и другие.
+  * Работать с [навигатором](/flutter/sdk/examples/navigation) в приложении в трёх режимах: свободная навигация, ведение по маршруту и симуляция ведения.
+  * Строить оптимальные [маршруты](/flutter/sdk/examples/routing) на карте, в том числе внутри зданий.
+  * Использовать [офлайн-данные](/flutter/sdk/start#offline-mode).
+* [Map](https://pub.dev/packages/dgis_mobile_sdk_map) — облегчённая версия, которая позволяет:
+  * Добавлять [карту](/flutter/sdk/examples/map) в приложение и управлять ей: добавлять маркеры и геометрические фигуры, управлять движением камеры, отображать слои (например, пробки), работать со стилями карты и т. д.
+  * Искать объекты в [справочнике](/flutter/sdk/examples/directory): организации, здания, места и другие.
+
+:::warning
+
+Не используйте версии **Full** и **Map** вместе: это приведёт к ошибке сборки.
+
+:::
+
+## API для работы SDK {#api-list}
+
+В зависимости от нужных функциональностей, для работы SDK требуются ключи доступа к API карт, поиска и навигации. Доступные возможности зависят от [версии SDK](#versions): **Full** или **Map**.
+
+При использовании ключа оплачивается только доступ к используемым API, в зависимости от количества отправленных запросов (и в некоторых случаях — полученных ответов). Вы можете работать с ключами в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=sdk_flutter).
+
+### Карта (для Full и Map)
+
+Подробнее о доступных возможностях см. в инструкции [Карта](/flutter/sdk/examples/map).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API|
+| ----------------------------------------------------- | --------------- |
+| [Создание карты в приложении](/flutter/sdk/examples/map#creating-map)<br />(класс [MapWidget](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/MapWidget-class.html)) | <ul><li>[Map Tiles API](/maps/others/maptiles/overview)</li><li>[Regions API](/api/search/regions/overview)</li></ul> |
+| [Отображение растровой карты в приложении](/flutter/sdk/examples/map#add-raster-map)<br />(класс [RasterTileSource](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/RasterTileSource-class.html)) | [Raster Tiles API](/maps/others/rastertiles/overview) |
+| [Отображение пробок на карте](/flutter/sdk/examples/map#traffic)<br />(класс [TrafficSource](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/TrafficSource-class.html))  | [Regions API](/api/search/regions/overview) |
+
+### Справочник (для Full и Map)
+
+Подробнее о доступных возможностях см. в инструкции [Справочник](/flutter/sdk/examples/directory).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API|
+| ----------------------------------------------------- | --------------- |
+| [Создание поискового движка](/flutter/sdk/examples/directory#creating-a-search-engine)<br />(класс [SearchManager](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/SearchManager-class.html)) | [Regions API](/api/search/regions/overview) |
+| [Получение результатов поиска](/flutter/sdk/examples/directory#get-search-results)<br />(метод [SearchManager.search()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/SearchManager/search.html)) | <ul><li>[Places API](/api/search/places/overview)</li><li>[Markers API](/api/search/markers/overview)</li></ul>Получение некоторой информации об объектах в доступно только при дополнительной настройке ключа за отдельную плату: см. раздел [Структура данных объекта](/flutter/sdk/examples/directory#object-data-structure). |
+| [Поиск объектов в справочнике по идентификатору](/flutter/sdk/examples/directory#create-search-query)<br />(метод [SearchManager.searchById()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/SearchManager/searchById.html)) | <ul><li>[Places API](/api/search/places/overview)</li><li>[Markers API](/api/search/markers/overview)</li></ul> |
+| [Формирование поисковых подсказок](/flutter/sdk/examples/directory#search-suggestions)<br />(метод [SearchManager.suggest()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/SearchManager/suggest.html)) | [Suggest API](/api/search/suggest/overview) |
+
+### Маршруты (только для Full)
+
+Подробнее о доступных возможностях см. в инструкции [Маршруты](/flutter/sdk/examples/routing).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API|
+| ----------------------------------------------------- | --------------- |
+| [Поиск оптимального маршрута с учётом пробок](/flutter/sdk/examples/routing#building-route)<br />(класс [TrafficRouter](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/TrafficRouter-class.html)) | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+| [Отображение маршрутов на карте](/flutter/sdk/examples/routing#building-route)<br />(класс [RouteEditorSource](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/RouteEditorSource-class.html)) | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+
+### Навигация (только для Full)
+
+Подробнее о доступных возможностях см. в инструкции [Навигация](/flutter/sdk/examples/navigation).
+
+| <div style={{"width":"180px"}}>Функциональность</div> | API|
+| ----------------------------------------------------- | --------------- |
+| Запуск навигатора (метод [NavigationManager.start()](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/NavigationManager/start.html)):<ul><li>[в режиме свободной навигации](/flutter/sdk/examples/navigation#free-drive-mode),</li><li>[в режиме ведения по маршруту](/flutter/sdk/examples/navigation#turn-by-turn-mode).</li></ul> | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+| [Поиск альтернативных маршрутов](/flutter/sdk/examples/navigation#alternative-routes)<br />(класс [AlternativeRouteSelector](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/AlternativeRouteSelector-class.html)) | <ul><li>[Directions API](/api/navigation/directions/overview) — все маршруты, кроме общественного транспорта.</li><li>[Routing API](/api/navigation/routing/overview) — маршруты общественного транспорта.</li><li>[Truck Directions API](/api/navigation/truck-directions/overview) — зоны движения грузовиков по пропускам.</li></ul> |
+| [Отображение дорожных событий](/flutter/sdk/examples/navigation#dynamic-route-data)<br />(класс [RoadEventSource](https://pub.dev/documentation/dgis_mobile_sdk_full/latest/dgis_mobile_sdk/RoadEventSource-class.html)) | [Regions API](/api/search/regions/overview) |
+| [Вычисление местоположения устройства по сотовым вышкам и точкам доступа Wi-Fi](/flutter/sdk/examples/navigation#radar-api)<br />(использование [RadarApiSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.positioning.radar.radar-api-settings) в Android и `ru.dgis.sdk.positioning.RadarSettingsProvider`) | [Radar API](/api/navigation/radar/overview) |
+
+## Варианты размещения {#distribution}
+
+- **Облако**: Flutter SDK доступен для работы в облачной инфраструктуре <Brand />.
+- **On-Premise**: Flutter SDK до версии 12.10 включительно доступен при установке API-платформы <Brand /> в закрытом контуре. Подробнее см. в разделе [API-платформа для сервера](/on-premise-api-platform/overview/summary).

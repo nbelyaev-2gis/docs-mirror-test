@@ -1,0 +1,93 @@
+﻿---
+sidebar: maptilesapi
+---
+# Map Tiles API
+
+Сервис Map Tiles API предоставляет векторные тайлы для карт.
+
+Для работы с векторными тайлами используйте JavaScript-библиотеку [MapGL JS API](/mapgl/overview/features) и размещайте на сайтах и в веб-приложениях трёхмерную интерактивную карту <Brand /> на WebGL-движке. При оформлении подписки на Map Tiles API безлимитный доступ к библиотеке MapGL JS API предоставляется бесплатно.
+
+Также вы можете добавлять карты в мобильные приложения с помощью мобильных SDK для [iOS](/ios/sdk/overview), [Android](/android/sdk/overview) и [Flutter](/flutter/sdk/overview).
+
+Прямая интеграция векторных тайлов без использования библиотеки или SDK <Brand /> не поддерживается.
+
+## Начало работы {#getting-started}
+
+### Получение ключа доступа {#getting-access-key}
+
+1. Зарегистрируйтесь в личном кабинете [Менеджер Платформы](https://platform.2gis.ru/ru/?utm_source=docs&utm_medium=referral&utm_campaign=api_vector).
+2. Создайте [демо-ключ](/platform-manager/subscription/keys#demo) или купите [подписку](/platform-manager/subscription/purchase) для доступа к API. Подробнее о стоимости сервиса см. в разделе [Тарифы](#tariffs).
+
+:::tip
+
+Если у вас уже есть действующий API-ключ, полученный для MapGL JS API, вы можете использовать его для доступа к Map Tiles API до истечения срока действия подписки. Срок действия можно посмотреть в личном кабинете, на вкладке **Главная**.
+
+:::
+
+Работать с ключами можно в Менеджере Платформы: подробнее см. в [документации личного кабинета](/platform-manager/overview).
+
+### Интеграция библиотеки MapGL JS API {#using-mapgl-js-api}
+
+MapGL JS API — это бесплатная JavaScript-библиотека для работы с трёхмерными интерактивными картами <Brand />. Содержит готовый набор инструментов для взаимодействия с картой, автоматически запрашивает векторные тайлы и отображает их на странице.
+
+Чтобы использовать с библиотекой MapGL JS API тайлы, предоставленные сервисом Map Tiles API, сначала получите ключ доступа, затем подключите библиотеку к вашему проекту. Подробнее см. в инструкции [Начало работы](/mapgl/start/first-steps).
+
+### Пример использования
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Map Tiles API</title>
+        <meta name="description" content="Карта Map Tiles API" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+                style: 'c080bb6a-8134-4993-93a1-5b4d8c36a59b'
+            });
+            const marker = new mapgl.Marker(map, {
+                coordinates: [37.615655, 55.768005],
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+:::tip[Песочница]
+
+Вы также можете поработать с готовой картой в [песочнице](https://platform.2gis.ru/ru/playground/mapgl/?utm_source=docs&utm_medium=referral&utm_campaign=api_vector) (авторизация не требуется).
+
+:::
+
+## Статистика {#statistics}
+
+При исчерпании лимитов сервис станет недоступен. Вы можете отслеживать расходование лимитов в подписке и статистику распределения запросов к сервису в личном кабинете. Подробнее об инструментах статистики см. в разделе [Статистика](/platform-manager/subscription/statistics#view-the-statistics).
+
+## Тарифы {#tariffs}
+
+* Стоимость сервиса рассчитывается исходя из количества запросов в месяц. Один запрос соответствует загрузке одного векторного тайла. Безлимитный доступ к библиотеке MapGL JS API предоставляется бесплатно.
+* Актуальные тарифы можно посмотреть в [Менеджере Платформы](https://platform.2gis.ru/ru/tariffs?utm_source=docs&utm_medium=referral&utm_campaign=api_vector).
+
+## Варианты размещения {#distribution}
+
+* **Облако**: Map Tiles API доступен через публичные endpoint-ы <Brand />.
+* **On-Premise**: для получения векторных тайлов установите Tiles API в составе API-платформы <Brand /> в закрытом контуре. Подробнее см. в разделе [API-платформа для сервера](/on-premise-api-platform/overview/summary).

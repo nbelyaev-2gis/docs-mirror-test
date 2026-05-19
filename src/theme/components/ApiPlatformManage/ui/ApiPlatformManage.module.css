@@ -1,0 +1,31 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-6m);
+  width: 100%;
+
+  @media screen and (--media-xs) {
+    gap: var(--gap-5m);
+  }
+}
+
+.title {
+  color: var(--text-main);
+  font-size: 28px;
+  font-style: normal;
+  font-weight: var(--fw-sb);
+  line-height: var(--lh-xl);
+}
+
+.cards {
+  display: flex;
+  gap: var(--gap-6m);
+
+  @media screen and (--media-xs) {
+    flex-flow: column;
+  }
+
+  @media screen and (--media-xs) {
+    gap: var(--gap-4m);
+  }
+}

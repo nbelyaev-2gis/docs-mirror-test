@@ -1,0 +1,111 @@
+.content {
+  display: grid;
+  grid-template-columns: 1fr 1px 2fr 1px 1fr;
+  gap: var(--gap-3m);
+}
+
+.divider {
+  background-color: var(--shape-level-2);
+  margin: var(--gap-4m) 0;
+}
+
+.serviceSidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2m);
+  padding: var(--gap-4m) 0;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.sidebarLabel {
+  padding: 0 var(--gap-4m);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-secondary);
+}
+
+.sidebarButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebarButton {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-1m);
+  padding: var(--gap-3m) var(--gap-4m);
+  border-radius: var(--border-radius-md);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-m);
+  line-height: var(--lh-sm);
+  color: var(--text-main);
+  text-align: left;
+  width: 100%;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: var(--shape-level-1);
+  }
+}
+
+.sidebarButtonActive {
+  background-color: var(--shape-level-1) !important;
+}
+
+.management {
+  padding: var(--gap-3m) var(--gap-1m);
+  background-color: var(--shape-level-1);
+  height: 100%;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2m);
+  padding: var(--gap-4m) 0 var(--gap-4m);
+  min-width: 0;
+}
+
+.sectionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2m);
+}
+
+.sectionLabel {
+  padding: 0 var(--gap-4m);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-secondary);
+}
+
+.sectionCards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: var(--gap-6m);
+  row-gap: var(--gap-1m);
+  overflow-y: auto;
+}
+
+.cardRow {
+  display: flex;
+  gap: var(--gap-6m);
+}
+
+.sectionDivider {
+  width: 100%;
+  height: var(--gap-3m);
+  border-top: 1px solid var(--shape-level-2);
+}
+
+.description {
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-secondary);
+}

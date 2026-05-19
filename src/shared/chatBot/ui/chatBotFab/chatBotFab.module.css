@@ -1,0 +1,31 @@
+.fab {
+  --inset: 20px;
+
+  position: fixed;
+  right: calc(var(--inset) + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--inset) + env(safe-area-inset-bottom, 0px));
+  padding: 11px; /* 1px под border */
+  border-radius: 12px;
+
+  @media screen and (--media-s) {
+    --inset: 16px;
+  }
+}
+
+.fabWithBadge::before {
+  /* В чатботе может быть только одно непрочитанное сообщение, поэтому хардкод */
+  content: '1';
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  background-color: var(--shape-yellow-dark);
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: var(--fw-m);
+  line-height: 14px;
+}

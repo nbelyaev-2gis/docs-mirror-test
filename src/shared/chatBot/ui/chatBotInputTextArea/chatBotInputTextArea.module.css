@@ -1,0 +1,10 @@
+.textarea {
+  margin-top: auto;
+  margin-bottom: auto;
+  border: none;
+  background-color: var(--shape-base);
+
+  &::placeholder {
+    color: var(--ifm-color-primary-lighter);
+  }
+}

@@ -1,0 +1,168 @@
+---
+sidebar: mapgljsapi
+---
+# Планы этажей
+
+Для некоторых зданий доступны поэтажные планы. Они отображаются на стилевом масштабе 18 и выше.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Поэтажные планы" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script>
+            function initMap() {
+                const map = new mapgl.Map('container', {
+                    center: [37.625245, 55.759986],
+                    zoom: 19,
+                    rotation: -3,
+                    pitch: 45,
+                    key: 'Your API access key',
+                });
+            }
+        </script>
+        <script src="__MAPGL_API_URL__?callback=initMap" async defer></script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## События
+
+При показе поэтажного плана вызывается событие `floorplanshow` (см. [FloorPlanShowEvent](/mapgl/reference/interface#floor-plan-show-event)). При скрытии поэтажного плана вызывается событие `floorplanhide` (см. [FloorPlanHideEvent](/mapgl/reference/interface#floor-plan-hide-event)).
+
+Если при показе поэтажного плана был изменён номер текущего этажа (используя [кнопки этажей](/mapgl/map/configuration/controls#floor-control) или метод [setFloorPlanLevel()](/mapgl/reference/class#map/set-floor-plan-level)), то будет вызвано событие `floorlevelchange` (см. [FloorLevelChangeEvent](/mapgl/reference/interface#floor-level-change-event)).
+
+Чтобы подписаться на эти события, нужно использовать метод `on()`.
+
+```js
+map.on('floorplanshow', (e) => {
+    alert('План ' + e.floorPlanId + ' показан.');
+});
+map.on('floorplanhide', (e) => {
+    alert('План ' + e.floorPlanId + ' скрыт.');
+});
+map.on('floorlevelchange', (e) => {
+    alert('Изменён номер этажа.');
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="События в поэтажных планах" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script>
+            function initMap() {
+                const map = new mapgl.Map('container', {
+                    center: [37.625245, 55.759986],
+                    zoom: 16,
+                    rotation: -3,
+                    pitch: 45,
+                    key: 'Your API access key',
+                });
+
+               map.on('floorplanshow', (e) => {
+                  alert('План ' + e.floorPlanId + ' показан.');
+               });
+
+               map.on('floorplanhide', (e) => {
+                  alert('План ' + e.floorPlanId + ' скрыт.');
+               });
+            }
+        </script>
+        <script src="__MAPGL_API_URL__?callback=initMap" async defer></script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Изменение номера этажа
+
+Чтобы изменить номер отображаемого этажа, нужно вызвать метод [setFloorPlanLevel()](/mapgl/reference/class#map/set-floor-plan-level) и указать два параметра: идентификатор плана и индекс этажа. Оба этих значения можно получить, подписавшись на событие [FloorPlanShowEvent](/mapgl/reference/interface#floor-plan-show-event).
+
+Пример ниже меняет поведение карты, чтобы при показе поэтажного плана первоначально отображался последний этаж здания. Для этого в обработчике события `floorplanshow` вызывается метод `setFloorPlanLevel()`, в который передаётся индекс последнего этажа.
+
+```js
+map.on('floorplanshow', (e) => {
+    const length = e.floorLevels.length;
+    const { floorLevelIndex } = e.floorLevels[length - 1];
+    map.setFloorPlanLevel(e.floorPlanId, floorLevelIndex);
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Изменение номера этажа в поэтажных планах" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script>
+            function initMap() {
+                const map = new mapgl.Map('container', {
+                    center: [37.625245, 55.759986],
+                    zoom: 19,
+                    rotation: -3,
+                    pitch: 45,
+                    key: 'Your API access key',
+                });
+
+                map.on('floorplanshow', (e) => {
+                    const length = e.floorLevels.length;
+                    const { floorLevelIndex } = e.floorLevels[length - 1];
+                    map.setFloorPlanLevel(e.floorPlanId, floorLevelIndex);
+                });
+            }
+        </script>
+        <script src="__MAPGL_API_URL__?callback=initMap" async defer></script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

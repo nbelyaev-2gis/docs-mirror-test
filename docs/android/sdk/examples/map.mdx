@@ -1,0 +1,1482 @@
+---
+sidebar: androidsdk
+---
+# Карта
+
+## Создание карты {#creating-map}
+
+Чтобы создать карту, добавьте [MapView](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-view) в ваш activity:
+
+```xml
+<ru.dgis.sdk.map.MapView
+    android:id="@+id/mapView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:dgis_cameraTargetLat="55.740444"
+    app:dgis_cameraTargetLng="37.619524"
+    app:dgis_cameraZoom="16.0"
+/>
+```
+
+Для карты можно указать начальные координаты (`cameraTargetLat` - широта; `cameraTargetLng` - долгота) и масштаб (`cameraZoom`).
+
+[MapView](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-view) также можно создать программно. В таком случае настройки можно указать в виде объекта [MapOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-options).
+
+Объект карты ([Map](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map)) можно получить, вызвав метод `getMapAsync()`:
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    val sdkContext = DGis.initialize(applicationContext, apiKeys)
+    setContentView(R.layout.activity_main)
+
+    val mapView = findViewById<MapView>(R.id.mapView)
+    lifecycle.addObserver(mapView)
+
+    mapView.getMapAsync { map ->
+        // Действия с картой
+        val camera = map.camera
+    }
+}
+```
+
+### Источники данных для карты
+
+В некоторых случаях для добавления объектов на карту нужно создать специальный объект: источник данных. Источники данных выступают в роли менеджеров объектов: вместо добавления объектов на карту напрямую, на карту добавляется источник данных и вся последующая работа с объектами происходит через него.
+
+Источники данных бывают разных типов: движущиеся маркеры, маршруты с отображением текущей загруженности дорог, произвольные геометрические фигуры и т. д. Для каждого типа данных существует свой класс.
+
+В общем случае работа с источниками данных выглядит следующим образом:
+
+```kotlin
+// Создание источника данных
+val source = MyMapObjectSource(
+    sdkContext,
+    ...
+)
+
+// Добавление источника данных на карту
+map.addSource(source)
+
+// Добавление и удаление объектов в источнике данных
+source.addObject(...)
+source.removeObject(...)
+```
+
+Чтобы удалить созданный источник данных и все связанные с ним объекты, нужно вызвать метод карты `removeSource()`:
+
+```kotlin
+map.removeSource(source)
+```
+
+Список активных источников данных можно получить, используя свойство `map.sources`.
+
+### Подключение растровой карты {#add-raster-map}
+
+По умолчанию в SDK используется векторная карта, тайлы для которой предоставляет [Map Tiles API](/maps/others/maptiles/overview). Если вы хотите использовать растровую карту, вы можете подключить её двумя способами:
+
+- Наложить растровые тайлы из внешнего источника поверх стандартной векторной карты: например, чтобы обогатить карту дополнительной информацией.
+- Подключить [Raster Tiles API](/maps/others/rastertiles/overview), чтобы использовать растровую карту <Brand /> вместо векторной: например, чтобы показать карту на устройстве с низкой производительностью.
+
+Чтобы подключить растровую карту:
+
+1. Если вы планируете использовать растровую карту <Brand />, убедитесь, что для вашего ключа доступен [Raster Tiles API](/maps/others/rastertiles/overview).
+2. Создайте стилевой слой:
+
+   1. Откройте [Редактор стилей](https://styles.2gis.com/).
+   2. Откройте стиль или [создайте новый](/maps/styles/create).
+   3. В разделе **Слои** нажмите значок ![Добавить слой](/img/styles/add-layer-icon.svg).
+   4. Прокрутите список вниз, включите **Динамические слои** и выберите тип **Растровый слой**.
+   5. На вкладке **Данные** выберите **JSON — добавить вручную**.
+   6. Добавьте атрибут `db_sublayer` с уникальным идентификатором слоя (например, `my_raster_layer`): вставьте следующий код в текстовое поле:
+
+      ```json
+      ["match", ["get", "db_sublayer"], ["my_raster_layer"], true, false]
+      ```
+
+      Этот идентификатор будет использован для ссылки на стилевой слой из кода.
+
+      <img src="/img/mobile-sdk/raster_layer_example.png" width="600" alt="Пример редактирования JSON" />
+
+   7. Настройте другие параметры стиля в соответствующих вкладках.
+   8. [Экспортируйте и подключите стиль](/maps/styles/connect#android-sdk).
+
+3. Создайте объект [RasterUrlTemplate](/android/sdk/reference/stable/class#ru.dgis.sdk.map.raster-url-template) и передайте в него URL-адрес источника растровых тайлов в виде объекта [DefaultRasterUrlTemplate](/android/sdk/reference/stable/class#ru.dgis.sdk.map.default-raster-url-template) или [WmsRasterUrlTemplate](/android/sdk/reference/stable/class#ru.dgis.sdk.map.wms-raster-url-template) (для стандарта WMS). Пример подключения Raster Tiles API:
+
+    ```kotlin
+    val sourceTemplate = RasterUrlTemplate(
+        DefaultRasterUrlTemplate("https://tile{n}.maps.2gis.com/v2/tiles/{tileset}/{z}/{x}/{y}.png?key={key}")
+    )
+    ```
+
+4. Создайте источник данных с помощью [RasterTileSource](/android/sdk/reference/stable/class#ru.dgis.sdk.map.raster-tile-source), укажите идентификатор созданного слоя в параметре `sublayerName` и созданный объект `RasterUrlTemplate` в параметре `sourceTemplate`:
+
+   ```kotlin
+   val rasterSource = RasterTileSource(
+       sdkContext,
+       "my_raster_layer",
+       sourceTemplate
+   )
+   ```
+
+5. Добавьте источник на карту:
+
+    ```kotlin
+    map.addSource(rasterSource)
+    ```
+
+### Офлайн-режим {#offline-mode}
+
+Чтобы настроить карту для работы в офлайн-режиме:
+
+1. Выполните [подготовительные шаги](/android/sdk/start#offline-mode), чтобы карта могла работать с предзагруженными данными.
+
+2. Добавьте источник данных для карты. Для этого в функции [createDgisSource()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.dgis-source/create-dgis-source) установите параметру `workingMode` одно из следующих значений:
+
+   * `OFFLINE` — чтобы всегда использовать только предварительно загруженные данные.
+   * `HYBRID_ONLINE_FIRST` — чтобы преимущественно использовать онлайн-данные с серверов <Brand />. Предзагруженные данные используются, только когда они совпадают с онлайн-данными или когда данные с серверов получить невозможно.
+   * `HYBRID_OFFLINE_FIRST` — чтобы преимущественно использовать предзагруженные данные. Онлайн-данные с серверов <Brand /> используются, только когда отсутствуют предзагруженные данные.
+
+   ```kotlin
+   sourcesList = listOf(
+       DgisSource.createDgisSource(sdkContext, workingMode = DgisSourceWorkingMode.OFFLINE)
+   )
+   ```
+
+3. При создании карты укажите созданный источник в [MapOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-options/var-sources):
+
+   ```kotlin
+   val mapOptions = MapOptions().apply {
+       sources = sourceList
+   }
+
+   // Создание карты с указанными настройками
+   mapView = MapView(this, mapOptions)
+   mapContainer.addView(mapView)
+   ```
+
+## Добавление объектов {#add-objects}
+
+Для добавления динамических объектов на карту (маркеров, линий, кругов, многоугольников) нужно создать менеджер объектов ([MapObjectManager](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager)), указав объект карты. При удалении менеджера объектов удаляются все связанные с ним объекты на карте, поэтому его нужно сохранить в activity.
+
+```kotlin
+mapObjectManager = MapObjectManager(map)
+```
+
+Для добавления объектов используются методы [addObject()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager/with-generalization) и [addObjects()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager/with-generalization). Для каждого динамического объекта можно указать поле `userData`, которое будет хранить произвольные данные, связанные с объектом. Настройки объектов можно менять после их создания.
+
+Для удаления объектов используются методы [removeObject()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager/with-generalization) и [removeObjects()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager/with-generalization). Чтобы удалить все объекты, можно использовать метод [removeAll()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager/with-generalization).
+
+:::note[Сохранение объектов на карте]
+
+[MapObjectManager](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager) — это контейнер объектов. Пока объекты нужны на карте, `MapObjectManager` необходимо сохранять на уровне класса.
+
+:::
+
+### Маркер
+
+Чтобы добавить маркер на карту, нужно создать объект [Marker](/android/sdk/reference/stable/class#ru.dgis.sdk.map.marker), указав нужные настройки в [MarkerOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.map.marker-options), и передать его в вызов `addObject()` менеджера объектов.
+
+Единственный обязательный параметр — координаты маркера (`position`).
+
+```kotlin
+val marker = Marker(
+    MarkerOptions(
+        position = GeoPointWithElevation(
+            latitude = 55.752425,
+            longitude = 37.613983
+        )
+    )
+)
+
+mapObjectManager.addObject(marker)
+```
+
+Чтобы настроить иконку маркера, нужно указать объект [Image](/android/sdk/reference/stable/class#ru.dgis.sdk.map.image) в качестве параметра `icon`. Создать [Image](/android/sdk/reference/stable/class#ru.dgis.sdk.map.image) можно с помощью следующих функций:
+
+* [imageFromAsset()](/android/sdk/reference/stable/method#ru.dgis.sdk.map.image-from-asset-context-asset-name-size-)
+* [imageFromBitmap()](/android/sdk/reference/stable/method#ru.dgis.sdk.map.image-from-bitmap-context-bitmap-)
+* [imageFromCanvas()](/android/sdk/reference/stable/method#ru.dgis.sdk.map.image-from-canvas-context-size-block-)
+* [imageFromResource()](/android/sdk/reference/stable/method#ru.dgis.sdk.map.image-from-resource-context-resource-id-size-)
+* [imageFromSvg()](/android/sdk/reference/stable/method#ru.dgis.sdk.map.image-from-svg-context-data-)
+* [imageFromLottieJSON()](/android/sdk/reference/stable/method#ru.dgis.sdk.map.image-from-lottie-json-context-data-)
+
+```kotlin
+val icon = imageFromResource(sdkContext, R.drawable.ic_marker)
+
+val marker = Marker(
+    MarkerOptions(
+        position = GeoPointWithElevation(
+            latitude = 55.752425,
+            longitude = 37.613983
+        ),
+        icon = icon
+    )
+)
+```
+
+Чтобы изменить настройки уже созданного маркера, установите новые значения для параметров объекта `Marker`: cм. полный список доступных параметров в описании [Marker](/android/sdk/reference/stable/class#ru.dgis.sdk.map.marker).
+
+```kotlin
+// Изменение координат маркера
+ marker.position = GeoPointWithElevation(GeoPoint(55.74460317215391, 37.63435363769531))
+
+// Изменение иконки
+marker.icon = imageFromAsset(context, "icon.json")
+
+// Изменение точки привязки иконки
+marker.anchor = Anchor(x=0.5f, 0.5f)
+
+// Изменение прозрачности иконки
+marker.iconOpacity = Opacity(value = 1.0f)
+
+// Изменение подписи маркера
+marker.text = "text"
+
+// Изменения стиля подписи
+marker.textStyle = TextStyle(textHorizontalAlignment = textHorizontalAlignment)
+
+// Изменение флага перемещаемости маркера
+marker.draggable = false
+
+// Изменение целевой ширины маркера
+marker.iconWidth = LogicalPixel(value = 1.0f)
+
+// Изменение угла поворота маркера на карте относительно направления на север
+marker.iconMapDirection = MapDirection(0.5)
+
+// Изменение флага анимации для появления маркера
+marker.iconAnimationMode = AnimationMode.LOOP
+```
+
+### Линия
+
+Чтобы нарисовать на карте линию, нужно создать объект [Polyline](/android/sdk/reference/stable/class#ru.dgis.sdk.map.polyline), указав нужные настройки в [PolylineOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.map.polyline-options), и передать его в вызов `addObject()` менеджера объектов.
+
+```kotlin
+// Координаты вершин ломаной линии
+val points = listOf(
+    GeoPoint(latitude = 55.7513, longitude = 37.6236),
+    GeoPoint(latitude = 55.7405, longitude = 37.6235),
+    GeoPoint(latitude = 55.7439, longitude = 37.6506)
+)
+
+// Создание линии
+val polyline = Polyline(
+    PolylineOptions(
+        points = points,
+        width = 2.lpx // Свойство-расширение .lpx преобразует целое число в объект LogicalPixel
+    )
+)
+
+// Добавление линии на карту
+mapObjectManager.addObject(polyline)
+```
+
+Чтобы изменить настройки уже созданной линии, установите новые значения для параметров объекта `Polyline`: cм. полный список доступных параметров в описании [Polyline](/android/sdk/reference/stable/class#ru.dgis.sdk.map.polyline).
+
+```kotlin
+// Изменение координат вершин линии
+val newPoints = mutableListOf<GeoPoint>()
+polyline.points = newPoints
+
+// Изменение толщины линии
+polyline.width = 2.lpx
+
+// Изменение цвета линии
+polyline.width = Color(255, 0, 0)
+
+// Изменение стёртой части
+polyline.erasedPart = 0.4
+
+// Изменение параметров пунктирной линии
+polyline.dashedPolylineOptions = DashedPolylineOptions(
+    dashLength = 5.lpx,
+    dashSpaceLength = 5.lpx
+)
+
+// Изменение параметров градиентной линии
+polyline.gradientPolylineOptions = GradientPolylineOptions(
+    borderWidth = 10.lpx,
+    secondBorderWidth = 5.lpx,
+    gradientLength = 10.lpx,
+    borderColor = Color(255,0,0),
+    secondBorderColor = Color(0,255,0),
+    colors = listOf(Color(255,0,0)),
+    colorIndices = colorIndices.toByteArray()
+)
+```
+
+### Многоугольник
+
+Чтобы нарисовать на карте многоугольник, нужно создать объект [Polygon](/android/sdk/reference/stable/class#ru.dgis.sdk.map.polygon), указав нужные настройки в [PolygonOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.map.polygon-options), и передать его в вызов `addObject()` менеджера объектов.
+
+Координаты для многоугольника указываются в виде двумерного списка. Первый вложенный список должен содержать координаты основных вершин многоугольника. Остальные вложенные списки не обязательны и могут быть заданы для того, чтобы создать вырез внутри многоугольника (один дополнительный список — один вырез в виде многоугольника).
+
+```kotlin
+val polygon = Polygon(
+    PolygonOptions(
+        contours = listOf(
+            // Вершины многоугольника
+            listOf(
+                GeoPoint(latitude = 55.72014932919687, longitude = 37.562599182128906),
+                GeoPoint(latitude = 55.72014932919687, longitude = 37.67555236816406),
+                GeoPoint(latitude = 55.78004852149085, longitude = 37.67555236816406),
+                GeoPoint(latitude = 55.78004852149085, longitude = 37.562599182128906),
+                GeoPoint(latitude = 55.72014932919687, longitude = 37.562599182128906)
+            ),
+            // Координаты для выреза внутри многоугольника
+            listOf(
+                GeoPoint(latitude = 55.754167897761, longitude = 37.62422561645508),
+                GeoPoint(latitude = 55.74450654680055, longitude = 37.61238098144531),
+                GeoPoint(latitude = 55.74460317215391, longitude = 37.63435363769531),
+                GeoPoint(latitude = 55.754167897761, longitude = 37.62422561645508)
+            )
+        ),
+        borderWidth = 1.lpx
+    )
+)
+
+mapObjectManager.addObject(polygon)
+```
+
+Чтобы изменить настройки уже созданного многоугольника, установите новые значения для параметров объекта `Polygon`: cм. полный список доступных параметров в описании [Polygon](/android/sdk/reference/stable/class#ru.dgis.sdk.map.polygon).
+
+```kotlin
+// Изменение координат вершин многоугольника
+val points = mutableListOf<GeoPoint>()
+polygon.contours = listOf(points)
+
+// Изменение цвета заливки многоугольника
+polygon.color = Color(255,0,0)
+
+// Изменение толщины границы многоугольника
+polygon.strokeWidth = 10.lpx
+
+// Изменение цвета границы многоугольника
+polygon.strokeColor = Color(255,0,0)
+```
+
+### Окружность
+
+Чтобы нарисовать на карте окружность, создайте объект [Circle](/android/sdk/reference/stable/class#ru.dgis.sdk.map.circle), указав нужные настройки в [CircleOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.map.circle-options), и передайте его в метод `addObject()` менеджера объектов.
+
+```kotlin
+// Настройки окружности
+val circle = Circle(
+    CircleOptions(
+        position = Geopoint(55.754167897761, 37.62422561645508),
+        radius = 100.meter
+    )
+)
+
+// Создание и добавление окружности
+mapObjectManager.addObject(circle)
+```
+
+Чтобы изменить настройки уже созданной окружности, установите новые значения для параметров объекта `Circle`: cм. полный список доступных параметров в описании [Circle](/android/sdk/reference/stable/class#ru.dgis.sdk.map.circle).
+
+```kotlin
+// Изменение координат центра окружности
+circle.position = GeoPoint(53.64564532, 43.5654345)
+
+// Изменение радиуса окружности
+circle.radius = 10.meter
+
+// Изменение цвета заливки окружности
+circle.color = Color(255,0,0)
+
+// Изменение толщины границы окружности
+circle.width = 10.lpx
+
+// Изменение цвета границы окружности
+circle.strokeColor = Color(255,0,0)
+```
+
+### 3D-модели {#3d-models}
+
+#### Требования и рекомендации
+
+Для оптимальной производительности карты и корректного отображения трёхмерных моделей на ней следуйте требованиям и рекомендациям.
+
+Обязательные требования:
+
+* Формат: glTF/GLB (файлы `.gltf`, `.glb`).
+* Меш: желательно, чтобы модель содержала один [меш](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#meshes) (геометрический объект на сцене). Использование моделей с несколькими мешами снижает производительность карты.
+* Текстура:
+
+  * Меш может иметь [текстуру](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#textures) или одноцветную заливку.
+  * Разрешение текстуры должно быть кратно степени двойки (2, 4, 8, 16, 32, 64, 128 и 256). Текстуры высокого разрешения снижают производительность карты.
+  * Поддерживаются форматы изображений `.png`, `.jpg` и `.bmp`.
+  * Не поддерживается сжатие текстур.
+
+* Инстанцирование: расширения для [инстанцирования](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#instantiation) не поддерживаются.
+
+<br />
+
+Рекомендации по использованию и производительности:
+
+* Размер: оптимальный размер уникальных моделей — не более 10 000 вершин; типовых моделей (например, деревьев) — от 200 до 2000 вершин.
+* Текстура: оптимальный размер текстур для уникальных моделей — 256×256; для типовых моделей — 64×64.
+* Цвета: если вы не настраиваете собственные стили карты, а загружаете модели, рекомендуется, чтобы цвета текстуры моделей сочетались с цветами карты <Brand />.
+* Сжатие: рекомендуется использовать алгоритм [Draco](https://google.github.io/draco/) для сжатия моделей.
+* Матричные анимации: поддерживаются, но использование снижает производительность карты.
+* Модель освещения PBR: поддерживается, но использование снижает производительность карты.
+* Локальные трансформации: локальные [трансформации](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#transformations) (перемещения, вращения и масштабирования) поддерживаются, но снижают производительность карты.
+
+#### Добавление моделей
+
+Чтобы добавить на карту 3D-модель:
+
+1. Преобразуйте модель в объект [ModelData](/android/sdk/reference/stable/class#ru.dgis.sdk.map.model-data), который будет использоваться в SDK:
+
+    ```kotlin
+    val modelData = modelDataFromAsset(sdkContext, "model.glb")
+    ```
+
+1. Создайте объект [ModelSize](/android/sdk/reference/stable/class#ru.dgis.sdk.map.model-size) и укажите размер модели одним из способов:
+
+    - Чтобы задать постоянный размер модели, который не будет изменяться при изменении масштаба карты, используйте метод `logicalPixel()` и укажите размер в логических пикселях:
+
+      ```kotlin
+        val modelSize = ModelSize(
+            LogicalPixel(256.0f)
+        )
+      ```
+
+    - Чтобы задать размер, который будет зависеть от масштаба карты (при отдалении модель будет становиться меньше и наоборот), используйте метод `scale()` и укажите коэффициент масштабирования модели [ModelScale](/android/sdk/reference/stable/class#ru.dgis.sdk.map.model-scale):
+
+      ```kotlin
+       val modelSize = ModelSize(ModelScale(0.5f))
+      ```
+
+1. Создайте объект [ModelMapObject](/android/sdk/reference/stable/class#ru.dgis.sdk.map.model-map-object), указав нужные настройки в [ModelMapObjectOptions](/android/sdk/reference/stable/class#ru.dgis.sdk.map.model-map-object-options), и передайте его в метод `addObject()` менеджера объектов:
+
+    ```kotlin
+    // Настройки 3D-модели
+        val model = ModelMapObject(
+            ModelMapObjectOptions(
+                position = position,
+                data = modelData,
+                size = modelSize,
+                mapDirection = MapDirection(0.5),
+                opacity = Opacity(1.0f),
+                visible = true,
+            )
+        )
+
+    // Создание и добавление 3D-модели на карту
+    mapObjectManager.addObject(model)
+    ```
+
+Чтобы изменить настройки уже добавленной модели, установите новые значения для параметров объекта `ModelMapObject`: cм. полный список доступных параметров в описании [ModelMapObject](/android/sdk/reference/stable/class#ru.dgis.sdk.map.model-map-object).
+
+```kotlin
+// Изменение координат центра 3D-модели
+model.position = GeoPointWithElevation(GeoPoint(55.74460317215391, 37.63435363769531))
+
+// Изменение прозрачности 3D-модели
+model.opacity = Opacity(0.5f)
+
+// Изменение постоянного размера 3D-модели
+model.size = ModelSize(LogicalPixel(256.0f))
+
+// Изменение коэффициента масштабирования 3D-модели
+model.size = ModelSize(ModelScale(0.5f))
+
+// Изменение угла поворота 3D-модели
+model.mapDirection = MapDirection(0.5)
+
+// Изменение настроек анимации 3D-модели
+model.animationSettings = AnimationSettings() // TBD
+```
+
+### Добавление нескольких объектов {#add-multiple-objects}
+
+Если на карту необходимо добавить коллекцию объектов, то добавление через метод [addObject](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager/with-generalization) в цикле по всей коллекции приведет к потере производительности. Для добавления коллекции объектов нужно сначала подготовить всю коллекцию и добавить её через метод [addObjects](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager/with-generalization):
+
+```kotlin
+// Подготавливаем коллекцию объектов
+val markers = mutableListOf<Marker>()
+val markerOptions = listOf(
+    MarkerOptions(<params>),
+    MarkerOptions(<params>),
+    MarkerOptions(<params>),
+    MarkerOptions(<params>),
+    ...)
+markerOptions.forEach({
+    markers.add(Marker(it))
+})
+
+// Добавляем коллекцию объектов на карту
+MapObjectManager.addObjects(markers)
+```
+
+### Кластеризация
+
+Кластеризация — это визуальная группировка близко расположенных друг к другу объектов (маркеров) в один кластер при уменьшении масштаба карты. Группировка происходит постепенно: чем меньше масштаб карты, тем меньше кластеров. Кластер отображается как маркер с цифрой, соответствующий количеству объектов в кластере.
+
+Чтобы добавить на карту маркеры в режиме кластеризации, создайте менеджер объектов ([MapObjectManager](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager)) с помощью метода [MapObjectManager.withClustering()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager/with-generalization) и укажите следующие свойства:
+
+* Экземпляр карты (`map`).
+* Минимальное расстояние между маркерами в логических пикселях на уровнях масштабирования, при которых работает кластеризация (`logicalPixel`).
+* Уровень масштабирования, при котором и выше видны только отдельные маркеры, без кластеров (`maxZoom`).
+* Уровень масштабирования, при котором и ниже перестают формироваться новые кластеры (`minZoom`).
+* Пользовательскую реализацию протокола [SimpleClusterRenderer](/android/sdk/reference/stable/interface#ru.dgis.sdk.map.simple-cluster-renderer), который используется для кастомизации кластеров в [MapObjectManager](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager).
+
+```kotlin
+val clusterRenderer = object : SimpleClusterRenderer {
+    override fun renderCluster(cluster: SimpleClusterObject): SimpleClusterOptions {
+        val textStyle = TextStyle(
+            fontSize = LogicalPixel(15.0f),
+            textPlacement = TextPlacement.RIGHT_TOP
+        )
+        val objectCount = cluster.objectCount
+        val iconMapDirection = if (objectCount < 5) MapDirection(45.0) else null
+        return SimpleClusterOptions(
+            icon,
+            iconWidth = LogicalPixel(30.0f),
+            text = objectCount.toString(),
+            textStyle = textStyle,
+            iconMapDirection = iconMapDirection,
+            userData = objectCount.toString()
+        )
+    }
+}
+
+mapObjectManager = MapObjectManager.withClustering(
+    map = map,
+    logicalPixel = LogicalPixel(80.0f),
+    maxZoom = Zoom(18.0f),
+    minZoom = Zoom(8.0f),
+    clusterRenderer = clusterRenderer
+)
+```
+
+После создания менеджера объектов с кластеризацией вы можете [добавлять маркеры](#add-objects) обычными способами через `addObject()` или `addObjects()`.
+
+### Генерализация
+
+Генерализация — это визуальная группировка близко расположенных друг к другу объектов (маркеров) так, что при уменьшении масштаба карты вместо нескольких маркеров отображается один «ключевой». Группировка происходит постепенно: чем меньше масштаб карты, тем меньше групп.
+
+Чтобы добавить на карту маркеры в режиме генерализации, создайте менеджер объектов ([MapObjectManager](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager)) с помощью метода [MapObjectManager.withGeneralization()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-object-manager/with-generalization) и укажите следующие свойства:
+
+* Экземпляр карты (`map`).
+* Минимальное расстояние между маркерами в логических пикселях на уровнях масштабирования, при которых работает генерализация (`logicalPixel`).
+* Уровень масштабирования, при котором и выше видны только отдельные маркеры, без групп (`maxZoom`).
+* Уровень масштабирования, при котором и ниже перестают формироваться новые группы (`minZoom`).
+
+```kotlin
+mapObjectManager = MapObjectManager.withGeneralization(
+    map = map,
+    logicalPixel = LogicalPixel(80.0f),
+    maxZoom = Zoom(18.0f),
+    minZoom = Zoom(8.0f)
+)
+```
+
+После создания менеджера объектов с генерализацией вы можете [добавлять маркеры](#add-objects) обычными способами через `addObject()` или `addObjects()`.
+
+## Стилизация объектов
+
+Вы можете настроить сложный стиль для динамического объекта с помощью [Редактора стилей](/maps/styles/overview). Например, настроить максимальный и минимальный масштаб, при котором должен отображаться этот объект.
+
+1. Создайте стилевой слой для объекта:
+
+   1. Откройте [Редактор стилей](https://styles.2gis.com/).
+
+   2. Откройте стиль или [создайте новый](/maps/styles/create).
+
+   3. В разделе **Слои** нажмите значок ![Добавить слой](/img/styles/add-layer-icon.svg).
+
+   4. Выберите тип слоя в зависимости от типа объекта. Для текущей задачи поддерживаются только типы **Полигон**, **Линия** и **Точка**. Подробнее о слоях см. в статье [Типы слоёв для мобильного SDK](/maps/styles/layers/types/msdk).
+
+   5. На вкладке **Данные** прокрутите список вниз и выберите **JSON — добавить вручную**.
+
+   6. Добавьте атрибут `db_sublayer` с уникальным идентификатором слоя (например, `my_object_layer`): вставьте следующий код в текстовое поле:
+
+      ```json
+      ["match", ["get", "db_sublayer"], ["my_object_layer"], true, false]
+      ```
+
+      Этот идентификатор будет использован для ссылки на стилевой слой из кода.
+
+      <img src="/img/mobile-sdk/styling_object_example.png" width="600" alt="Пример редактирования JSON" />
+
+   7. Настройте другие параметры стиля в соответствующих вкладках.
+
+   8. [Экспортируйте и подключите стиль](/maps/styles/connect#android-sdk).
+
+2. Создайте динамический объект с помощью [GeometryMapObjectBuilder](/android/sdk/reference/stable/class#ru.dgis.sdk.map.geometry-map-object-builder) и укажите идентификатор созданного слоя в методе `setObjectAttribute()`. Например, чтобы добавить объект в виде точки:
+
+   ```kotlin
+   geometryObject = GeometryMapObjectBuilder()
+       .setGeometry(PointGeometry(point)) // Геометрия в виде точки
+       .setObjectAttribute("db_sublayer", "my_object_layer")
+       .createObject()   // Создание объекта
+   ```
+
+3. Чтобы объект отобразился на карте, добавьте его в источник данных:
+
+   1. Создайте источник:
+
+      ```kotlin
+      val geometrySource = GeometryMapObjectSourceBuilder(sdkContext).createSource()
+      ```
+
+   2. Добавьте источник на карту:
+
+      ```kotlin
+      override fun onCreate(savedInstanceState: Bundle?) {
+          super.onCreate(savedInstanceState)
+          setContentView(binding.root)
+
+          binding.mapView.getMapAsync {
+              it.addSource(geometrySource)
+          }
+      }
+      ```
+
+   3. Добавьте созданный объект в источник:
+
+      ```kotlin
+      geometrySource.addObject(geometryObject)
+      ```
+
+## Выделение объектов
+
+### Настройка стилей
+
+Для того, чтобы объекты на карте визуально реагировали на их выделение, в стилях необходимо настроить разный внешний вид слоя с помощью функции "Добавить зависимость от состояния" для всех необходимых свойств (иконка, шрифт, цвет и т. д.):
+
+<img src="/img/mobile-sdk/editor_state_dependency.png" height="600" />
+
+Настройки свойства выделенного объекта находятся в табе "Выделенное состояние":
+
+<img src="/img/mobile-sdk/editor_state_selected.png" height="600" />
+
+### Выделение объектов по нажатию на карту
+
+Для начала получим информацию об объектах, попадающих в область нажатия, с помощью метода [getRenderedObjects()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map/get-rendered-objects), как в примере [Получение объектов по экранным координатам](#получение-объектов-по-экранным-координатам).
+
+Выделение объектов происходит с помощью вызова метода [setHighlighted()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.dgis-source/create-dgis-source), который получает на вход список идентификаторов справочника изменяемых объектов [DgisObjectId](/android/sdk/reference/stable/class#ru.dgis.sdk.dgis-object-id). Внутри метода `getRenderedObjects()` мы можем получить все данные, необходимые для использования этого метода, как то источник данных объектов и их идентификаторы:
+
+```kotlin
+override fun onTap(point: ScreenPoint) {
+    map.getRenderedObjects(point).onResult { renderedObjects ->
+        // Получим ближайший к месту нажатия объект внутри установленного радиуса
+        val dgisObject = renderedObjects
+            .firstOrNull { it.item.source is DgisSource && it.item.item is DgisMapObject }
+            ?: return@onResult
+
+        // Сохраним источник данных объекта и его идентификатор
+        val source = dgisObject.item.source as DgisSource
+        val id = (dgisObject.item.item as DgisMapObject).id
+
+        searchManager.searchByDirectoryObjectId(id)
+	    .onResult onDirectoryObjectReady@ {
+	        val obj = it ?: return@onDirectoryObjectReady
+
+		val entrancesIds = obj.entrances.map { entranceInfo ->
+			entranceInfo.id
+		} as MutableList<DgisObjectId>
+		entrancesIds.add(id)
+
+                // Снимаем выделение с выбранных ранее объектов
+		source.setHighlighted(source.highlightedObjects, false)
+                // Выделяем полученный объект и входы
+		source.setHighlighted(entrancesIds, true)
+            }
+    }
+}
+```
+
+## Управление камерой
+
+Для работы с камерой используется объект [Camera](/android/sdk/reference/stable/class#ru.dgis.sdk.map.camera), доступный через свойство `map.camera`.
+
+### Перелёт
+
+Чтобы запустить анимацию перелёта камеры, нужно вызвать метод [move()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.camera/move) и указать параметры перелёта:
+
+* `position` - конечная позиция камеры (координаты и уровень приближения). Дополнительно можно указать наклон и поворот камеры (см. [CameraPosition](/android/sdk/reference/stable/class#ru.dgis.sdk.map.camera-position)).
+* `time` - продолжительность перелёта в секундах ([Duration](/android/sdk/reference/stable/class#ru.dgis.sdk.duration)).
+* `animationType` - тип анимации ([CameraAnimationType](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.map.camera-animation-type)).
+
+Функция `move()` возвращает объект [Future](/android/sdk/reference/stable/interface#ru.dgis.sdk.future), который можно использовать, чтобы обработать событие завершения перелёта.
+
+```kotlin
+val mapView = findViewById<MapView>(R.id.mapView)
+
+mapView.getMapAsync { map ->
+    val cameraPosition = CameraPosition(
+        point = GeoPoint(latitude = 55.752425, longitude = 37.613983),
+        zoom = Zoom(16.0),
+        tilt = Tilt(25.0),
+        bearing = Arcdegree(85.0)
+    )
+
+    map.camera.move(cameraPosition, Duration.ofSeconds(2), CameraAnimationType.LINEAR).onResult {
+        Log.d("APP", "Перелёт камеры завершён.")
+    }
+}
+```
+
+Для указания продолжительности перелёта можно использовать расширение `.seconds`:
+
+```kotlin
+map.camera.move(cameraPosition, 2.seconds, CameraAnimationType.LINEAR)
+```
+
+Для более точного контроля над анимацией перелёта можно использовать контроллер перелёта, который будет определять позицию камеры в каждый конкретный момент времени. Для этого нужно реализовать интерфейс [CameraMoveController](/android/sdk/reference/stable/interface#ru.dgis.sdk.map.camera-move-controller) и передать созданный объект в метод `move()` вместо параметров перелёта.
+
+### Получение состояния камеры
+
+Текущее состояние камеры (находится ли камера в полёте) можно получить, используя свойство `state`. См. [CameraState](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.map.camera-state) для списка возможных состояний камеры.
+
+```kotlin
+val currentState = map.camera.state
+```
+
+Подписаться на изменения состояния камеры можно с помощью свойства `statefulChanges`:
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+```kotlin
+// Подписка
+val connection = map.camera.statefulChanges(CameraChangeReason.STATE) {
+    map.camera.state
+}.connect { state ->
+    Log.d("APP", "Состояние камеры изменилось на ${state}")
+}
+
+// Отписка
+connection.close()
+```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+```kotlin
+// Подписка
+val connection = map.camera.stateChannel.connect { state ->
+    Log.d("APP", "Состояние камеры изменилось на ${state}")
+}
+
+// Отписка
+connection.close()
+```
+
+</TabItem>
+</Tabs>
+
+### Получение позиции камеры
+
+Текущую позицию камеры можно получить, используя свойство `position` (см. объект [CameraPosition](/android/sdk/reference/stable/class#ru.dgis.sdk.map.camera-position)).
+
+```kotlin
+val currentPosition = map.camera.position
+
+Log.d("APP", "Координаты: ${currentPosition.point}")
+Log.d("APP", "Приближение: ${currentPosition.zoom}")
+Log.d("APP", "Наклон: ${currentPosition.tilt}")
+Log.d("APP", "Поворот: ${currentPosition.bearing}")
+```
+
+Подписаться на изменения позиции камеры (и угла наклона/поворота) можно с помощью свойства `positionChannel`.
+
+```kotlin
+// Подписка
+val connection = map.camera.positionChannel.connect { position ->
+    Log.d("APP", "Изменилась позиция камеры или угол наклона/поворота.")
+}
+
+// Отписка
+connection.close()
+```
+
+### Расчёт позиции камеры
+
+Чтобы отобразить на экране объект или группу объектов, используйте метод расчёта позиции камеры [calcPosition](/android/sdk/reference/stable/method#ru.dgis.sdk.map.calc-position-camera-geometry-style-zoom-to-tilt-relation-screen-area-tilt-bearing-size-):
+
+```kotlin
+// Чтобы «увидеть» два маркера на карте:
+
+// Создаём геометрию, которая охватывает оба объекта
+val geometry = ComplexGeometry(listOf(PointGeometry(point1), PointGeometry(point2)))
+// Рассчитываем нужную позицию
+val position = calcPosition(map.camera, geometry)
+// Используем рассчитанную позицию
+map.camera.move(position)
+```
+
+Пример выше выдаст результат похожий на такой:
+
+<img src="/img/mobile-sdk/calc_position_example_1_android.png" height="500" align="center" />
+
+Маркеры обрезаются наполовину, так как у метода есть информация только о геометриях, а не объектах. В данном примере позиция маркера — это его центр. Метод рассчитал позицию так, чтобы вписать центры маркеров в активную область. Активная область отображается в виде красного прямоугольника по краям экрана. Чтобы отобразить маркеры целиком, вы можете задать активную область.
+
+Например, задайте отступы сверху и снизу экрана:
+
+```kotlin
+val geometry = ComplexGeometry(listOf(PointGeometry(point1), PointGeometry(point2)))
+
+// Задаём отступы сверху и снизу, чтобы маркеры отображались полностью
+map.camera.padding = Padding(top = 100, bottom = 100)
+val position = calcPosition(map.camera, geometry)
+map.camera.move(position)
+```
+
+Результат:
+
+<img src="/img/mobile-sdk/calc_position_example_2_android.png" height="500" align="center" />
+
+Помимо задания настроек в камере, вы можете задавать определённые параметры только для расчёта позиции. Например, указанные отступы можно задать только в методе расчёта позиции и получить такой же результат.
+
+```kotlin
+val geometry = ComplexGeometry(listOf(PointGeometry(point1), PointGeometry(point2)))
+// Задаём активную область только для расчёта позиции
+val position = calcPosition(map.camera, geometry, screenArea = Padding(top = 100, bottom = 100))
+map.camera.move(position)
+```
+
+Результат:
+
+<img src="/img/mobile-sdk/calc_position_example_3_android.png" height="500" align="center" />
+
+На изображении видно, что активная область не изменилась, но маркеры вписаны полностью. Такой подход может приводить к неожиданному поведению, так как позиция камеры задаёт геокоординату, которая должна быть в точке позиции камеры (красный кружок в центре экрана). Настройки `padding`, `positionPoint` и `size` влияют на положение данной точки.
+
+Если при вычислении позиции в метод будут переданы параметры, которые сместят точку позиции камеры, то использование результата приведёт к неожиданному поведению. Например, если вы задаёте ассиметричную активную область, то изображение может сильно смещаться.
+
+Пример установки одной и той же позиции для разных отступов:
+
+<img src="/img/mobile-sdk/calc_position_example_compare_android.png" height="500" align="center" />
+
+В качестве простого решения вы можете задавать все необходимые настройки в камере и использовать для расчёта позиции только камеру и геометрию. В случае, если используются дополнительные параметры, которые не устанавливаются для камеры, может потребоваться коррекция результата, чтобы сдвинуть изображение в нужную сторону.
+
+### Настройка точки позиции и обзора камеры
+
+Вы можете управлять отображением карты на экране, например, менять размер области видимости карты, при этом сохраняя позицию обзора. Для этого используйте экранные точки: точку позиции камеры [BaseCamera.positionPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.map.base-camera/var-position-point) и точку обзора камеры [BaseCamera.viewPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.map.base-camera/var-view-point).
+
+<br />
+
+Точка позиции камеры ([BaseCamera.positionPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.map.base-camera/var-position-point)) — точка экрана, к которой привязана камера, с учётом отступов [BaseCamera.padding](/android/sdk/reference/stable/class#ru.dgis.sdk.map.base-camera/var-padding). Точка задаётся относительно области видимости карты:
+
+```kotlin
+val cameraPositionPoint = CameraPositionPoint(0.5f, 0.5f)
+map.camera.positionPoint = cameraPositionPoint
+```
+
+При изменении точки позиции камеры меняется область видимости карты и смещается точка наблюдения [CameraPosition.Point](/android/sdk/reference/stable/class#ru.dgis.sdk.map.camera-position/val-point) — точка на местности в географических координатах, которая находится в точке позиции камеры. Угол наклона [CameraPosition.Tilt](/android/sdk/reference/stable/class#ru.dgis.sdk.map.camera-position/val-tilt) и угол поворота камеры [CameraPosition.Bearing](/android/sdk/reference/stable/class#ru.dgis.sdk.map.camera-position/val-bearing) не меняются:
+
+<img src="/img/mobile-sdk/camera-position-point-before.png" height="500" align="center" /> <img src="/img/mobile-sdk/camera-position-point-after.png" height="500" align="center" />
+
+<br />
+
+Точка обзора камеры ([BaseCamera.viewPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.map.base-camera/var-view-point)) — точка экрана, в которую направлен «взгляд» камеры. Точка задаётся относительно области видимости карты:
+
+```kotlin
+val cameraViewPoint = CameraViewPoint(0.5f, 0.5f)
+map.camera.viewPoint = cameraViewPoint
+```
+
+При изменении точки обзора камеры меняется направление обзора относительно точки наблюдения. Точка наблюдения [CameraPosition.Point](/android/sdk/reference/stable/class#ru.dgis.sdk.map.camera-position/val-point) не смещается, также не меняется угол наклона [CameraPosition.Tilt](/android/sdk/reference/stable/class#ru.dgis.sdk.map.camera-position/val-tilt) и угол поворота камеры [CameraPosition.Bearing](/android/sdk/reference/stable/class#ru.dgis.sdk.map.camera-position/val-bearing):
+
+<Video src="/video/MSDK.ViewPoint.mp4" width="300px" />
+
+### visibleArea и visibleRect
+
+У камеры есть два свойства, которые описывают геометрию видимой области, но делают это по-разному. [visibleRect](/android/sdk/reference/stable/class#ru.dgis.sdk.map.base-camera/var-position-point%20visibleRect) имеет тип [GeoRect](/android/sdk/reference/stable/class#ru.dgis.sdk.coordinates.geo-rect) и всегда является прямоугольником. [visibleArea](/android/sdk/reference/stable/class#ru.dgis.sdk.map.base-camera/var-position-point%20visibleArea) представляет собой произвольную геометрию. Проще всего увидеть на примере с разными углами наклона камеры относительно карты:
+
+* При наклоне 45° `visibleRect` и `visibleArea` не будут равны: `visibleRect` в данном случае будет больше, т.к. он должен быть прямоугольником и содержать в себе `visibleArea`.
+
+  Синим цветом изображена `visibleArea`, красным – `visibleRect`.
+
+  <img src="/img/mobile-sdk/tilt_45.gif" height="300"  />
+
+* При наклоне 0° `visibleArea` и `visibleRect` будут совпадать, как видно из изменения цвета.
+
+  <img src="/img/mobile-sdk/tilt_0.gif" height="300"  />
+
+### Определение попадания объекта в видимую область камеры
+
+С помощью свойства [visibleArea](/android/sdk/reference/stable/class#ru.dgis.sdk.map.base-camera/var-position-point%20visibleArea) мы можем получить область карты, которая попадает в камеру, в виде [Geometry](/android/sdk/reference/stable/class#ru.dgis.sdk.geometry.geometry). С помощью метода [intersects()](/android/sdk/reference/stable/class#ru.dgis.sdk.geometry.geometry/intersects) мы можем получить пересечение видимой области камеры с нужной нам геометрией:
+
+```kotlin
+//Допустим, у нас есть маркер и нужно узнать, попадает ли он в видимую область карты
+// val marker: Marker
+val markerGeometry: Geometry = PointGeometry(marker.position)
+
+val intersects: Boolean = map.camera.visibleArea.intersects(markerGeometry)
+```
+
+## Поэтажные планы зданий {#floor-plans}
+
+С помощью SDK вы можете отображать поэтажные планы зданий на карте и переключаться между этажами. Детальные поэтажные планы доступны только для определённых групп зданий (например, торговых центров). Чтобы начать работу, получите доступ к Places API и дополнительно к информации о поэтажных планах зданий. Подробнее см. в разделе [Начало работы](/android/sdk/start).
+
+Основной объект для работы с поэтажными планами — класс [IndoorManager](/android/sdk/reference/stable/class#ru-dgis-sdk-map-indoormanager), который доступен через свойство карты [indoorManager](/android/sdk/reference/stable/class#ru-dgis-sdk-map-map).
+
+Чтобы получить информацию о поэтажных планах здания, которое в данный момент отображается на карте, используйте свойство `focusedBuilding` класса [IndoorManager](/android/sdk/reference/stable/class#ru-dgis-sdk-map-indoormanager) или подпишитесь на канал `focusedBuildingChannel`.
+
+```kotlin
+// Получение информации о текущем здании с поэтажными планами
+val currentBuilding = map.indoorManager.focusedBuilding
+
+// Подписка на изменения текущего здания
+val connection = map.indoorManager.focusedBuildingChannel.connect { building ->
+    if (building != null) {
+        Log.d("APP", "Отображается здание с ID: ${building.id}")
+        Log.d("APP", "Количество этажей: ${building.levels.size}")
+        Log.d("APP", "Этаж по умолчанию: ${building.defaultLevelIndex}")
+    } else {
+        Log.d("APP", "Поэтажные планы не отображаются")
+    }
+}
+
+// Отписка от уведомлений
+connection.close()
+```
+
+### Показ и скрытие поэтажных планов
+
+Чтобы управлять отображением поэтажных планов, используйте метод `setIndoorState()` класса [IndoorManager](/android/sdk/reference/stable/class#ru-dgis-sdk-map-indoormanager):
+
+```kotlin
+// Показать поэтажные планы
+map.indoorManager.setIndoorState(IndoorManagerState.ENABLED)
+
+// Скрыть поэтажные планы
+map.indoorManager.setIndoorState(IndoorManagerState.DISABLED)
+```
+
+### Переключение между этажами
+
+Чтобы переключаться между этажами, укажите индекс нужного этажа в свойстве `activeLevelIndex` объекта [IndoorBuilding](/android/sdk/reference/stable/class#ru-dgis-sdk-map-indoorbuilding):
+
+```kotlin
+// Получение информации о текущем здании
+val building = map.indoorManager.focusedBuilding
+
+if (building != null) {
+    // Получение информации о всех этажах
+    val levels = building.levels
+    Log.d("APP", "Доступные этажи:")
+    levels.forEachIndexed { index, levelInfo ->
+        Log.d("APP", "Этаж $index: ${levelInfo.name}")
+    }
+
+    // Переключение на первый этаж (индекс 0)
+    building.activeLevelIndex = 0
+
+    // Переключение на последний этаж
+    building.activeLevelIndex = (levels.size - 1).toLong()
+
+    // Подписка на изменения активного этажа
+    val connection = building.activeLevelIndexChannel.connect { levelIndex ->
+        val levelName = levels[levelIndex.toInt()].name
+        Log.d("APP", "Активный этаж изменился на: $levelName")
+    }
+}
+```
+
+### Создание UI для управления этажами
+
+Чтобы создать UI-элемент управления этажами, используйте модель [IndoorControlModel](/android/sdk/reference/stable/class#ru-dgis-sdk-map-indoorcontrolmodel):
+
+```kotlin
+class IndoorControlActivity : AppCompatActivity() {
+
+    private var map: Map? = null
+    private var indoorModel: IndoorControlModel? = null
+
+    private var levelNamesConn: AutoCloseable? = null
+    private var activeLevelConn: AutoCloseable? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_indoor_control_model_example)
+
+        initializeDGis(applicationContext)
+
+        val mapView = findViewById<MapView>(R.id.mapView)
+        lifecycle.addObserver(mapView)
+
+        mapView.getMapAsync {
+            map = it
+            it.indoorManager.setIndoorState(IndoorManagerState.ENABLED)
+            setupIndoorModel(it)
+        }
+    }
+
+    private fun setupIndoorModel(map: Map) {
+        indoorModel = IndoorControlModel(map).also { model ->
+            levelNamesConn = model.levelNamesChannel.connect { names ->
+                if (names.isNotEmpty()) showLevels(names) else hideLevels()
+            }
+            activeLevelConn = model.activeLevelIndexChannel.connect { idx ->
+                idx?.toInt()?.let { highlightActive(it) }
+            }
+
+        }
+    }
+
+    private fun showLevels(levelNames: List<String>) {
+        val container = findViewById<LinearLayout>(R.id.levelsContainer)
+        container.visibility = View.VISIBLE
+        container.removeAllViews()
+
+        levelNames.forEachIndexed { index, name ->
+            val btn = Button(this).apply {
+                text = name
+                isAllCaps = false
+                setOnClickListener {
+                    indoorModel?.activeLevelIndex = index.toLong()
+                }
+            }
+            container.addView(btn)
+        }
+        indoorModel?.activeLevelIndex?.toInt()?.let { highlightActive(it) }
+    }
+
+    private fun highlightActive(activeIndex: Int) {
+        val container = findViewById<LinearLayout>(R.id.levelsContainer)
+        for (i in 0 until container.childCount) {
+            val levelButton = container.getChildAt(i) as? Button ?: continue
+            val isSelectedLevel = (i == activeIndex)
+            levelButton.isSelected = isSelectedLevel
+            levelButton.alpha = if (isSelectedLevel) 1f else 0.55f
+        }
+    }
+
+    private fun hideLevels() {
+        findViewById<LinearLayout>(R.id.levelsContainer).apply {
+            removeAllViews()
+            visibility = View.GONE
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        levelNamesConn?.close()
+        activeLevelConn?.close()
+        indoorModel = null
+        map?.close()
+    }
+}
+```
+
+### Выделение этажей
+
+Чтобы выделить определённый этаж (например, с важными объектами), используйте свойство `markedLevels` модели [IndoorControlModel](/android/sdk/reference/stable/class#ru-dgis-sdk-map-indoorcontrolmodel):
+
+```kotlin
+// Установка отмеченных этажей
+val markedLevels = setOf(
+    LevelId("level_1"),
+    LevelId("level_3")
+)
+indoorControlModel.markedLevels = markedLevels
+
+// Проверка, отмечен ли этаж
+val isMarked = indoorControlModel.isLevelMarked(1) // true для этажа с индексом 1
+```
+
+## Пробки на карте {#traffic}
+
+Чтобы отобразить слой пробок на карте, создайте источник данных [TrafficSource](/android/sdk/reference/stable/class#ru.dgis.sdk.map.traffic-source) и передайте его в метод карты [addSource()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map/get-rendered-objects).
+
+```kotlin
+val trafficSource = TrafficSource(sdkContext)
+map.addSource(trafficSource)
+```
+
+## Дорожные события на карте {#road-events}
+
+Вы можете настроить отображение на карте дорожных событий из данных <Brand />, а также добавить собственные события.
+
+### Отображение событий на карте
+
+Чтобы показать слой дорожных событий на карте, создайте источник данных [RoadEventSource](/android/sdk/reference/stable/class#ru.dgis.sdk.map.road-event-source) и добавьте его на карту с помощью метода карты [addSource()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map/get-rendered-objects):
+
+```kotlin
+val roadEventSource = RoadEventSource(sdkContext)
+map.addSource(roadEventSource)
+```
+
+Чтобы удалить созданный источник данных и все связанные с ним объекты, вызовите метод карты [removeSource()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map/get-rendered-objects):
+
+```kotlin
+map.removeSource(roadEventSource)
+```
+
+### Добавление события
+
+Вы можете добавить собственное дорожное событие на карту, которое смогут увидеть все пользователи карт <Brand />. Вы можете разместить событие на карте только в радиусе 2 км от своего текущего местоположения.
+
+1. Создайте экземпляр менеджера объектов [RoadEventManager](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.road-event-manager):
+
+    <Tabs>
+    <TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+    ```kotlin
+    val roadEventManager = RoadEventManager.instance(context)
+    ```
+
+    </TabItem>
+    <TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+    ```kotlin
+    val roadEventManager = RoadEventManager(context)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+
+2. Добавьте событие одного из типов ниже (каждому типу соответствует своя иконка на карте):
+
+   * ДТП. Вызовите метод [createAccident()](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.road-event-manager/create-road-restriction) и укажите координаты события ([GeoPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.coordinates.geo-point)), затронутые полосы движения ([Lane](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.road-events.lane)) и текстовое описание события:
+
+     ```kotlin
+     val accidentLocation = GeoPoint(55.751244, 37.618423)
+     val accidentLanes = EnumSet.of(Lane.LEFT, Lane.CENTER) // затронуты левая и средняя полосы движения
+     val accidentFuture = roadEventManager.createAccident(
+         location = accidentLocation,
+         lanes = accidentLanes,
+         description = "ДТП на левой полосе"
+     )
+
+     // Обработка результата
+     accidentFuture.onResult { result ->
+         if (result.isEvent) {
+             println("Авария добавлена!")
+         } else {
+             println("Ошибка: ${result.match(event = { "" }, error = { it.toString() })}")
+         }
+     }
+     ```
+
+   * Камера ГИБДД. Вызовите метод [createCamera()](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.road-event-manager/create-road-restriction) и укажите координаты события ([GeoPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.coordinates.geo-point)) и текстовое описание:
+
+     ```kotlin
+     val cameraLocation = GeoPoint(55.752220, 37.615560)
+     val cameraFuture = roadEventManager.createCamera(
+         location = cameraLocation,
+         description = "Камера контроля скорости"
+     )
+
+     // Обработка результата
+     cameraFuture.onResult { result ->
+         if (result.isEvent) {
+             println("Событие камеры успешно создано!")
+         } else {
+             println("Ошибка: ${result.match(event = { "" }, error = { it.toString() })}")
+         }
+     }
+     ```
+
+   * Перекрытие дорожного движения. Вызовите метод [createRoadRestriction()](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.road-event-manager/create-road-restriction) и укажите координаты события ([GeoPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.coordinates.geo-point)) и текстовое описание:
+
+     ```kotlin
+     val restrictionLocation = GeoPoint(55.753930, 37.620795)
+     val restrictionFuture = roadEventManager.createRoadRestriction(
+         location = restrictionLocation,
+         description = "Дорога перекрыта для фестиваля"
+     )
+
+     // Обработка результата
+     restrictionFuture.onResult { result ->
+         if (result.isEvent) {
+             println("Событие перекрытия успешно создано!")
+         } else {
+             println("Ошибка: ${result.match(event = { "" }, error = { it.toString() })}")
+         }
+     }
+     ```
+
+   * Дорожные работы. Вызовите метод [createRoadWorks()](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.road-event-manager/create-road-restriction) и укажите координаты события ([GeoPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.coordinates.geo-point)), затронутые полосы движения ([Lane](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.road-events.lane)) и текстовое описание события:
+
+     ```kotlin
+     val roadWorksLocation = GeoPoint(55.754800, 37.621000)
+     val roadWorksLanes = EnumSet.of(Lane.RIGHT)  // затронута правая полоса движения
+     val roadWorksFuture = roadEventManager.createRoadWorks(
+         location = roadWorksLocation,
+         lanes = roadWorksLanes,
+         description = "Ремонт дорожного покрытия"
+     )
+
+     // Обработка результата
+     roadWorksFuture.onResult { result ->
+         if (result.isEvent) {
+             println("Событие ремонта дороги успешно создано!")
+         } else {
+             println("Ошибка: ${result.match(event = { "" }, error = { it.toString() })}")
+         }
+     }
+     ```
+
+   * Комментарий. Вызовите метод [createComment()](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.road-event-manager/create-road-restriction) и укажите координаты события ([GeoPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.coordinates.geo-point)) и текстовое описание:
+
+     ```kotlin
+     val commentLocation = GeoPoint(55.755000, 37.622000)
+     val commentFuture = roadEventManager.createComment(
+         location = commentLocation,
+         description = "Осторожно, гололёд!"
+     )
+
+     // Обработка результата
+     commentFuture.onResult { result ->
+         if (result.isEvent) {
+             println("Комментарий успешно создан!")
+         } else {
+             println("Ошибка: ${result.match(event = { "" }, error = { it.toString() })}")
+         }
+     }
+     ```
+
+   * Другое событие. Вызовите метод [createOther()](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.road-event-manager/create-road-restriction) и укажите координаты события ([GeoPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.coordinates.geo-point)), затронутые полосы движения ([Lane](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.road-events.lane)) и текстовое описание события:
+
+     ```kotlin
+     val otherLocation = GeoPoint(55.756000, 37.623000)
+     val otherLanes = EnumSet.of(Lane.CENTER, Lane.RIGHT)   // затронуты правая и средняя полосы движения
+     val otherFuture = roadEventManager.createOther(
+         location = otherLocation,
+         lanes = otherLanes,
+         description = "Препятствие на дороге"
+     )
+
+     // Обработка результата
+     otherFuture.onResult { result ->
+         if (result.isEvent) {
+             println("Другое событие успешно создано!")
+         } else {
+             println("Ошибка: ${result.match(event = { "" }, error = { it.toString() })}")
+         }
+     }
+     ```
+
+## Получение объектов по экранным координатам
+
+Информацию об объектах на карте можно получить, используя пиксельные координаты. Для этого нужно вызвать метод карты [getRenderedObjects()](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map/get-rendered-objects), указав координаты в пикселях и радиус в экранных миллиметрах (не более 30). Метод вернет отложенный результат, содержащий информацию обо всех найденных объектах в указанном радиусе на видимой области карты (список [RenderedObjectInfo](/android/sdk/reference/stable/class#ru.dgis.sdk.map.rendered-object-info)).
+
+Пример функции, которая принимает координаты нажатия на экран и передаёт их в метод `getRenderedObjects()`:
+
+```kotlin
+override fun onTap(point: ScreenPoint) {
+    map.getRenderedObjects(point, ScreenDistance(5f)).onResult { renderedObjectInfos ->
+        // Первый объект в списке - самый близкий к координатам
+        for (renderedObjectInfo in renderedObjectInfos) {
+            Log.d("APP", "Произвольные данные объекта: ${renderedObjectInfo.item.item.userData}")
+        }
+    }
+}
+```
+
+Кроме реализации интерфейса [TouchEventsObserver](/android/sdk/reference/stable/interface#ru.dgis.sdk.map.touch-events-observer), можно установить функцию обратного вызова [MapObjectTappedCallback](/android/sdk/reference/stable/typeAlias#ru.dgis.sdk.map.map-object-tapped-callback) для тапа или лонгтапа в [MapView](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-view) с помощью методов [addObjectTappedCallback](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-view/use-custom-gesture-recognition-engine) и [addObjectLongTouchCallback](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-view/use-custom-gesture-recognition-engine). В эту функцию обратного вызова придет [RenderedObjectInfo](/android/sdk/reference/stable/class#ru.dgis.sdk.map.rendered-object-info) для объекта, который находится ближе всего к точке касания.
+
+```kotlin
+...
+fun onObjectTappedOrLongTouch(objInfo: RenderedObjectInfo) {
+     Log.d("APP", "Произвольные данные объекта: ${objInfo.item.item.userData}")
+}
+...
+
+mapView.addObjectTappedCallback(::onObjectTappedOrLongTouch)
+mapView.addObjectLongTouchCallback(::onObjectTappedOrLongTouch)
+```
+
+## Размещение View на карте
+
+<img src="/img/mobile-sdk/view_on_map_android.gif" height="300" />
+
+Существует возможность разместить нативные view на карте с привязкой к конкретной позиции. Для этого используется [SnapToMapLayout](/android/sdk/reference/stable/class#ru.dgis.sdk.map.snap-to-map-layout), который содержит собственную реализацию класса [LayoutParams](https://developer.android.com/reference/android/view/ViewGroup.LayoutParams), позволяющую установить позицию view на карте.
+
+Добавим `SnapToMapLayout` в макет:
+
+```xml
+<ru.dgis.sdk.map.MapView>
+    ...
+     <ru.dgis.sdk.map.SnapToMapLayout
+            android:id="@+id/snapToMapLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+</ru.dgis.sdk.map.MapView>
+...
+```
+
+Для привязки view к позиции на карте, эту view необходимо добавлять внутрь `SnapToMapLayout`. При добавлении необходимо сконструировать `LayoutParams` с геокоординатой [GeoPointWithElevation](/android/sdk/reference/stable/class#ru.dgis.sdk.geometry.geo-point-with-elevation) и некоторыми другими параметрами:
+
+```kotlin
+val params = SnapToMapLayout.LayoutParams(
+    // Ширина, используем WRAP_CONTENT
+    width = ViewGroup.LayoutParams.WRAP_CONTENT,
+    // Высота, используем WRAP_CONTENT
+    height = ViewGroup.LayoutParams.WRAP_CONTENT,
+    // Точка на карте, к которой осуществляется привязка
+    position = GeoPointWithElevation(55.7, 37.6),
+    // Точка на view, к которой осуществляется привязка
+    // В данном случае – левый верхний угол View
+    anchor = Anchor(0.0f, 0.0f),
+    // Смещение по оси X или Y относительно верхней и левой границы соответственно
+    offsetX = -15 * context.resources.displayMetrics.density,
+    offsetY = -15 * context.resources.displayMetrics.density
+)
+```
+
+Эти параметры необходимо передать, например, при вызове [addView()](https://developer.android.com/reference/kotlin/android/view/ViewGroup#addView\(android.view.View,%20android.view.ViewGroup.LayoutParams\)).
+
+## Работа с жестами управления картой
+
+Кастомизировать работу с жестами можно двумя способами:
+
+* Настроить существующие жесты.
+* Реализовать свой собственный механизм распознавания жестов.
+
+### Настройка жестов
+
+Из коробки управлять картой можно при помощи следующих жестов:
+
+* сдвиг карты в любом направлении одним пальцем;
+* сдвиг карты в любом направлении несколькими пальцами;
+* вращение карты двумя пальцами;
+* масштабирование карты двумя пальцами (щипок);
+* приближение карты двойным тапом;
+* отдаление карты тапом двумя пальцами;
+* масштабирование карты при помощи тап-тап-свайп жеста одним пальцем;
+* наклон камеры свайпом двумя пальцами вверх или вниз.
+
+По умолчанию включены все жесты. При необходимости можно отключить какие-либо жесты при помощи [GestureManager](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager).
+
+Получить `GestureManager` можно напрямую у [MapView](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-view/use-custom-gesture-recognition-engine%20gestureManager).
+
+```kotlin
+mapView.getMapAsync {
+    gestureManager = mapView.gestureManager!!
+}
+```
+
+Для активации жестов нужно использовать метод [enableGesture](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager/set-settings-about-map-position-point).
+
+Для выключения жестов нужно использовать метод [disableGesture](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager/set-settings-about-map-position-point).
+
+Для проверки выключен жест или нет использовать метод [gestureEnabled](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager/set-settings-about-map-position-point).
+
+Для изменения настроек или получения информации о нескольких жестах за раз можно работать напрямую со свойством [enabledGestures](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager/set-settings-about-map-position-point%20enabledGestures).
+
+Конкретный жест задаётся при помощи значений из [Gesture](/android/sdk/reference/stable/ru.dgis.sdk.map.Gesture). Значение [SCALING](/android/sdk/reference/stable/ru.dgis.sdk.map.Gesture#nav-lvl1--SCALING) отвечает за всю группу жестов масштабирования карты. Отключить эти жесты по одному нельзя.
+
+Пример отключения сдвига карты одним пальцем:
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+```kotlin
+gestureManager.disableGesture(TransformGesture.SHIFT)
+Log.d("GestureExample", "${gestureManager.enabledGestures}") // result 'D/GestureExample: [SCALING, ROTATION, MULTI_TOUCH_SHIFT, TILT]'
+```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+```kotlin
+gestureManager.disableGesture(Gesture.SHIFT)
+Log.d("GestureExample", "${gestureManager.enabledGestures}") // result 'D/GestureExample: [SCALING, ROTATION, MULTI_TOUCH_SHIFT, TILT]'
+```
+
+</TabItem>
+</Tabs>
+
+У некоторых жестов есть свой перечень настроек:
+
+* [MultiTouchShiftSettings](/android/sdk/reference/stable/ru.dgis.sdk.map.MultiTouchShiftSettings) для сдвига несколькими пальцами;
+* [RotationSettings](/android/sdk/reference/stable/ru.dgis.sdk.map.RotationSettings) для вращения;
+* [ScalingSettings](/android/sdk/reference/stable/ru.dgis.sdk.map.ScalingSettings) для масштабирования;
+* [TiltSettings](/android/sdk/reference/stable/ru.dgis.sdk.map.TiltSettings) для наклона.
+
+Подробнее о настройках можно прочитать на соответствующих страницах в документации. Объекты этих настроек доступны через свойства [GestureManager](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager).
+
+Кроме настроек конкретного жеста, также существуют настройки поведения масштабирования и поворота карты. Можно настроить точку, относительно которой будут происходить операции поворота и масштабирования карты. По умолчанию эти операции работают относительно "центра масс" точек постановки пальцев. Это поведение можно сменить при помощи настройки [EventsProcessingSettings](/android/sdk/reference/stable/ru.dgis.sdk.map.EventsProcessingSettings). Настройку можно установить при помощи метода [setSettingsAboutMapPositionPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager/set-settings-about-map-position-point).
+
+Для управления одновременным срабатыванием нескольких жестов используется метод [setMutuallyExclusiveGestures](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager/set-settings-about-map-position-point).
+
+### Реализация собственного механизма распознавания жестов
+
+Есть возможность заменить стандартный механизм распознавания жестов на пользовательский. Для этого нужно передать в `MapView` реализацию интерфейса [MapGestureRecognitionEngine](/android/sdk/reference/stable/interface#ru.dgis.sdk.map.map-gesture-recognition-engine) в метод [useCustomGestureRecognitionEngine](/android/sdk/reference/stable/class#ru.dgis.sdk.map.map-view/use-custom-gesture-recognition-engine).
+
+У интерфейса есть 4 метода:
+
+* [resetRecognitionState](/android/sdk/reference/stable/interface#ru.dgis.sdk.map.map-gesture-recognition-engine/reset-recognition-state), при вызове которого движок должен сбросить своё состояние на начальное. Вызывается в случаях, если какие-либо события (например, перелёты камеры) завершают работу с событиями управления карты.
+* [onDevicePpiChanged](/android/sdk/reference/stable/interface#ru.dgis.sdk.map.map-gesture-recognition-engine/reset-recognition-state) оповещает об изменении ppi. Значение может использоваться для перевода дистанции из экранных точек в миллиметры.
+* [setMapEventSender](/android/sdk/reference/stable/interface#ru.dgis.sdk.map.map-gesture-recognition-engine/reset-recognition-state) вызывается для передачи движку объекта, через который будут отправляться генерируемые события управления картой.
+* [processMotionEvent](/android/sdk/reference/stable/interface#ru.dgis.sdk.map.map-gesture-recognition-engine/reset-recognition-state) вызывается для передачи в движок точек касания к экрану в [стандартом](https://developer.android.com/reference/android/view/MotionEvent.html) виде.
+
+```kotlin
+// Упрощённая реализация распознавателя жестов, умеющая определять только перемещение карты.
+class ExampleGestureRecognitionEngine : MapGestureRecognitionEngine {
+    private var mapEventSender: MapEventSender? = null
+    private var oldTouchPoint: ScreenPoint? = null
+    private var origin: ScreenPoint? = null
+    private fun findTouchPoint(event: MotionEvent): ScreenPoint? =
+        if (event.actionMasked == MotionEvent.ACTION_CANCEL) {
+            // Отмена жеста
+            null
+        } else if (event.actionMasked == MotionEvent.ACTION_UP && event.pointerCount == 1) {
+            // Поднят последний палец
+            null
+        } else if (event.pointerCount <= 0) {
+            // Не зарегистрировано ни одного касания
+            null
+        } else {
+            ScreenPoint(event.getX(0), event.getY(0))
+        }
+    override fun processMotionEvent(event: MotionEvent) : Boolean{
+        val newTouchPoint = findTouchPoint(event)
+        if (newTouchPoint != null) {
+            if (oldTouchPoint != null) {
+                mapEventSender!!.sendEvent(
+                    DirectMapShiftEvent(
+                        ScreenShift(
+                            newTouchPoint.x - oldTouchPoint!!.x,
+                            newTouchPoint.y - oldTouchPoint!!.y
+                        ),
+                        origin!!,
+                        Duration.now()
+                    )
+                )
+            } else {
+                origin = newTouchPoint
+                mapEventSender!!.sendEvent(DirectMapControlBeginEvent())
+            }
+        } else {
+            origin = null
+            mapEventSender!!.sendEvent(DirectMapControlEndEvent(Duration.now()))
+        }
+        oldTouchPoint = newTouchPoint
+        return true
+    }
+    override fun resetRecognitionState() {
+        origin = null
+        oldTouchPoint = null
+    }
+    override fun onDevicePpiChanged(devicePpi: DevicePpi) {}
+    override fun setMapEventSender(mapEventSender: MapEventSender) {
+        this.mapEventSender = mapEventSender
+    }
+    override fun close() {}
+}
+```
+
+Задача движка состоит в том, чтобы преобразовывать касания к экрану в события управления картой. Движок работает с событиями прямого управления картой. Все такие события представлены классами, имя которых начинается с `DirectMap`. Всего таких событий шесть:
+
+* [DirectMapControlBeginEvent](/android/sdk/reference/stable/class#ru.dgis.sdk.map.direct-map-control-begin-event)
+* [DirectMapControlEndEvent](/android/sdk/reference/stable/class#ru.dgis.sdk.map.direct-map-control-end-event)
+* [DirectMapShiftEvent](/android/sdk/reference/stable/class#ru.dgis.sdk.map.direct-map-shift-event)
+* [DirectMapRotationEvent](/android/sdk/reference/stable/class#ru.dgis.sdk.map.direct-map-rotation-event)
+* [DirectMapScalingEvent](/android/sdk/reference/stable/class#ru.dgis.sdk.map.direct-map-scaling-event)
+* [DirectMapTiltEvent](/android/sdk/reference/stable/class#ru.dgis.sdk.map.direct-map-tilt-event)
+
+Подробности о событии можно узнать в его описании. Нужно помнить, что для работы событий прямого управления картой необходимо использовать события-сигналы о начале и окончании последовательности событий (даже если генерируется всего одно событие).
+
+

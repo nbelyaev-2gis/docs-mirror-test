@@ -1,0 +1,8 @@
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.buttonActive {
+  color: var(--text-blue-1) !important;
+}

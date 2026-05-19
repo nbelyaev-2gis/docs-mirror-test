@@ -1,0 +1,375 @@
+---
+sidebar: mapgljsapi
+---
+# Работа с React
+
+Вы можете работать с картой MapGL JS API в проектах на React. Обратите внимание на следующие инструкции:
+
+* [Как добавить карту в приложение и избежать повторного рендеринга карты](#prevent-rerender).
+* [Как получить доступ к карте из другого компонента](#access-from-other-components).
+
+:::tip
+
+Вы можете воспользоваться [шаблоном React-проекта](https://github.com/2gis/mapgl-react-app).
+
+:::
+
+## Повторный рендеринг {#prevent-rerender}
+
+Возьмём для примера простое приложение на React:
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+import { App } from './App';
+
+const rootElement = document.getElementById('root');
+ReactDOM.render(<App />, rootElement);
+```
+
+С простым компонентом App:
+
+```js
+import React from 'react';
+
+export const App = () => {
+    return <div>My App</div>;
+};
+```
+
+Чтобы добавить в это приложение карту, создадим новый компонент:
+
+```js
+import { load } from '@2gis/mapgl';
+
+export const Map = () => {
+    useEffect(() => {
+        let map;
+        load().then((mapglAPI) => {
+            map = new mapglAPI.Map('map-container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+        });
+
+        // Удаляем карту при размонтировании компонента
+        return () => map && map.destroy();
+    }, []);
+
+    return (
+        <div style={{ width: '100%', height: '100%' }}>
+            <MapWrapper />
+        </div>
+    );
+};
+```
+
+Обратите внимание, что в этом компоненте нет контейнера карты (`map-container`). Чтобы избежать повторного рендеринга карты, мы создадим отдельный компонент, который будет использовать [React.memo](https://ru.reactjs.org/docs/react-api.html#reactmemo):
+
+```js
+const MapWrapper = React.memo(
+    () => {
+        return <div id="map-container" style={{ width: '100%', height: '100%' }}></div>;
+    },
+    () => true,
+);
+```
+
+Второй аргумент [React.memo](https://ru.reactjs.org/docs/react-api.html#reactmemo) — функция, которая определяет, можно ли использовать последний результат рендеринга, избегая таким образом повторного рендеринга. В нашем случае эта функция будет всегда возвращать `true`.
+
+Осталось добавить карту в компонент App и всё готово к работе:
+
+```js
+export const App = () => {
+    return (
+        <div style={{ width: '100%', height: 400 }}>
+            <Map />
+        </div>
+    );
+};
+```
+
+Полный исходный код можно найти в примере ниже.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Пример инициализации MapGL JS API в React-приложении" />
+        <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <!-- Не используйте в проектах: -->
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        <style>
+            html,
+            body,
+            #root {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root" style="height: 100%;"></div>
+        <script type="text/babel">
+            const MapWrapper = React.memo(
+                () => {
+                    return <div id="map-container" style={{ width: '100%', height: '100%' }}></div>;
+                },
+                () => true,
+            );
+            const MapGL = () => {
+                React.useEffect(() => {
+                    const map = new mapgl.Map('map-container', {
+                        center: [37.615655, 55.768005],
+                        zoom: 13,
+                        key: 'Your API access key',
+                    });
+
+                    return () => map.destroy();
+                }, []);
+
+                return (
+                    <div style={{ width: '100%', height: '100%' }}>
+                        <MapWrapper />
+                    </div>
+                );
+            };
+            const App = () => {
+                return (
+                    <div style={{ width: '100%', height: '100%' }}>
+                        <MapGL />
+                    </div>
+                );
+            };
+
+            ReactDOM.render(<App />, document.getElementById('root'));
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Получение доступа к карте {#access-from-other-components}
+
+Второй частый сценарий использования: получение доступа к карте из другого компонента.
+
+В качестве примера можно взять кнопку, которая меняет центр карты. Если эта кнопка будет расположена в отдельном компоненте, то нужно из этого компонента получить доступ к компоненту с картой. Для этого можно использовать [React Context API](https://ru.reactjs.org/docs/context.html).
+
+Для начала создадим новый компонент и вызовем [React.createContext()](https://ru.reactjs.org/docs/context.html#reactcreatecontext), чтобы создать объект Context.
+
+```js
+const MapContext = React.createContext([undefined, () => {}]);
+const MapProvider = (props) => {
+    const [mapInstance, setMapInstance] = React.useState();
+
+    return (
+        <MapContext.Provider value={[mapInstance, setMapInstance]}>
+            {props.children}
+        </MapContext.Provider>
+    );
+};
+```
+
+Затем обернём компонент App компонентом MapProvider. Это позволит использовать созданный объект Context в компоненте App и всех дочерних компонентах.
+
+```js
+ReactDOM.render(
+    <MapProvider>
+        <App />
+    </MapProvider>,
+    rootElement,
+);
+```
+
+Теперь после создания карты мы можем использовать Context, чтобы сохранить ссылку на карту:
+
+```js
+export const Map = () => {
+    const [_, setMapInstance] = React.useContext(MapContext);
+
+    useEffect(() => {
+        let map;
+        load().then((mapglAPI) => {
+            map = new mapglAPI.Map('map-container', {
+                center: [37.615655, 55.768005],
+                zoom: 13,
+                key: 'Your API access key',
+            });
+
+            // Сохраняем ссылку на карту
+            setMapInstance(map);
+        });
+
+        // Удаляем карту при размонтировании компонента
+        return () => map && map.destroy();
+    }, []);
+
+    return (
+        <div style={{ width: '100%', height: '100%' }}>
+            <MapWrapper />
+        </div>
+    );
+};
+```
+
+Сохранённую ссылку можно использовать в других компонентах приложения. Например, создадим кнопку, которая будет менять центр карты:
+
+```js
+export const MoveMapButton = () => {
+    const [mapInstance] = React.useContext(MapContext);
+
+    const setInitialCenter = useCallback(() => {
+        if (mapInstance) {
+            mapInstance.setCenter([37.615655, 55.768005]);
+        }
+    }, [mapInstance]);
+
+    return <button onClick={setInitialCenter}>Set initial center</button>;
+};
+```
+
+Полный исходный код можно найти в примере ниже.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '350px' }}>
+{`
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Пример взаимодействия с картой в React-приложении" />
+        <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+        <script src="__MAPGL_API_URL__"></script>
+        <!-- Не используйте в проектах: -->
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        <style>
+            html,
+            body,
+            #root {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="text/babel">
+            const MapContext = React.createContext([undefined, () => {}]);
+
+            const MapProvider = (props) => {
+                const [mapInstance, setMapInstance] = React.useState();
+
+                return (
+                    <MapContext.Provider value={[mapInstance, setMapInstance]}>
+                        {props.children}
+                    </MapContext.Provider>
+                );
+            };
+
+            const MapWrapper = React.memo(
+                () => {
+                    return <div id="map-container" style={{ width: '100%', height: '100%' }}></div>;
+                },
+                () => true,
+            );
+            const MapGL = () => {
+                const [_, setMapInstance] = React.useContext(MapContext);
+
+                React.useEffect(() => {
+                    const map = new mapgl.Map('map-container', {
+                        center: [37.615655, 55.768005],
+                        zoom: 13,
+                        key: 'Your API access key',
+                    });
+
+                    setMapInstance(map);
+                    return () => map.destroy();
+                }, []);
+
+                return (
+                    <div style={{ width: '100%', height: '100%' }}>
+                        <MapWrapper />
+                    </div>
+                );
+            };
+            const MoveMapButton = () => {
+                const [mapInstance] = React.useContext(MapContext);
+
+                const setInitialCenter = React.useCallback(() => {
+                    if (mapInstance) {
+                        mapInstance.setCenter([37.615655, 55.768005]);
+                    }
+                }, [mapInstance]);
+
+                return (
+                    <button style={{ padding: '4px 10px' }} onClick={setInitialCenter}>
+                        Установить начальный центр
+                    </button>
+                );
+            };
+            const App = () => {
+                return (
+                    <div>
+                        <div style={{ padding: '0 0 6px' }}>
+                            Перетащите карту, а затем нажмите кнопку <MoveMapButton />
+                        </div>
+                        <br />
+                        <div style={{ width: '100%', height: 250 }}>
+                            <MapGL />
+                        </div>
+                    </div>
+                );
+            };
+
+            ReactDOM.render(
+                <MapProvider>
+                    <App />
+                </MapProvider>,
+                document.getElementById('root'),
+            );
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Вы можете добавить пользовательский хук, который позволит выполнять `effect` с сохранённой ранее ссылкой на карту:
+
+```jsx
+const useMapEffect = (
+  // Функция, которая выполняется в useEffect при наличии mapInstance
+  effect,
+  // Зависимости, при изменении которых выполняется effect
+  deps,
+) => {
+  const { mapInstance } = React.useContext(MapContext);
+
+  return React.useEffect(() => {
+    if (!mapInstance) {
+      return;
+    }
+
+    return effect({ mapInstance });
+  }, [mapInstance, ...deps]);
+};
+```
+
+## Готовый пакет npm
+
+Если вы используете npm, вы можете скачать пакет [@2gis/mapgl](https://www.npmjs.com/package/@2gis/mapgl), который также включает поддержку TypeScript.
+
+Примеры использования и другую информацию можно найти в [Readme](https://www.npmjs.com/package/@2gis/mapgl?activeTab=readme).
+
+## Пример использования в стороннем проекте
+
+См. пример использования MapGL в стороннем проекте в репозитории [github.com/city-mobil/frontend_react-2gis](https://github.com/city-mobil/frontend_react-2gis), где реализована React-обёртка. Также доступен npm-пакет обёртки: [react-2gis](https://www.npmjs.com/package/react-2gis).

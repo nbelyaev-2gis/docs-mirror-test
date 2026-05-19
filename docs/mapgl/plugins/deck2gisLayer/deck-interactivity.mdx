@@ -1,0 +1,227 @@
+---
+sidebar: mapgljsapi
+---
+# Получение данных слоя deck.gl
+
+Вы можете получать данные:
+
+* [только об объектах слоёв deck.gl](#visualization);
+* [одновременно об объектах слоёв deck.gl и объектах, добавленных на карту MapGL JS API](#visualization-and-map).
+
+Кликните на гексагон на карте и посмотрите информацию о нём в консоли браузера. Чтобы получить данные одновременно из слоя и карты, кликните на гексагон в месте, где под ним указан значок метро или название улицы.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapGL JS API</title>
+    <meta name="description" content="Пример использования плагина deck2gisLayer" />
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 100%;
+            height: 550px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="__MAPGL_API_URL__"></script>
+    <script src="__MAPGL_PLUGIN_DECK2GIS-LAYER_URL__"></script>
+    <script src="__DECKGL_URL__"></script>
+
+    <div id="container"></div>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [37.615655, 55.751005],
+            zoom: 13,
+            key: 'Your API access key',
+            forceSyncIdentify: true,
+        });
+        const deckgl = mapgl.Deck2gisLayer.initDeck(map, deck.Deck, {
+          antialiasing: 'msaa',
+          getCursor({ isHovering }) {
+            return isHovering ? 'pointer' : 'inherit';
+          }
+        });
+        const data = [
+            {
+                point: {
+                    lon: 37.615655,
+                    lat: 55.768005,
+                },
+            },
+            {
+                point: {
+                    lon: 37.615427,
+                    lat: 55.768484,
+                },
+            },
+            {
+                point: {
+                    lon: 37.617814,
+                    lat: 55.760535,
+                },
+            },
+            {
+                point: {
+                    lon: 37.617814,
+                    lat: 55.760535,
+                },
+            },
+        ];
+        const deckHexagonLayer = new mapgl.Deck2gisLayer({
+            id: 'deckgl-HexagonLayer',
+            deck: deckgl,
+            type: deck.HexagonLayer,
+            data,
+            radius: 480,
+            opacity: 0.5,
+            getPosition: (d) => [d.point.lon, d.point.lat],
+            pickable: true,
+            parameters: { depthTest: false },
+        });
+
+        map.once('styleload', () => {
+            map.addLayer(deckHexagonLayer);
+        });
+
+        map.on('click', (event) => {
+            const pickCoords = {
+                x: event.point[0],
+                y: event.point[1],
+            };
+
+            const pickedObject = deckgl.pickObject(pickCoords);
+
+            console.log('Выбран объект Deck:', pickedObject);
+            console.log('Событие клика на карте MapGL:', event);
+        });
+    </script>
+</body>
+
+</html>`}
+</HtmlExampleWithSrcCode>
+
+## 1. Инициализируйте карту {#initialize-map}
+
+При [инициализации карты MapGL JS API](/mapgl/start/first-steps) установите флаг `forceSyncIdentify: true`. В MapGL JS API объекты идентифицируются по умолчанию асинхронно, а в deck.gl — синхронно. Установка флага позволяет синхронизировать эти процессы и получать информацию о выбранных объектах при клике на карту из обоих источников одновременно.
+
+Пример добавления флага `forceSyncIdentify` при инициализации карты:
+
+```js
+const map = new mapgl.Map('container', {
+    center: [37.615655, 55.751005],
+    zoom: 13,
+    key: 'Your API access key',
+    // Включение флага forceSyncIdentify для синхронного получения информации о выбранных объектах
+    forceSyncIdentify: true,
+});
+```
+
+## 2. Настройте получение данных {#obtain-data}
+
+### Из слоя deck.gl {#visualization}
+
+С помощью встроенной обработки событий в deck.gl можно определять, какой объект и слой находятся в точке на карте.
+
+Чтобы получать информацию из слоя визуализации deck.gl, добавьте в его настройки следующие параметры:
+
+* `pickable: true` — поддержка выбора объектов слоя;
+* `depthTest: false` — отключение проверки глубины.
+
+Вы можете использовать методы deck.gl для обработки событий взаимодействия со слоем, например `onClick`, `onHover` и других. Подробнее см. в документации по [взаимодействию со слоями deck.gl](https://deck.gl/docs/developer-guide/interactivity).
+
+Пример обработчика события `onClick` (клик на карту) для слоя `HexagonLayer`:
+
+```js
+const deckHexagonLayer = new Deck2gisLayer({
+    id: 'deckgl-HexagonLayer',
+    deck,
+    type: HexagonLayer,
+    data,
+    radius: 250,
+    getPosition: (d) => [d.point.lon, d.point.lat],
+    pickable: true,
+    parameters: { depthTest: false },
+    onClick: ({ object, x, y }) => {
+        if (object) {
+            console.log('Клик на гексагон:', object);
+        }
+    },
+});
+```
+
+### Из слоя deck.gl и из карты {#visualization-and-map}
+
+Вы можете получать информацию из слоя визуализации deck.gl и из карты MapGL JS API одновременно.
+
+Пример обработчика события `click` (клик на карту):
+
+```js
+import { Deck } from '@deck.gl/core';
+import { Deck2gisLayer, initDeck } from '@2gis/deck2gis-layer';
+
+const deck = initDeck(mapInstance, Deck, { antialiasing: 'msaa' });
+
+map.on('click', (event) => {
+  const pickCoords = {
+      x: event.point[0],
+      y: event.point[1],
+  };
+
+  const pickedObject = deck.pickObject(pickCoords);
+
+  console.log('Deck picked object:', pickedObject);
+  console.log('MapGL click event:', event);
+});
+```
+
+Метод `pickObject()` используется для определения объекта, который был выбран при клике на карту. Это позволяет одновременно обрабатывать взаимодействия с картой и со слоями deck.gl. Если несколько объектов перекрываются, для получения информации о них используйте метод `pickObjects()`.
+
+Если вы используете React, вы можете использовать любой менеджер состояний для отображения информации о выбранных объектах в пользовательском интерфейсе (например, во всплывающем окне или на боковой панели):
+
+```jsx
+// Инициализация deck.gl
+const deck = initDeck(map, Deck, { antialiasing: 'msaa' });
+
+// Доступ к selectedObject и setSelectedObject
+const [selectedObject, setSelectedObject] = useState(undefined);
+
+// Обработчик события клика на карту
+useMapEffect(({mapInstance }) => {
+  const handleClick = (event) => {
+    const pickCoords = {
+        x: event.point[0],
+        y: event.point[1],
+    };
+
+    const pickedObject = deck.pickObject(pickCoords);
+
+    setSelectedObject({
+      pickedObject,
+      mapEvent: event,
+    });
+  };
+
+  mapInstance.on('click', handleClick);
+
+  return () => {
+    mapInstance.off('click', handleClick);
+  };
+}, [deck]);
+
+// Использование данных о выбранном объекте
+{selectedObject && (
+  <div className="popup">
+    <h3>Selected Object</h3>
+    <pre>{JSON.stringify(selectedObject, null, 2)}</pre>
+  </div>
+)}
+```

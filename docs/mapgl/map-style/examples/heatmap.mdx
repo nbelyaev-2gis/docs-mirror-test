@@ -1,0 +1,218 @@
+---
+sidebar: mapgljsapi
+---
+# Тепловая карта
+
+С помощью [источника данных GeoJSON](/mapgl/geodata/geojson) и [стилей карты](/mapgl/styles-specification) на карте можно нарисовать тепловой слой: набор градиентных кругов, которые сливаются в единый объект при приближении к друг другу.
+
+Чтобы это сделать, нужно подключить источник данных с помощью метода [GeoJsonSource()](/mapgl/reference/class#geo-json-source), указав уникальный атрибут для этого источника (например, `purpose: 'heatmap'`). Подключаемый GeoJSON должен состоять только из объектов `Point` и `MultiPoint` (центры кругов).
+
+:::note[Ограниченная доступность]
+
+Тепловая карта не поддерживается в режиме отображения [3D-рельефа](/mapgl/map-style/immersive/terrain) на карте.
+
+:::
+
+```js
+const data = {
+    type: 'FeatureCollection',
+    features: [
+        {
+            type: 'Feature',
+            properties: { customProperty: 1 },
+            geometry: {
+                type: 'MultiPoint',
+                coordinates: [
+                  [37.6173, 55.7558],
+                  [37.6089, 55.7612],
+                  [37.6201, 55.7634],
+                ],
+            },
+        },
+        {
+            type: 'Feature',
+            properties: { customProperty: 2 },
+            geometry: {
+                type: 'Point',
+                coordinates: [37.6156, 55.7680],
+            },
+        },
+    ],
+};
+
+const source = new mapgl.GeoJsonSource(map, {
+    data,
+    attributes: {
+        purpose: 'heatmap',
+    },
+});
+```
+
+После этого нужно создать стиль для теплового слоя, указав для него тип [heatmap](/mapgl/styles-specification#style-for-heatmap) и фильтр по указанному при подключении GeoJSON атрибуту (`purpose = heatmap`).
+
+```js
+const layer = {
+    id: 'my-heatmap-layer', // ID каждого слоя должен быть уникальным
+
+    // Фильтрация или выбор данных для этого слоя
+    filter: [
+      'match',
+      ['sourceAttr', 'purpose'],
+      ['heatmap'],
+      true, // Значение при совпадении атрибута 'purpose' источника со значением 'heatmap'
+      false // Значение при несовпадении
+    ],
+
+    // Тип объекта отрисовки
+    type: 'heatmap',
+
+    // Стиль объекта отрисовки
+    style: {
+        color: [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0,
+            'rgba(0, 0, 0, 0)',
+            0.2,
+            'rgba(172, 32, 135, 1)',
+            0.4,
+            'rgba(255, 154, 0, 1)',
+            0.6,
+            'rgba(255, 252, 0, 1)',
+            0.8,
+            'rgba(255, 255, 63, 1)',
+            1,
+            'rgba(255, 255, 255, 1)',
+        ],
+        radius: 50,
+        weight: ['get', 'customProperty'],
+        intensity: 0.8,
+        opacity: 0.8,
+        downscale: 1,
+    },
+};
+
+map.on('styleload', () => {
+    map.addLayer(layer);
+});
+```
+
+Описание параметров:
+
+* `color` — набор цветов для градиента, от периметра (`0.0`) до центра круга (`1.0`). Для периметра важно указать прозрачный цвет, иначе им будет закрашена вся карта.
+* `radius` — радиус круга в пикселях.
+* `weight` — интенсивность точки. Чем выше значение, тем больше размер центра круга (сильнее будут преобладать цвета ближе к `1.0` из массива `color`). В качестве значения имеет смысл указывать только [ExtractorExpression](/mapgl/styles-specification#extractor-expressions) или [InterpolateExpression](/mapgl/styles-specification#interpolation-expressions), используя одно из свойств объекта, иначе интенсивность будет применена ко всем точкам.
+* `intensity` — модификатор интенсивности для всех точек теплового слоя.
+* `opacity` — прозрачность слоя (`1` — слой непрозрачный, `0` — слой полностью прозрачный).
+* `downscale` — модификатор разрешения. Чем выше значение, тем ниже качество изображения теплового слоя и выше скорость отрисовки. По умолчанию `1`.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Тепловая карта" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 11.5,
+                key: 'Your API access key',
+            });
+
+            const data = {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: { customProperty: 1 },
+                        geometry: {
+                            type: 'MultiPoint',
+                            coordinates: [
+                                [37.6173, 55.7558],
+                                [37.6089, 55.7612],
+                                [37.6201, 55.7634],
+                            ],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: { customProperty: 2 },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [37.6156, 55.7680],
+                        },
+                    },
+                ],
+            };
+
+            const source = new mapgl.GeoJsonSource(map, {
+                data,
+                attributes: {
+                    purpose: 'heatmap',
+                },
+            });
+
+            const layer = {
+                id: 'my-heatmap-layer',
+
+                filter: [
+                    'match',
+                    ['sourceAttr', 'purpose'],
+                    ['heatmap'],
+                    true,
+                    false,
+                ],
+
+                type: 'heatmap',
+
+                style: {
+                    color: [
+                        'interpolate',
+                        ['linear'],
+                        ['heatmap-density'],
+                        0,
+                        'rgba(0, 0, 0, 0)',
+                        0.2,
+                        'rgba(172, 32, 135, 1)',
+                        0.4,
+                        'rgba(255, 154, 0, 1)',
+                        0.6,
+                        'rgba(255, 252, 0, 1)',
+                        0.8,
+                        'rgba(255, 255, 63, 1)',
+                        1,
+                        'rgba(255, 255, 255, 1)',
+                    ],
+                    radius: 50,
+                    weight: ['get', 'customProperty'],
+                    intensity: 0.8,
+                    opacity: 0.8,
+                    downscale: 1,
+                },
+            };
+
+            map.on('styleload', () => {
+                map.addLayer(layer);
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

@@ -1,0 +1,24 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--shape-level-2);
+  padding: 12px;
+  margin: 12px 32px 0 12px;
+  border-radius: 16px;
+}
+
+.header {
+  font-weight: var(--fw-m);
+  font-size: var(--fs-md);
+  line-height: var(--lh-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sendWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

@@ -1,0 +1,593 @@
+---
+sidebar: iossdk
+---
+# Навигация
+
+С помощью SDK вы можете работать со следующими сценариями навигации:
+
+* Запустить навигатор в разных режимах ([свободная навигация](#free-drive-mode), [ведение по маршруту](#turn-by-turn-mode) и [симуляция ведения](#simulation)), в том числе [внутри зданий](#indoor-navigation).
+* Предлагать пользователю [альтернативные маршруты](#alternative-routes) по пути.
+* Получать [динамические данные маршрута](#dynamic-route-data) в ходе навигации.
+* Настраивать [звуковые оповещения](#sound-notifications) в навигаторе.
+
+## Начало работы {#getting-started}
+
+<Tabs>
+<TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+* **UIKit**:
+
+    Чтобы создать навигатор, используйте готовый элемент интерфейса [INavigationUIView](/ios/sdk/reference/stable/interface#inavigation-uiview) и класс [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager).
+
+    Создайте слой навигатора с помощью фабрики [INavigationUIViewFactory](/ios/sdk/reference/stable/interface#inavigation-view-factory) и класса [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager).
+
+    Добавьте на карту маркер с текущей геопозицией устройства с помощью источника данных [MyLocationMapObjectSource](/ios/sdk/reference/stable/class#MyLocationMapObjectSource) и передайте его в метод карты [addSource()](/ios/sdk/reference/stable/class#Map).
+
+    ```swift
+    // Создание фабрики объектов карты
+    guard let mapFactory = try? sdk.makeMapFactory(options: .default) else {
+        return
+    }
+
+    // Добавление слоя карты в иерархию View
+    let mapUIView = mapFactory.mapUIView
+    mapUIView.translatesAutoresizingMaskIntoConstraints = false
+    containerView.addSubview(mapUIView)
+    NSLayoutConstraint.activate([
+        mapUIView.leftAnchor.constraint(equalTo: containerView.leftAnchor),
+        mapUIView.rightAnchor.constraint(equalTo: containerView.rightAnchor),
+        mapUIView.topAnchor.constraint(equalTo: containerView.topAnchor),
+        mapUIView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+    ])
+
+    // Создание объекта NavigationManager
+    let navigationManager = NavigationManager(platformContext: sdk.context)
+
+    // Добавление карты в навигатор
+    let map = mapFactory.map
+    navigationManager.mapManager.addMap(map: map)
+
+    // Добавление маркера с текущей геопозицией на карту
+    let locationSource = MyLocationMapObjectSource(context: sdk.context)
+    map.addSource(source: locationSource)
+
+    // Создание фабрики UI-компонентов навигатора
+    let navigationUIViewFactory = sdk.makeNavigationUIViewFactory()
+
+    // Создание слоя навигатора и размещение его в иерархии выше слоя карты
+    let navigationUIView = navigationUIViewFactory.makeNavigationUIView(
+        map: map,
+        navigationManager: navigationManager
+    )
+    navigationUIView.translatesAutoresizingMaskIntoConstraints = false
+    containerView.addSubview(navigationUIView)
+    NSLayoutConstraint.activate([
+        navigationUIView.leftAnchor.constraint(equalTo: containerView.leftAnchor),
+        navigationUIView.rightAnchor.constraint(equalTo: containerView.rightAnchor),
+        navigationUIView.topAnchor.constraint(equalTo: containerView.topAnchor),
+        navigationUIView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+    ])
+
+    // Добавление обработчика нажатия кнопки закрытия
+    navigationUIView.closeButtonCallback = { [weak navigationManager] in
+        navigationManager?.stop()
+    }
+    ```
+
+* **SwiftUI**:
+
+    Чтобы создать навигатор, используйте готовый элемент интерфейса [NavigationView](/ios/sdk/reference/stable/struct#navigation-view) и класс [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager).
+
+    Создайте слой навигатора с помощью фабрики [INavigationViewFactory](/ios/sdk/reference/stable/interface#inavigation-view-factory) и класса [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager).
+
+    ```swift
+    @MainActor
+    final class NavigatorDemoViewModel: ObservableObject, @unchecked Sendable {
+        let navigationManager: NavigationManager
+        private let map: Map
+
+        init(
+            map: Map,
+            navigationManager: NavigationManager
+        ) throws {
+            self.map = map
+            self.navigationManager = navigationManager
+
+            let locationSource = mapSourceFactory.makeMyLocationMapObjectSource(
+                bearingSource: .satellite
+            )
+            self.map.addSource(source: locationSource)
+        }
+
+        func stopNavigation() {
+            self.navigationManager.stop()
+        }
+    }
+
+    struct NavigatorDemoView: View {
+        @ObservedObject private var viewModel: NavigatorDemoViewModel
+
+        private let mapFactory: IMapFactory
+        private let navigationViewFactory: INavigationViewFactory
+
+        init(
+            viewModel: NavigatorDemoViewModel,
+            mapFactory: IMapFactory,
+            navigationViewFactory: INavigationViewFactory
+        ) {
+            self.viewModel = viewModel
+            self.mapFactory = mapFactory
+            self.navigationViewFactory = navigationViewFactory
+        }
+
+        var body: some View {
+            ZStack {
+                self.mapFactory.mapView
+                    .edgesIgnoringSafeArea(.all)
+                self.navigationViewFactory.makeNavigationView(
+                    map: self.mapFactory.map,
+                    navigationManager: self.viewModel.navigationManager
+                )
+                .finishButtonCallback { [viewModel = self.viewModel] in
+                    viewModel.stopNavigation()
+                }
+            }
+            .onDisappear {
+                self.viewModel.stopNavigation()
+            }
+        }
+    }
+    ```
+
+</TabItem>
+<TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+Чтобы создать навигатор, используйте готовый элемент интерфейса [INavigationView](/ios/sdk/reference/stable/interface#INavigationView) и класс [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager).
+
+Создайте слой навигатора с помощью фабрики [INavigationViewFactory](/ios/sdk/reference/stable/interface#inavigation-view-factory) и класса [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager).
+
+Добавьте на карту маркер с текущей геопозицией устройства с помощью источника данных [MyLocationMapObjectSource](/ios/sdk/reference/stable/class#my-location-map-object-source) и передайте его в метод карты [addSource()](/ios/sdk/reference/stable/class#map/add-source).
+
+```swift
+// Создание фабрики объектов карты
+guard let mapFactory = try? sdk.makeMapFactory(options: .default) else {
+    return
+}
+
+// Добавление слоя карты в иерархию View
+let mapView = mapFactory.mapView
+mapView.translatesAutoresizingMaskIntoConstraints = false
+containerView.addSubview(mapView)
+NSLayoutConstraint.activate([
+    mapView.leftAnchor.constraint(equalTo: containerView.leftAnchor),
+    mapView.rightAnchor.constraint(equalTo: containerView.rightAnchor),
+    mapView.topAnchor.constraint(equalTo: containerView.topAnchor),
+    mapView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+])
+
+// Создание объекта NavigationManager
+let navigationManager = NavigationManager(platformContext: sdk.context)
+
+// Добавление карты в навигатор
+let map = mapFactory.map
+navigationManager.mapManager.addMap(map: map)
+
+// Добавление маркера с текущей геопозицией на карту
+let locationSource = MyLocationMapObjectSource(context: sdk.context)
+map.addSource(source: locationSource)
+
+// Создание фабрики UI-компонентов навигатора
+let navigationViewFactory = sdk.makeNavigationViewFactory()
+
+// Создание слоя навигатора и размещение его в иерархии выше слоя карты
+let navigationView = navigationViewFactory.makeNavigationView(
+    map: map,
+    navigationManager: navigationManager
+)
+navigationView.translatesAutoresizingMaskIntoConstraints = false
+containerView.addSubview(navigationView)
+NSLayoutConstraint.activate([
+    navigationView.leftAnchor.constraint(equalTo: containerView.leftAnchor),
+    navigationView.rightAnchor.constraint(equalTo: containerView.rightAnchor),
+    navigationView.topAnchor.constraint(equalTo: containerView.topAnchor),
+    navigationView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+])
+
+// Добавление обработчика нажатия кнопки закрытия
+navigationView.closeButtonCallback = { [weak navigationManager] in
+    navigationManager?.stop()
+}
+```
+
+</TabItem>
+</Tabs>
+
+Навигатор может работать в трёх режимах: свободная навигация, ведение по маршруту и симуляция ведения.
+
+Настройки навигатора можно изменить через свойства объекта [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager/var-indoor-detector).
+
+## Собственный источник геопозиции {#custom-location-source}
+
+В качестве источника данных о текущем местоположении вы можете использовать собственный источник геопозиции. Для этого реализуйте протокол [ILocationProvider](/ios/sdk/reference/stable/interface#ilocation-provider) и передайте его в параметр `locationProvider` при создании контейнера SDK.
+
+1. Создайте класс, реализующий протокол `ILocationProvider`:
+
+   ```swift
+    import DGis
+    import CoreLocation
+
+    final class CustomLocationProvider: NSObject, ILocationProvider, @unchecked Sendable {
+        private var locationCallback: LocationCallback?
+        private var availabilityCallback: AvailabilityCallback?
+
+        // Установка callback-функций для передачи геопозиции в SDK
+        func setCallbacks(
+            locationCallback: LocationCallback?,
+            availabilityCallback: AvailabilityCallback?
+        ) {
+            self.locationCallback = locationCallback
+            self.availabilityCallback = availabilityCallback
+
+            availabilityCallback?(true)
+
+            ...
+        }
+
+        // Метод для установки желаемой точности геопозиции
+        func setDesiredAccuracy(_ accuracy: DesiredAccuracy) {}
+
+        // Метод для передачи новой геопозиции в SDK
+        func updateLocation(_ location: CLLocation) {
+            locationCallback?([location])
+        }
+    }
+   ```
+
+2. Создайте контейнер с собственным поставщиком геопозиции:
+
+   ```swift
+   let customLocationProvider = CustomLocationProvider()
+
+   let sdk = DGis.Container(
+       keySource: .default,
+       locationProvider: customLocationProvider,
+       magneticHeadingProvider: nil // Можно передать собственный IMagneticHeadingProvider
+   )
+   ```
+
+3. Когда ваше приложение получает новые координаты, передавайте их в SDK через `updateLocation`:
+
+   ```swift
+   let location = CLLocation(
+       coordinate: CLLocationCoordinate2D(latitude: 55.751244, longitude: 37.618423),
+       altitude: 0,
+       horizontalAccuracy: 5,
+       verticalAccuracy: 5,
+       course: 90,
+       speed: 10,
+       timestamp: Date()
+   )
+
+   customLocationProvider.updateLocation(location)
+   ```
+
+   Если вы не передаёте координаты, SDK использует стандартный источник местоположения на основе [Core Location](https://developer.apple.com/documentation/corelocation).
+
+## Свободная навигация {#free-drive-mode}
+
+В этом режиме маршрут следования отсутствует, но навигатор будет информировать о превышениях скорости, дорожных камерах, авариях и ремонтных работах.
+
+Чтобы запустить навигатор в этом режиме, нужно вызвать метод `start()` без параметров.
+
+```swift
+navigationManager.start()
+```
+
+## Ведение по маршруту {#turn-by-turn-mode}
+
+В этом режиме на карте будет построен маршрут от текущего местоположения до указанной точки назначения, и пользователь будет получать инструкции по мере движения.
+
+Чтобы запустить навигатор в этом режиме, нужно вызвать метод `start()` и указать объект [RouteBuildOptions](/ios/sdk/reference/stable/struct#route-build-options): координаты точки назначения и настройки маршрута.
+
+```swift
+let routeBuildOptions = RouteBuildOptions(
+    finishPoint: RouteSearchPoint(
+        coordinates: GeoPoint(
+            latitude: 55.752425,
+            longitude: 37.613983
+        )
+    ),
+    routeSearchOptions: routeSearchOptions
+)
+
+navigationManager.start(routeBuildOptions)
+```
+
+Дополнительно при вызове метода `start()` можно указать объект [TrafficRoute](/ios/sdk/reference/stable/class#traffic-route) — готовый маршрут для навигации (см. детали в разделе [Маршруты](/ios/sdk/examples/routing)). В таком случае навигатор не будет пытаться построить маршрут от текущего местоположения, а начнёт ведение по указанному маршруту.
+
+```swift
+// Ищем маршрут.
+self.routeSearchCancellable = routesFuture.sinkOnMainThread { routes in
+    guard let route = routes.first else { return }
+
+    // Настройки маршрута.
+    let routeBuildOptions = RouteBuildOptions(
+        finishPoint: finishPoint,
+        routeSearchOptions: routeSearchOptions
+    )
+    // Запускаем навигатор.
+    navigationManager.start(
+        routeBuildOptions: routeBuildOptions,
+        trafficRoute: route
+    )
+} failure: { error in
+    print("Не удалось найти маршрут: \\(error)")
+}
+```
+
+## Симуляция ведения по маршруту {#simulation}
+
+В этом режиме навигатор не будет отслеживать реальное местоположение устройства, а запустит симулированное движение по указанному маршруту. Режим удобно использовать для отладки.
+
+Чтобы запустить навигатор в режиме симуляции, нужно вызвать метод `startSimulation()`, указав готовый маршрут ([TrafficRoute](/ios/sdk/reference/stable/class#traffic-route)) и его настройки ([RouteBuildOptions](/ios/sdk/reference/stable/struct#route-build-options)).
+
+Скорость движения можно изменить с помощью свойства [SimulationSettings.speed](/ios/sdk/reference/stable/class#simulation-settings) (метры в секунду).
+
+```swift
+navigationManager.simulationSettings.speed = 30 / 3.6
+navigationManager.startSimulation(
+    routeBuildOptions: routeBuildOptions,
+    trafficRoute: route
+)
+```
+
+Остановить симуляцию можно с помощью метода `stop()`.
+
+```swift
+navigationManager.stop()
+```
+
+## Навигация внутри зданий {#indoor-navigation}
+
+<img src="/img/mobile-sdk/first_indoor_ru.png" width="200" /> <img src="/img/mobile-sdk/secoond_indoor_ru.png" width="200" /> <img src="/img/mobile-sdk/third_indoor_ru.png" width="200" />
+
+SDK предоставляет возможность строить маршруты внутри некоторых зданий, для которых существуют этажные планы. Например, можно проложить маршрут до конкретного магазина в торговом центре, составить сложный маршрут между несколькими точками и тд.
+
+Этот тип навигации включен в набор стандартной поставки Full SDK, однако имеет ряд ограничений:
+
+* Может быть активирован только в режиме пешеходной навигации.
+* Из-за особенностей работы современных систем позиционирования, возможности определения позиции внутри зданий сильно ограничены. Когда система определит, что устройство попало в пределы здания, слежение за геопозицей и ее отображение отключится, оставив построенный маршрут и рекомендации по проходу.
+  Мы работаем над преодолением этих трудностей и надеемся предоставить надежный способ определения местоположения внутри зданий в будущем.
+
+### Создание маршрута
+
+Создание маршрута происходит по принципам, описанным в разделе [Ведение по маршруту](#turn-by-turn-mode) с несколькими важными дополнениями. При создании конечной точки маршрута [RouteSearchPoint](/ios/sdk/reference/stable/struct#route-search-point) обязательно указывать параметры [objectId](/ios/sdk/reference/stable/struct#dgis-object-id) и [levelId](/ios/sdk/reference/stable/struct#level-id).
+
+```swift
+// объект RouteBuildOptions также необходим
+let routeBuildOptions = RouteBuildOptions(
+    finishPoint: RouteSearchPoint(
+        coordinates : GeoPoint(latitude: 55.752425, longitude: 37.613983),
+        objectId: ..., // Можно получить из DgisMapObject
+        levelId: ..., // Можно получить из DirectoryObject или RenderedObjectInfo
+    ),
+    // routeSearchOptions должен иметь тип PedestrianRouteSearchOptions
+    routeSearchOptions: PedestrianRouteSearchOptions()
+)
+```
+
+### Отображение маршрута
+
+Если вы используете стандартный набор UI-элементов навигации, создавая стандартную фабрику [INavigationViewControlsFactory](/ios/sdk/reference/stable/INavigationViewControlsFactory), как рекомендуется в [начале раздела](#навигатор), эта возможность уже доступна и не требует предварительной конфигурации.
+
+Если вы используете собственные UI-элементы, для определения вхождения в режим навигации внутри здания можно пользоваться стандартными возможностями SDK, а именно подпиской на канал [indoorChannel](/ios/sdk/reference/stable/class#indoor-detector/var-indoor-channel). Этот канал можно получить из [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager/var-indoor-detector).
+
+## Альтернативные маршруты {#alternative-routes}
+
+Во время движения по автомобильному маршруту навигатор периодически ищет другие способы доехать до финишной точки. При поиске альтернативных маршрутов учитываются все заданные параметры маршрута и промежуточные точки (кроме тех, которые пользователь уже посетил). Интервал поиска составляет 1 минуту и не может быть изменён.
+
+Альтернативный маршрут отображается на карте, когда развилка для съезда на него приближается по ходу движения, но при этом у пользователя остается достаточно времени на принятие решения.
+
+Альтернативный маршрут показывается на карте в виде линии с бабликом, на котором показана разница во времени движения: сколько времени сэкономит или потеряет пользователь, если перейдёт на альтернативный маршрут. Для перехода на этот маршрут пользователь может нажать на линию маршрута на экране или просто свернуть на развилке на альтернативный маршрут. Если на развилке пользователь продолжает движение по основному маршруту, альтернативный маршрут исчезает с карты.
+
+Чтобы начать ведение по альтернативному маршруту, используйте [AlternativeRouteSelector](/ios/sdk/reference/stable/class#alternative-route-selector):
+
+```swift
+self.navigationManager.alternativeRouteSelector.selectAlternativeRoute(trafficRoute: route)
+```
+
+### «Маршрут лучше»
+
+Среди альтернативных маршрутов может быть выделен особый тип «маршрут лучше», если маршрут соответствует следующим критериям:
+
+* Ожидаемая длительность движения по «маршруту лучше» должна быть существенно меньше, чем по оставшейся части основного маршрута. Разница по умолчанию — 5 минут.
+* «Маршрут лучше» должен существенно отличаться от основного маршрута по геометрии (по дорогам, через которые он проходит). По умолчанию разница в длине отличающихся рёбер маршрута — 500 метров.
+
+Если среди обнаруженных альтернативных маршрутов находится «маршрут лучше», на карте дополнительно отображается отдельный UI-элемент, при нажатии на который пользователь может перейти на движение по «маршруту лучше» или явно отказаться от него. Этот элемент исчезает с экрана через определённое время (по умолчанию 30 секунд), но линия маршрута продолжает отображаться на карте до проезда развилки.
+
+В один и тот же момент времени только один маршрут может быть предложен пользователю как «маршрут лучше». Поиск нового «маршрута лучше» начинается либо после явного отказа пользователя от предыдущего (при нажатии на UI-элемент), либо после проезда развилки с ним.
+
+### Настройки поиска альтернативных маршрутов
+
+Чтобы изменить параметры поиска альтернативных маршрутов, используйте свойство [AlternativeRoutesProviderSettings](/ios/sdk/reference/stable/class#alternative-routes-provider-settings) объекта [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager).
+
+Например, чтобы отключить поиск альтернативных маршрутов и «маршрута лучше», используйте параметры `alternativeRoutesEnabled` и `betterRouteEnabled` соответственно:
+
+```swift
+// Отключить поиск альтернативных маршрутов
+self.navigationManager.alternativeRoutesProviderSettings.alternativeRoutesEnabled = false
+
+// Отключить поиск «маршрута лучше»
+self.navigationManager.alternativeRoutesProviderSettings.betterRouteEnabled = false
+```
+
+Поиск «маршрута лучше» не может быть включён самостоятельно, если не включён поиск альтернативных маршрутов в целом.
+
+## Динамическая информация о маршруте {#dynamic-route-data}
+
+В процессе навигации вы можете получать динамическую информацию о маршруте через свойство `uiModel` в [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager) и отображать её в UI навигатора. В классе [Model](/ios/sdk/reference/stable/class#model) представлены следующие параметры:
+
+* состояние навигатора (`state` и `stateChannel`);
+* текущая геопозиция, с которой работает навигатор (`location` и `locationChannel`);
+* флаг использования текущей геопозиции для навигации (`locationAvailable` и `locationAvailableChannel`);
+* информация о маршруте с манёврами (`route` и `routeChannel`);
+* дорожные события и пробочные данные на маршруте (`dynamicRouteInfo` и `dynamicRouteInfoChannel`);
+* текущая позиция пользователя на маршруте (`routePosition` и `routePositionChannel`);
+* флаг превышения скорости (`exceedingMaxSpeedLimit` и `exceedingMaxSpeedLimitChannel`);
+* флаг нахождения «маршрута лучше» (`betterRoute` и `betterRouteChannel`);
+* расстояние (`distance`) и время (`duration`) до конца маршрута;
+* флаг режима свободной навигации (`isFreeRoam`).
+
+Информация о маршруте в [Model](/ios/sdk/reference/stable/class#model) изменяется динамически относительно текущей позиции пользователя на маршруте. Чтобы получать актуальную позицию, подпишитесь на канал [routePositionChannel](/ios/sdk/reference/stable/class#model/var-route-position-channel) и затем используйте это значение для получения других данных о маршруте. Подробнее о работе с каналами см. в разделе [Потоки значений](/ios/sdk/examples/base#data-channels).
+
+Например, получите следующую информацию:
+
+* Расстояние ([distance](/ios/sdk/reference/stable/class#model/var-distance)) и время ([duration](/ios/sdk/reference/stable/class#model/var-duration)) от текущей точки до конца маршрута:
+
+  ```swift
+  // Канал для получения позиции на маршруте
+  let positionChannel = navigationManager.uiModel.routePositionChannel
+
+  self.cancellable = positionChannel.sinkOnMainThread { [weak self] routePosition in
+
+      // Расстояние до конца маршрута в метрах
+      let distance = navigationManager.uiModel.distance
+
+      // Время до конца маршрута в секундах
+      let duration = navigationManager.uiModel.duration
+
+      ...
+  }
+  ```
+
+* Дорожные события и данные о пробках ([dynamicRouteInfo](/ios/sdk/reference/stable/class#model/var-dynamic-route-info)). Данные о дорожных событиях хранятся в контейнере [RoadEventRouteAttribute](/ios/sdk/reference/stable/class#road-event-route-attribute), откуда элемент можно получить по позиции на маршруте.
+
+  Например, чтобы получить следующее ближайшее дорожное событие на маршруте:
+
+  ```swift
+  // Канал для получения позиции на маршруте
+  let positionChannel = navigationManager.uiModel.routePositionChannel
+
+  self.cancellable = positionChannel.sinkOnMainThread { [weak self] routePosition in
+      // Получить ближайшее дорожное событие относительно текущей позиции
+      let dynamicInfo = navigationManager.uiModel.dynamicRouteInfo
+      let nearestEvent = dynamicInfo.roadEvents?.findNearForward(point: routePosition)
+
+      ...
+  }
+  ```
+
+* Текущее состояние навигатора. Вы можете получать его через подписку на канал [stateChannel](/ios/sdk/reference/stable/class#model/var-state-channel) или отдельно ([state](/ios/sdk/reference/stable/class#model/var-state)):
+
+  ```swift
+  // Получить состояние навигатора вне канала
+  let currentState = navigationManager.uiModel.state
+  ```
+
+  ```swift
+  // Канал для получения состояния навигатора
+  let stateChannel = navigationManager.uiModel.stateChannel
+
+  self.cancellable = stateChannel.sinkOnMainThread { state in
+      ...
+  }
+  ```
+
+  Навигатор может находиться в одном из следующих состояний:
+
+  * `disabled` — неактивен (начальное состояние);
+  * `navigation` — в режиме ведения по маршруту;
+  * `routeSearch` — в поиске нового маршрута;
+  * `finished` — завершил ведение по маршруту (конечная точка достигнута).
+
+## Звуковые оповещения {#sound-notifications}
+
+Вы можете настроить звуковые оповещения в навигаторе:
+
+* Установить уровень громкости через параметр `volume` класса [AudioSettings](/ios/sdk/reference/stable/class#audio-settings). Передаётся в свойстве `audioSettings` объекта [Container](/ios/sdk/reference/stable/class#container):
+
+   ```swift
+   if let audioSettings = try? container.audioSettings {
+         audioSettings.volume = 10 // Значение от 0 до 100
+   }
+   ```
+
+* Отключить звук через параметр `mute` класса [AudioSettings](/ios/sdk/reference/stable/class#audio-settings). Передаётся в свойстве `audioSettings` объекта [Container](/ios/sdk/reference/stable/class#container):
+
+   ```swift
+   if let audioSettings = try? container.audioSettings {
+         audioSettings.mute = true // Звук отключен
+   }
+   ```
+
+* Указать категории звуковых оповещений через параметр `enabledSoundCategories` класса [SoundNotificationSettings](/ios/sdk/reference/stable/class#sound-notification-settings). Передаётся в свойстве `soundNotificationSettings` объекта [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager).
+
+   Примеры категорий событий: дорожные работы (`roadWorks`), платные дороги (`tolls`), препятствия (`obstacles`) и другие (см. полный список в [SoundCategoryOptionSet](/ios/sdk/reference/stable/struct#sound-category-option-set)).
+
+   По умолчанию все категории оповещений включены. Чтобы включить оповещения только для определённых событий, укажите их:
+
+   ```swift
+   let soundSettings = navigationManager.soundNotificationSettings
+
+   soundSettings.enabledSoundCategories = [
+         .crossroadCameras,    // Камеры контроля перекрёстка
+         .averageSpeedCameras, // Камеры контроля средней скорости
+         .roadWorks,           // Дорожные работы
+         .tolls,               // Платные дороги
+         .obstacles            // Препятствия
+   ]
+   ```
+
+* По умолчанию язык озвучки навигатора зависит от [языка приложения](/ios/sdk/start#application-language). Вы можете установить язык звуковых оповещений только для навигатора. Выберите голосовой пакет навигатора [Voice](/ios/sdk/reference/stable/class#voice) с нужным языком, установите его и передайте объект [NavigationVoice](/ios/sdk/reference/stable/class#navigation-voice) в класс [VoiceSelector](/ios/sdk/reference/stable/class#voice-selector). Передаётся в свойстве `voiceSelector` объекта [NavigationManager](/ios/sdk/reference/stable/class#navigation-manager).
+
+   Пример установки звуковых оповещений на английском языке:
+
+   <Tabs>
+   <TabItem value="sdk-13" label="Для версии SDK 13.0.0 и выше" default>
+
+   ```swift
+   // Получение списка голосов из VoiceManager
+   let voices = try VoiceManager.instance(context: sdkContext).voices
+
+   // Выбор голоса с нужным языком
+   let selectedVoice = voices.first(where: { $0.language == "en" } )
+
+   // Установка голосового пакета
+   selectedVoice?.install()
+
+   // Передача NavigationVoice в NavigationManager
+   self.navigationManager.voiceSelector.voice = selectedVoice?.navigationVoice
+   ```
+
+   </TabItem>
+   <TabItem value="sdk-12" label="Для версии SDK 12.x">
+
+   ```swift
+   // Получение списка голосов из VoiceManager
+   let voices = getVoiceManager(context: sdkContext).voices
+
+   // Выбор голоса с нужным языком
+   let selectedVoice = voices.first(where: { $0.language == "en" } )
+
+   // Установка голосового пакета
+   selectedVoice?.install()
+
+   // Передача NavigationVoice в NavigationManager
+   self.navigationManager.voiceSelector.voice = selectedVoice?.navigationVoice
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   Доступные значения языков озвучки (параметр `language`):
+
+   * `ru` — русский;
+   * `en` — английский;
+   * `ar` — арабский;
+   * `hy` — армянский;
+   * `kk` — казахский;
+   * `ky` — киргизский
+   * `uz` — узбекский;
+   * `ka` — грузинский;
+   * `az` — азербайджанский;
+   * `tg` — таджикский.

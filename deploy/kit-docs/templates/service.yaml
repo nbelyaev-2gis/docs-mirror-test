@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "filteredReleaseName" . }}
+  annotations:
+    router.deis.io/ssl.enforce: 'true'
+    router.deis.io/domains: '{{ required "Define one or more domain in service.deis.domains" (join "," .Values.service.deis.domains) }}'
+    router.deis.io/proxyNextUpstream: http_500 http_502 http_503 http_504 timeout error
+  labels:
+    router.deis.io/routable: 'true'
+    {{- include "labels" . | nindent 4 }}
+    {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      name: http
+      targetPort: {{ .Values.appPort }}
+  selector:
+    {{- include "selectorLabels" . | nindent 4 }}

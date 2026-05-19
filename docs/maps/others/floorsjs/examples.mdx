@@ -1,0 +1,180 @@
+---
+sidebar: floorsjsapi
+---
+# Примеры
+
+## Параметры виджета
+
+```js
+// Указание размера виджета в процентах
+DG.FloorsWidget.init({
+    width: '100%',
+    height: '100%',
+    initData: {
+        complexId: '141373143573143',
+    },
+});
+
+// Открывает виджет с выдачей по запросу «одежда»
+DG.FloorsWidget.init({
+    width: '960px',
+    height: '600px',
+    initData: {
+        complexId: '141373143573143',
+        options: {
+            initialSearchQuery: 'одежда',
+        },
+    },
+});
+
+// Открывает виджет с открытой карточкой пельменной «Дюжина»
+DG.FloorsWidget.init({
+    width: '960px',
+    height: '600px',
+    initData: {
+        complexId: '141373143573143',
+        options: {
+            initialFirm: '141265770712989',
+        },
+    },
+});
+
+// Открывает виджет с открытой рубрикой «Кофейни»
+DG.FloorsWidget.init({
+    width: '960px',
+    height: '600px',
+    initData: {
+        complexId: '141373143573143',
+        options: {
+            initialRubric: '162',
+        },
+    },
+});
+
+// Открывает виджет новосибирской Икеи на зуме 18
+DG.FloorsWidget.init({
+    width: '960px',
+    height: '600px',
+    initData: {
+        complexId: '141373143569821',
+        options: {
+            initialFirm: '141265769608851',
+            initialZoom: 18,
+        },
+    },
+});
+
+// Открывает виджет на -1 этаже
+DG.FloorsWidget.init({
+    width: '960px',
+    height: '600px',
+    initData: {
+        complexId: '141373143573143',
+        options: {
+            initialFloor: '-1',
+        },
+    },
+});
+
+// Запрет вращать карту
+DG.FloorsWidget.init({
+    width: '960px',
+    height: '600px',
+    initData: {
+        complexId: '141373143573143',
+        options: {
+            rotatable: false,
+        },
+    },
+});
+
+// Кастомные границы масштаба
+DG.FloorsWidget.init({
+    width: '960px',
+    height: '600px',
+    initData: {
+        complexId: '141373143573143',
+        options: {
+            minZoom: 16,
+            maxZoom: 25,
+        },
+    },
+});
+```
+
+## Методы виджета
+
+```js
+const widget = DG.FloorsWidget.init({
+    width: '960px',
+    height: '600px',
+    initData: {
+        complexId: '141373143573143',
+    },
+});
+
+// Открыть выдачу по запросу «еда»
+widget.search('Еда');
+
+// Открыть карточку пельменной «Дюжина»
+widget.showFirm('141265770712989');
+
+// Открыть рубрику «Кофейни»
+widget.showRubric('162');
+
+// Прибавить масштаб
+widget.zoomIn();
+
+// Переключить этаж
+widget.showFloor('-2');
+```
+
+## Данные событий
+
+```js
+const widget = DG.FloorsWidget.init({
+    width: '960px',
+    height: '600px',
+    initData: {
+        complexId: '141373143573143',
+    },
+});
+
+// Событие init
+widget.on('init', (event) => {
+    console.log(event.type); // 'init'
+    console.log(event.floorList); // ['-2', '-1', '1', '2', '3', '4']
+    console.log(event.firmList); // [{id: '12345', floor: 0, floorName: '-2'}, ...]
+});
+
+// Событие click
+widget.on('click', (event) => {
+    console.log(event.type); // 'click'
+    console.log(event.firmIds); // ['1234', '5678']
+});
+
+// Событие zoomend
+widget.on('zoomend', (event) => {
+    console.log(event.type); // 'zoomend'
+    console.log(event.state); // {floor: 2, zoom: 18, minZoom: 17.5, maxZoom: 21.6}
+});
+
+// Событие floorswitch
+widget.on('floorswitch', (event) => {
+    console.log(event.type); // 'floorswitch'
+    console.log(event.state); // {floor: 3, zoom: 18, minZoom: 17.5, maxZoom: 21.6}
+});
+
+// Добавление обработчика на событие и удаление его
+const handler = (event) => console.log(event);
+widget.on('click', handler);
+widget.off('click', handler);
+
+// Полная отписка от события click
+widget.off('click');
+
+// Отписка от всех событий
+widget.off();
+```
+
+

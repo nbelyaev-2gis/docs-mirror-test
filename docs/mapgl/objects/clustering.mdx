@@ -1,0 +1,949 @@
+---
+sidebar: mapgljsapi
+---
+# Кластеризация маркеров
+
+Если в какой-то области карты сосредоточено большое количество маркеров, они могут отвлекать внимание и закрывать собой другие объекты карты. Чтобы избавиться от визуального шума, можно объединять маркеры в один объект (кластер) при уменьшении масштаба карты.
+
+Чтобы использовать кластеры, нужно подключить плагин `Clusterer`. Для этого нужно добавить следующую строку после подключения основного скрипта:
+
+```html
+<script src="__MAPGL_PLUGIN_CLUSTERER_URL__"></script>
+```
+
+Также можно установить плагин с помощью npm:
+
+```
+npm install @2gis/mapgl-clusterer
+```
+
+## Использование
+
+Чтобы создать кластер, сначала нужно инициализировать объект [Clusterer](/mapgl/plugins/clusterer/reference/class#clusterer):
+
+```js
+const clusterer = new mapgl.Clusterer(map, {
+    radius: 60,
+});
+```
+
+В случае использования npm:
+
+```js
+// Импортируйте плагин как ES-модуль...
+import { Clusterer } from '@2gis/mapgl-clusterer';
+// ...или как модуль CommonJS
+const { Clusterer } = require('@2gis/mapgl-clusterer');
+
+const clusterer = new Clusterer(map, {
+    radius: 60,
+});
+```
+
+Параметр `radius` определяет расстояние в пикселях. Если расстояние между маркерами меньше указанного значения, маркеры будут объединены в один объект.
+
+Чтобы добавить маркеры в кластер, их не нужно создавать отдельно. Вместо этого нужно вызвать метод кластера `load()` и указать массив с настройками маркеров (нужное количество объектов [InputMarker](/mapgl/plugins/clusterer/reference/typeAlias#input-marker)). Например, чтобы создать кластер из трёх маркеров, можно использовать следующий код:
+
+```js
+const markers = [
+    { coordinates: [37.61455, 55.73387] },
+    { coordinates: [37.64339, 55.72700] },
+    { coordinates: [37.68834, 55.76768] },
+];
+clusterer.load(markers);
+```
+
+На карте ниже показан пример кластера из трёх маркеров. Чем меньше масштаб карты, тем меньше отдельных маркеров будет видно на карте.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Кластеризация маркеров с помощью плагина Clusterer" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 500px;
+                height: 300px;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_CLUSTERER_URL__"></script>
+        <div id="container"></div>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 10.5,
+                key: 'Your API access key',
+            });
+
+            const markers = [
+                { coordinates: [37.61455, 55.73387] },
+                { coordinates: [37.64339, 55.72700] },
+                { coordinates: [37.68834, 55.76768] },
+            ];
+
+            const clusterer = new mapgl.Clusterer(map);
+            clusterer.load(markers);
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Чтобы изменить набор маркеров в существующем кластере, нужно вызвать метод `load()` повторно, указав новый массив с настройками маркеров.
+
+Чтобы удалить кластер, нужно вызвать метод `destroy()`. При удалении кластера также удаляются все входящие в него маркеры.
+
+```js
+clusterer.destroy();
+```
+
+## События
+
+Чтобы добавить обработчик событий для кластера, нужно вызвать метод `on()`. Полный список поддерживаемых событий можно найти в [Справочнике API](/mapgl/plugins/clusterer/reference/interface#clusterer-event-table).
+
+Например, подписаться на событие нажатия на кластер можно с помощью следующего кода:
+
+```js
+clusterer.on('click', (event) => {
+    alert(`click`);
+});
+```
+
+Функция-обработчик будет вызвана как при нажатии на кластер, так и при нажатии на отдельный маркер из этого кластера. Чтобы отличить нажатие на кластер от нажатия на маркер, можно использовать свойство `target` объекта события ([ClustererPointerEvent](/mapgl/plugins/clusterer/reference/interface#clusterer-pointer-event)):
+
+* Если пользователь нажал на кластер, `target.type` будет содержать строку "cluster", а в `target.data` будет указана информация о маркерах в этом кластере (массив объектов [InputMarker](/mapgl/plugins/clusterer/reference/typeAlias#input-marker)).
+* Если пользователь нажал на отдельный маркер, `target.type` будет содержать строку "marker", а в `target.data` будет указана информация об этом маркере (объект [InputMarker](/mapgl/plugins/clusterer/reference/typeAlias#input-marker)).
+
+```js
+clusterer.on('click', (event) => {
+    alert(`Вы нажали на ${event.target.type}`);
+});
+```
+
+Попробуйте нажать на кластер и на отдельный маркер в примере ниже.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Обработка событий кластера с помощью плагина Clusterer" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 500px;
+                height: 300px;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_CLUSTERER_URL__"></script>
+        <div id="container"></div>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 10.5,
+                key: 'Your API access key',
+            });
+
+            const markers = [
+                { coordinates: [37.61455, 55.73387] },
+                { coordinates: [37.64339, 55.72700] },
+                { coordinates: [37.68834, 55.76768] },
+            ];
+
+            const clusterer = new mapgl.Clusterer(map);
+            clusterer.load(markers);
+            clusterer.on('click', (event) => {
+                alert(\`Вы нажали на \${event.target.type}\`);
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Внешний вид маркера
+
+Маркерам в составе кластера можно задать настройки внешнего вида так же, как и обычным маркерам. Настройки нужно указать в виде объекта [InputMarker](/mapgl/plugins/clusterer/reference/typeAlias#input-marker) при вызове метода `load()`.
+
+```js
+const markers = [
+    {
+        coordinates: [37.61455, 55.73387],
+        icon: 'https://docs.2gis.com/img/mapgl/marker.svg',
+        hoverIcon: 'https://docs.2gis.com/img/mapgl/markerHover.svg',
+        size: [36, 36],
+        hoverSize: [46, 46],
+    },
+    {
+        coordinates: [37.64339, 55.72700],
+        icon: 'https://docs.2gis.com/img/mapgl/marker.svg',
+        hoverIcon: 'https://docs.2gis.com/img/mapgl/marker.svg',
+        size: [42, 42],
+        hoverSize: [48, 48],
+    },
+    {
+        coordinates: [37.68834, 55.76768],
+        icon: 'https://docs.2gis.com/img/mapgl/marker.svg',
+        hoverIcon: 'https://docs.2gis.com/img/mapgl/markerHover.svg',
+        size: [44, 44],
+        hoverSize: [50, 50],
+    },
+];
+
+clusterer.load(markers);
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Настройка внешнего вида маркеров в кластере с помощью плагина Clusterer" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 500px;
+                height: 300px;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_CLUSTERER_URL__"></script>
+        <div id="container"></div>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 11,
+                key: 'Your API access key',
+            });
+
+            const markers = [
+                {
+                    coordinates: [37.61455, 55.73387],
+                    icon: '__BASE_URL__/img/mapgl/marker.svg',
+                    hoverIcon: '__BASE_URL__/img/mapgl/markerHover.svg',
+                    size: [36, 36],
+                    hoverSize: [46, 46],
+                },
+                {
+                    coordinates: [37.64339, 55.72700],
+                    icon: '__BASE_URL__/img/mapgl/marker.svg',
+                    hoverIcon: '__BASE_URL__/img/mapgl/marker.svg',
+                    size: [42, 42],
+                    hoverSize: [48, 48],
+                },
+                {
+                    coordinates: [37.68834, 55.76768],
+                    icon: '__BASE_URL__/img/mapgl/marker.svg',
+                    hoverIcon: '__BASE_URL__/img/mapgl/markerHover.svg',
+                    size: [44, 44],
+                    hoverSize: [50, 50],
+                    label: {
+                        relativeAnchor: [0, 0.5],
+                        offset: [20, 0],
+                        color: '#00f',
+                        haloColor: '#ffffff',
+                        haloRadius: 1,
+                        fontSize: 12,
+                        text: 'Маркер'
+                    }
+                },
+            ];
+
+            const clusterer = new mapgl.Clusterer(map);
+            clusterer.load(markers);
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Внешний вид кластера
+
+Чтобы изменить внешний вид кластера, нужно указать параметр `clusterStyle`. С помощью этого параметра можно задать иконку, цвет текста, размер текста и другие настройки (см. [ClusterStyle](/mapgl/plugins/clusterer/reference/typeAlias#cluster-style)).
+
+```js
+const clusterer = new mapgl.Clusterer(map, {
+    clusterStyle: {
+        icon: 'https://docs.2gis.com/img/mapgl/cluster.svg',
+        hoverIcon: 'https://docs.2gis.com/img/mapgl/clusterHover.svg',
+        labelColor: '#ffffff',
+        labelFontSize: 16,
+    },
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Настройка внешнего вида кластера с помощью плагина Clusterer" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 500px;
+                height: 300px;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_CLUSTERER_URL__"></script>
+        <div id="container"></div>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 10.5,
+                key: 'Your API access key',
+            });
+
+            const markers = [
+                { coordinates: [37.61455, 55.73387] },
+                { coordinates: [37.64339, 55.72700] },
+                { coordinates: [37.68834, 55.76768] },
+            ];
+
+            const clusterer = new mapgl.Clusterer(map, {
+                clusterStyle: {
+                    icon: '__BASE_URL__/img/mapgl/cluster.svg',
+                    hoverIcon: '__BASE_URL__/img/mapgl/clusterHover.svg',
+                    labelColor: '#ffffff',
+                    labelFontSize: 16,
+                },
+            });
+            clusterer.load(markers);
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Также можно использовать разные стили в зависимости от количества маркеров в кластере. Для этого в качестве значения параметра `clusterStyle` нужно указать функцию, которая будет возвращать нужный стиль на основании первого аргумента (количества маркеров).
+
+```js
+function clusterStyle(pointsCount) {
+    if (pointsCount < 3) {
+        return {
+            icon: 'https://docs.2gis.com/img/mapgl/cluster.svg',
+            hoverIcon: 'https://docs.2gis.com/img/mapgl/cluster.svg',
+            size: [25, 25],
+            hoverSize: [35, 35],
+            labelColor: '#ffffff',
+            labelFontSize: 12,
+        };
+    }
+    return {
+        icon: 'https://docs.2gis.com/img/mapgl/clusterHover.svg',
+        hoverIcon: 'https://docs.2gis.com/img/mapgl/clusterHover.svg',
+        size: [35, 35],
+        hoverSize: [45, 45],
+        labelColor: '#ffffff',
+        labelFontSize: 16,
+    };
+}
+
+const clusterer = new mapgl.Clusterer(map, {
+    clusterStyle,
+});
+```
+
+Попробуйте изменить масштаб карты в примере ниже, чтобы увидеть переключение стилей.
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Переключение стилей кластера с помощью плагина Clusterer" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 500px;
+                height: 300px;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_CLUSTERER_URL__"></script>
+        <div id="container"></div>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 10.5,
+                key: 'Your API access key',
+            });
+
+            const markers = [
+                { coordinates: [37.61455, 55.73387] },
+                { coordinates: [37.64339, 55.72700] },
+                { coordinates: [37.68834, 55.76768] },
+            ];
+
+            function clusterStyle(pointsCount) {
+                if (pointsCount < 3) {
+                    return {
+                        icon: '__BASE_URL__/img/mapgl/cluster.svg',
+                        hoverIcon: '__BASE_URL__/img/mapgl/cluster.svg',
+                        size: [25, 25],
+                        hoverSize: [35, 35],
+                        labelColor: '#ffffff',
+                        labelFontSize: 12,
+                    };
+                }
+
+                return {
+                    icon: '__BASE_URL__/img/mapgl/clusterHover.svg',
+                    hoverIcon: '__BASE_URL__/img/mapgl/clusterHover.svg',
+                    size: [35, 35],
+                    hoverSize: [45, 45],
+                    labelColor: '#ffffff',
+                    labelFontSize: 16,
+                };
+            }
+
+            const clusterer = new mapgl.Clusterer(map, {
+                clusterStyle,
+            });
+            clusterer.load(markers);
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+Кроме количества маркеров для переключения стилей вы можете использовать свойства маркеров. Используйте второй аргумент функции: массив объектов [ClusterTarget](/mapgl/plugins/clusterer/reference/interface#cluster-target).
+
+Например, можно изменить стиль, если у всех маркеров в кластере одинаковые координаты:
+
+```js
+function clusterStyle(pointsCount, target) {
+    // Получаем информацию о маркерах
+    const points = target.data;
+
+    // Проверяем координаты маркеров
+    const divisible = points.some((point, index) => {
+        if (index > 0) {
+            const prevPoint = points[index - 1];
+            if (
+                point.coordinates[0] != prevPoint.coordinates[0] ||
+                point.coordinates[1] != prevPoint.coordinates[1]
+            ) {
+                return true;
+            }
+        }
+    });
+
+    // Если у всех маркеров одинаковые координаты, меняем иконку кластера на красную
+    if (!divisible) {
+        return {
+            icon: '__BASE_URL__/img/mapgl/clusterHover.svg',
+            hoverIcon: '__BASE_URL__/img/mapgl/clusterHover.svg',
+            size: [25, 25],
+            hoverSize: [35, 35],
+            labelColor: '#ffffff',
+        };
+    }
+
+    return {
+        icon: '__BASE_URL__/img/mapgl/cluster.svg',
+        hoverIcon: '__BASE_URL__/img/mapgl/cluster.svg',
+        size: [25, 25],
+        hoverSize: [35, 35],
+        labelColor: '#ffffff',
+    };
+}
+
+const clusterer = new mapgl.Clusterer(map, {
+    clusterStyle,
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Переключение стилей кластера с помощью плагина Clusterer" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 500px;
+                height: 300px;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_CLUSTERER_URL__"></script>
+        <div id="container"></div>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 10.5,
+                key: 'Your API access key',
+            });
+
+            const markers = [
+                { coordinates: [37.61455, 55.73387] },
+                { coordinates: [37.64339, 55.72700] },
+                { coordinates: [37.68834, 55.76768] },
+                { coordinates: [37.68834, 55.76768] },
+                { coordinates: [37.68834, 55.76768] },
+            ];
+
+            function clusterStyle(pointsCount, target) {
+                const points = target.data;
+
+                const divisible = points.some((point, index) => {
+                    if (index > 0) {
+                        const prevPoint = points[index - 1];
+
+                        if (
+                            point.coordinates[0] != prevPoint.coordinates[0] ||
+                            point.coordinates[1] != prevPoint.coordinates[1]
+                        )
+                            return true;
+                    }
+                });
+
+                if (!divisible) {
+                    return {
+                        icon: '__BASE_URL__/img/mapgl/clusterHover.svg',
+                        hoverIcon: '__BASE_URL__/img/mapgl/clusterHover.svg',
+                        size: [25, 25],
+                        hoverSize: [35, 35],
+                        labelColor: '#ffffff',
+                    };
+                }
+
+                return {
+                    icon: '__BASE_URL__/img/mapgl/cluster.svg',
+                    hoverIcon: '__BASE_URL__/img/mapgl/cluster.svg',
+                    size: [25, 25],
+                    hoverSize: [35, 35],
+                    labelColor: '#ffffff',
+                };
+            }
+
+            const clusterer = new mapgl.Clusterer(map, {
+                clusterStyle,
+            });
+            clusterer.load(markers);
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Произвольные данные
+
+Для маркеров можно указать произвольные данные при помощи поля `userData`. Эти данные затем можно использовать, например, в обработчиках событий.
+
+```js
+const markers = [
+    { coordinates: [37.61455, 55.73387], userData: 1 },
+    { coordinates: [37.64339, 55.72700], userData: 2 },
+    { coordinates: [37.68834, 55.76768], userData: 3 },
+];
+
+function clusterStyle(pointsCount, target) {
+    // Получаем информацию о маркерах в кластере
+    const points = target.data;
+
+    // Добавляем произвольные данные
+    target.userData = {
+        // Можно добавлять любые типы данных
+        foo: { bar: 'baz' },
+
+        // Собираем данные из маркеров в кластере
+        dataFromPoints: points.map((p) => p.userData).join(', '),
+    };
+
+    return {
+        icon: '__BASE_URL__/img/mapgl/cluster.svg',
+        hoverIcon: '__BASE_URL__/img/mapgl/cluster.svg',
+        size: [25, 25],
+        hoverSize: [35, 35],
+        labelColor: '#ffffff',
+    };
+}
+
+const clusterer = new mapgl.Clusterer(map, { clusterStyle });
+clusterer.load(markers);
+
+clusterer.on('click', (event) => {
+    if (event.target.type === 'cluster') {
+        alert(`Произвольные данные кластера: ${JSON.stringify(event.target.userData)}`);
+    } else {
+        alert(`Произвольные данные маркера: ${JSON.stringify(event.target.data.userData)}`);
+    }
+});
+```
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Использование userData с помощью плагина Clusterer" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 500px;
+                height: 300px;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_CLUSTERER_URL__"></script>
+        <div id="container"></div>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 9.5,
+                key: 'Your API access key',
+            });
+
+            const markers = [
+                { coordinates: [37.61455, 55.73387], userData: 1 },
+                { coordinates: [37.64339, 55.72700], userData: 2 },
+                { coordinates: [37.68834, 55.76768], userData: 3 },
+            ];
+
+            function clusterStyle(pointsCount, target) {
+                const points = target.data;
+                target.userData = {
+                    foo: { bar: 'baz' },
+                    dataFromPoints: points.map((p) => p.userData).join(', '),
+                };
+
+                return {
+                    icon: '__BASE_URL__/img/mapgl/cluster.svg',
+                    hoverIcon: '__BASE_URL__/img/mapgl/cluster.svg',
+                    size: [25, 25],
+                    hoverSize: [35, 35],
+                    labelColor: '#ffffff',
+                };
+            }
+
+            const clusterer = new mapgl.Clusterer(map, { clusterStyle });
+            clusterer.load(markers);
+            clusterer.on('click', (event) => {
+               if (event.target.type === 'cluster') {
+                  alert(\`Произвольные данные кластера: \${JSON.stringify(event.target.userData)}\`);
+               } else {
+                  alert(\`Произвольные данные маркера: \${event.target.data.userData}\`);
+               }
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## HTML-маркеры
+
+В качестве маркеров и кластеров можно использовать произвольные HTML-элементы. Для этого нужно указать параметр `type` со значением "html" и параметр `html` с нужной HTML-разметкой.
+
+При этом следует иметь в виду, что HTML-маркеры работают медленнее, чем обычные WebGL-маркеры. Чтобы избежать проблем с производительностью, старайтесь не отображать на экране более 100 HTML-маркеров одновременно. Количество отображаемых маркеров можно уменьшить, если увеличить значение параметра `radius` у кластера.
+
+Кластер может содержать оба типа маркеров:
+
+```js
+const htmlMarker = document.createElement('div');
+htmlMarker.classList.add('marker');
+htmlMarker.innerText = 'HTML-маркер 2';
+
+const markers = [
+    {
+        type: 'html',
+        coordinates: [37.68834, 55.76768],
+        html: '<div class="marker">HTML-маркер 1</div>',
+    },
+    {
+        type: 'html',
+        coordinates: [37.61455, 55.73387],
+        html: htmlMarker,
+    },
+    {
+        type: 'webgl',
+        coordinates: [37.615655, 55.768005],
+    },
+    {
+        type: 'webgl',
+        coordinates: [37.64339, 55.72700],
+    },
+];
+
+clusterer.load(markers);
+```
+
+Указать HTML-разметку для самого кластера можно при помощи параметра `clusterStyle`:
+
+```js
+const clusterer = new mapgl.Clusterer(map, {
+    clusterStyle: (count) => {
+        if (count < 4) {
+            return {
+                type: 'html',
+                html: `<div class="cluster">HTML-кластер (${count})</div>`,
+            };
+        }
+
+        return {
+            type: 'webgl',
+            labelText: `WebGL cluster (${count})`,
+        };
+    },
+});
+```
+
+## Примеры использования
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+<head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Кластеризация с помощью плагина Clusterer" />
+        <script src="https://mapgl.2gis.com/api/js/v1"></script>
+        <script src="https://unpkg.com/@2gis/mapgl-clusterer@^2/dist/clustering.js"></script>
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            width: 500px;
+            height: 300px;
+            overflow: hidden;
+        }
+
+        .marker, .cluster {
+            font-family: sans-serif;
+            font-size: 10px;
+            padding: 2px;
+            border-radius: 2px;
+            border: solid 1px black;
+            cursor: pointer;
+        }
+
+        .marker {
+            background: #00ffff;
+        }
+
+        .cluster {
+            background: #ffff00;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <script>
+        const map = new mapgl.Map('container', {
+            center: [37.615655, 55.768005],
+            zoom: 10.5,
+            key: 'Your API access key',
+        });
+        const htmlMarker = document.createElement('div');
+        htmlMarker.classList.add('marker');
+        htmlMarker.innerText = 'HTML-маркер 2';
+
+        const markers = [{
+            type: 'html',
+            coordinates: [37.68834, 55.76768],
+            html: '<div class="marker">HTML-маркер 1</div>',
+        }, {
+            type: 'html',
+            coordinates: [37.61455, 55.73387],
+            html: htmlMarker
+        }, {
+            type: 'webgl',
+            coordinates: [37.615655, 55.768005],
+        }, {
+            type: 'webgl',
+            coordinates: [37.64339, 55.72700],
+        }];
+
+        const clusterer = new mapgl.Clusterer(map, {
+            clusterStyle: (count) => {
+               if (count < 4) {
+                  return {
+                     type: 'html',
+                     html: \`<div class="cluster">HTML-кластер (\${count})</div>\`
+                  }
+               }
+                return {
+                    type: 'webgl',
+                    labelText: \`WebGL-кластер (\${count})\`,
+                }
+            }
+        });
+        clusterer.load(markers);
+    </script>
+</body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Кластеризация с помощью плагина Clusterer" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 500px;
+                height: 300px;
+                overflow: hidden;
+            }
+
+            .marker,
+            .cluster {
+                font-family: sans-serif;
+                font-size: 10px;
+                padding: 2px;
+                border-radius: 2px;
+                border: solid 1px black;
+                cursor: pointer;
+            }
+
+            .marker {
+                background: #00ffff;
+            }
+
+            .cluster {
+                background: #ffff00;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="__MAPGL_API_URL__"></script>
+        <script src="__MAPGL_PLUGIN_CLUSTERER_URL__"></script>
+        <div id="container"></div>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                zoom: 10.5,
+                key: 'Your API access key',
+            });
+
+            const htmlMarker = document.createElement('div');
+            htmlMarker.classList.add('marker');
+            htmlMarker.innerText = 'HTML-маркер 2';
+
+            const markers = [
+                {
+                    type: 'html',
+                    coordinates: [37.61455, 55.73387],
+                    html: '<div class="marker">HTML-маркер 1</div>',
+                },
+                {
+                    type: 'html',
+                    coordinates: [37.64339, 55.72700],
+                    html: htmlMarker,
+                },
+                {
+                    coordinates: [37.68834, 55.76768],
+                    icon: '__BASE_URL__/img/mapgl/marker.svg',
+                    hoverIcon: '__BASE_URL__/img/mapgl/markerHover.svg',
+                    size: [44, 44],
+                    hoverSize: [50, 50],
+                    label: {
+                        relativeAnchor: [0, 0.5],
+                        offset: [20, 0],
+                        color: '#00f',
+                        haloColor: '#ffffff',
+                        haloRadius: 1,
+                        fontSize: 12,
+                        text: 'Маркер',
+                    },
+                },
+            ];
+
+            function clusterStyle(pointsCount) {
+                if (pointsCount < 3) {
+                    return {
+                        type: 'html',
+                        html: \`<div class="cluster">HTML-кластер (\${pointsCount})</div>\`,
+                    };
+                }
+
+                return {
+                    icon: '__BASE_URL__/img/mapgl/clusterHover.svg',
+                    hoverIcon: '__BASE_URL__/img/mapgl/clusterHover.svg',
+                    size: [35, 35],
+                    hoverSize: [45, 45],
+                    labelColor: '#ffffff',
+                    labelFontSize: 16,
+                };
+            }
+
+            const clusterer = new mapgl.Clusterer(map, {
+                radius: 60,
+                clusterStyle,
+            });
+
+            clusterer.load(markers);
+            clusterer.on('click', (event) => {
+                alert(\`Вы нажали на \${event.target.type}\`);
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

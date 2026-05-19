@@ -1,0 +1,213 @@
+---
+sidebar: androidsdk
+---
+# Миграция с предыдущих мажорных версий SDK
+
+## С версий 12.x на 13.x {#from-12-to-13}
+
+### Для версий Full и Map
+
+* Повторно выгрузите стили: исправлены ошибки отображения пользовательских и иммерсивных объектов.
+* Обновлены все слои групп `Roads` для отображения иммерсивных дорог в основном режиме карты.
+* Добавлена группа `Traffic v13.0.0` для отображения новых цветов тайлов с пробками.
+* Добавлена группа `Car route line v13.0.0` для отображения автомобильных маршрутов на иммерсивных дорогах.
+* Теперь для отслеживания изменений состояний камеры используется единый канал [BaseCamera.changed](/android/sdk/reference/stable/class#ru.dgis.sdk.map.base-camera) вместо отдельных каналов для каждого свойства. Заменены подписки и добавлена дополнительная фильтрация причин изменений.
+
+* Изменён способ создания некоторых классов:
+
+  * Удалена функция `getSystemMemoryManager`. Чтобы получить объект для управления системной памятью, используйте метод [SystemMemoryManager.instance()](/android/sdk/reference/stable/class#ru.dgis.sdk.system-memory-manager).
+  * Удалён конструктор [SearchHistory](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history). Чтобы получить объект истории поиска, используйте метод [SearchHistory.instance()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-history).
+  * Удалён конструктор [RoadEventManager](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.road-event-manager). Чтобы получить объект для работы с дорожными событиями, используйте метод [RoadEventManager.instance()](/android/sdk/reference/stable/class#ru.dgis.sdk.road-events.road-event-manager).
+  * Удалена функция `getHttpCacheManager`. Чтобы получить объект для управления HTTP-кешем, используйте метод [HttpCacheManager.get()](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.http-cache-manager).
+  * Удалена функция `getLocaleManager`. Чтобы получить объект для управления локалями приложения, используйте метод [LocaleManager.instance()](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.locale-manager).
+  * Удалён конструктор [TrafficCollector](/android/sdk/reference/stable/class#ru.dgis.sdk.traffic.traffic-collector). Чтобы получить объект для управления сервисом сбора информации о дорожном движении, используйте метод [TrafficCollector.instance()](/android/sdk/reference/stable/class#ru.dgis.sdk.traffic.traffic-collector).
+  * Удалена функция `getAudioSettings`. Чтобы получить объект для управления звуком приложения, используйте метод [AudioSettings.get()](/android/sdk/reference/stable/class#ru.dgis.sdk.platform.audio-settings).
+  * Удалена функция `getPackageManager`. Чтобы получить объект для работы с пакетами, используйте метод [PackageManager.instance()](/android/sdk/reference/stable/class#ru.dgis.sdk.update.package-manager).
+  * Удалена функция `getTerritoryManager`. Чтобы получить объект для работы с территориями, используйте метод [TerritoryManager.instance()](/android/sdk/reference/stable/class#ru.dgis.sdk.update.territory-manager).
+  * Удалена функция `getTerritoriesAlongRouteProvider`. Чтобы получить объект для извлечения списка территорий вдоль маршрута, используйте конструктор [TerritoriesAlongRouteProvider](/android/sdk/reference/stable/class#ru.dgis.sdk.routing.territories-along-route-provider).
+  * Удалена функция `getVoiceManager`. Чтобы получить объект для управления голосовыми пакетами, используйте метод [VoiceManager.instance()](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.voice-manager).
+
+* Удалён класс `EventsProcessingSettings`.
+* Объект `Gesture` переименован в [TransformGesture](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.map.transform-gesture).
+* Объект `ScalingSettings` переименован в [ScalingRecognizeSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.scaling-recognize-settings).
+* Объект `RotationSettings` переименован в [RotationRecognizeSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.rotation-recognize-settings).
+* Объект `MultiTouchShiftSettings` переименован в [MultiTouchRecognizeSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.multi-touch-recognize-settings).
+* Объект `TiltSettings` переименован в [TiltRecognizeSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.tilt-recognize-settings).
+* [GestureManager.scalingSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager), [GestureManager.rotationSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager), [GestureManager.multitouchShiftSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager) и [GestureManager.tiltSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.gesture-manager) теперь возвращают объекты с типами [ScalingGestureSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.scaling-gesture-settings), [RotationGestureSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.rotation-gesture-settings), [MultiTouchGestureSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.multi-touch-gesture-settings) и [TiltGestureSettings](/android/sdk/reference/stable/class#ru.dgis.sdk.map.tilt-gesture-settings) соответственно.
+* Класс [Color](/android/sdk/reference/stable/class#ru.dgis.sdk.color) для представления цвета перенесён из пакета `ru.dgis.sdk.map`.
+* Класс [ScreenDistance](/android/sdk/reference/stable/class#ru.dgis.sdk.map.screen-distance) перенесён из пакета `ru.dgis.sdk.map`.
+* Класс [ScreenPoint](/android/sdk/reference/stable/class#ru.dgis.sdk.map.screen-point) перенесён из пакета `ru.dgis.sdk.map`.
+* Класс [ScreenShift](/android/sdk/reference/stable/class#ru.dgis.sdk.map.screen-shift) перенесён из пакета `ru.dgis.sdk.map`.
+* Свойство `buildingLevels` для получения этажных планов удалено из [DirectoryObject](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object).
+* Свойство [DirectoryObject.buildingInfo](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.directory-object) теперь опциональное.
+* Свойство [BuildingInfo.buildingId](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.building-info) теперь обязательное и не может быть пустым.
+* Свойство [LevelInfo.id](/android/sdk/reference/stable/class#ru.dgis.sdk.level-info) теперь опциональное.
+* Изменён тип свойства [PublicTransportDirectoryRouteInfo.color](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.public-transport-directory-route-info) с `Int?` на `Color?`.
+* Метод [SearchQueryBuilder.setGeoPoint()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/set-geo-point) теперь принимает опциональный тип значения.
+* Метод [SearchQueryBuilder.setRadius()](/android/sdk/reference/stable/class#ru.dgis.sdk.directory.search-query-builder/set-radius) теперь принимает опциональный тип значения.
+
+### Дополнительно для версии Full
+
+* Удалены функция `getRoadMacroGraph` и класс `RoadMacroGraph`. Теперь для построения офлайн-маршрутов между соседними регионами достаточно скачать пакеты нужных регионов.
+* Удалены класс для настройки позиции бабла с полосами на маршруте (`LanesCalloutMapPosition` и `RouteMapObject.lanesCalloutPositions`) и свойство в [RouteMapObject](/android/sdk/reference/stable/class#ru.dgis.sdk.map.route-map-object).
+* Переименован класс `UIntRouteLongAttribute` в [DoubleRouteLongAttribute](/android/sdk/reference/stable/class#ru.dgis.sdk.routing.double-route-long-attribute).
+* Изменён тип свойства [Route.trafficLights](/android/sdk/reference/stable/class#ru.dgis.sdk.routing.route) с [VoidRouteAttribute](/android/sdk/reference/stable/class#ru.dgis.sdk.routing.void-route-attribute) на [StringRouteAttribute](/android/sdk/reference/stable/class#ru.dgis.sdk.routing.string-route-attribute).
+* Добавлен новый вид транспорта `MOTORCYCLE` (мотоцикл) в [TransportType](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.routing.transport-type).
+* Добавлены параметры для настройки уровня масштабирования для стиля в конструктор [SpeedRangeToStyleZoom](/android/sdk/reference/stable/class#ru.dgis.sdk.navigation.speed-range-to-style-zoom).
+* Добавлены значения для пандусов `RAMP_DOWN`, `RAMP_UP`, `SMOOTH_RAMP_DOWN` и `SMOOTH_RAMP_UP` в [RoadSubtype](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.routing.road-subtype).
+* Добавлены новые значения позиций и ориентиров в [CarInstructionCrossroadLandmark](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.routing.car-instruction-crossroad-landmark).
+* Добавлены значения цветов `DEEP_GREEN` и `ORANGE` в [TrafficSpeedColor](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.routing.traffic-speed-color).
+* Добавлен флаг `CROSSING` для отображения начала и конца переправы на маршруте в [RouteMapObjectDisplayFlag](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.map.route-map-object-display-flag).
+* Добавлен новый тип точки маршрута `CROSSING` (начало и конец переправы) в [RoutePointKind](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.map.route-point-kind).
+* Добавлены значения для оповещений о событиях `BETTER_ROUTE` («маршрут лучше») и `HUMPS` (искусственные дорожные неровности) в [SoundCategory](/android/sdk/reference/stable/enumeration#ru.dgis.sdk.navigation.sound-category).
+
+## С версий 10.x на 12.x {#from-10-to-12}
+
+### Для версий Full и Map
+
+* Повторно выгрузите стили.
+* Для корректного отображения маркера геопозиции скопируйте соответствующие слои.
+* `KeySource`, `KeyFromAsset`, `KeyFromFile` и `KeyFromString` перенесены в `ru.dgis.sdk.platform`.
+* `VendorConfig`, `VendorConfigFromAsset`, `VendorConfigFromFile` и `VendorConfigFromString` перенесены в `ru.dgis.sdk.platform`.
+* `LogOptions`, `LogLevel`, `LogMessage` и `LogSink` перенесены в `ru.dgis.sdk.platform`.
+* `HttpOptions`, `Certificate`, `CertificateFromAsset`, `CertificateFromFile`, `SystemCertificate` и `HttpProxyOptions` перенесены в `ru.dgis.sdk.platform`.
+* Удалены `MyLocationController` и `MapLocationController.myLocationIndicatorController`. Для настройки источника маркера геопозиции используйте [MyLocationControllerSettings](/android/sdk/reference/12.0/class#ru.dgis.sdk.map.my-location-controller-settings). В [NavigationView](/android/sdk/reference/12.0/class#ru.dgis.sdk.navigation.navigation-view) теперь не происходит подмена источника геопозиции.
+* Добавлено значение `GEO_POSITION` в [EventsProcessingSettings.rotationCenter](/android/sdk/reference/12.0/class#ru.dgis.sdk.map.events-processing-settings) и [EventsProcessingSettings.scalingCenter](/android/sdk/reference/12.0/class#ru.dgis.sdk.map.events-processing-settings) для установки режима работы жеста относительно геопозиции. Для задания позиции, относительно которой будет работать жест, используйте метод [GestureManager.setTargetGeoPoint()](/android/sdk/reference/12.0/class#ru.dgis.sdk.map.gesture-manager/set-target-geo-point).
+* [Meter](/android/sdk/reference/12.0/class#ru.dgis.sdk.meter) перенесён из модуля `ru.dgis.sdk.map` в `ru.dgis.sdk`.
+* Удалено значение `CameraState.FOLLOW_POSITION`. Вместо него ориентируйтесь на значение [Camera.behaviour](/android/sdk/reference/12.0/class#ru.dgis.sdk.map.camera-behaviour).
+* Добавлены значения для [SuggestedType](/android/sdk/reference/12.0/enumeration#ru.dgis.sdk.directory.suggested-type), [SuggestorType](/android/sdk/reference/12.0/enumeration#ru.dgis.sdk.directory.suggestor-type) и [ObjectType](/android/sdk/reference/12.0/enumeration#ru.dgis.sdk.directory.object-type) и теперь соответствуют результатам Places API.
+* Удалён метод `createRasterTileDataSource()` и добавлен новый источник [RasterTileSource](/android/sdk/reference/12.0/class#ru.dgis.sdk.map.raster-tile-source) с возможностью задания прозрачности растровых тайлов.
+
+### Дополнительно для версии Full
+
+* Для отображения иммерсивных дорог реальной ширины и для корректного взаимодействия остальных объектов с иммерсивными дорогами в режиме навигации выгрузите последние стили Mobile SDK и примените свои настройки.
+* Удалён `AudioVolume`. Теперь вы можете задавать громкость инструкций от 0 до 100 через [AudioSettings.volume](/android/sdk/reference/12.0/class#ru.dgis.sdk.platform.audio-settings/var-volume).
+* Добавлен флаг [RouteMapObjectDisplayFlag.IMMERSIVE_ROUTE_PARTS](/android/sdk/reference/12.0/enumeration#ru.dgis.sdk.map.route-map-object-display-flag/immersive-route-parts) для использования иммерсивной геометрии для отрезков маршрута.
+
+## С версий 7.x на 10.x {#from-7-to-10}
+
+### Для версий Full и Map
+
+* Повторно выгрузите стили.
+
+* Изменена работа с [FollowController](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.follow-controller):
+
+  * Удалены методы `createRawMyLocationController()` и `createSmoothMyLocationController()`. Добавлен конструктор [MyLocationController](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.my-location-controller) для создания контроллера перемещения маркера геопозиции.
+  * Удалены значения `FollowBearing.SATELLITE` и `FollowBearing.MAGNETIC`, т. к. теперь не нужно указывать источник направления. Добавлено значение [FollowBearing.ON](/android/sdk/reference/10.0/enumeration#ru.dgis.sdk.map.follow-bearing) для включения слежения — источник выбирается автоматически.
+  * Удалено поле `FollowPosition.tilt`. Слежение за наклоном теперь нужно включать отдельно. Добавлен параметр `tilt` в конструктор [CameraBehaviour](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.camera-behaviour) для слежения за наклоном.
+  * Удалены значения `FollowValue.SATELLITE_BEARING`, `FollowValue.MAGNETIC_BEARING` и `FollowValue.ACCURACY`. Вместо них добавлено значение [FollowValue.BEARING](/android/sdk/reference/10.0/enumeration#ru.dgis.sdk.map.follow-value) с автоматическим выбором источника.
+  * Удалены методы `satelliteBearing()`, `magneticBearing()` и `accuracy()` из интерфейса [CustomFollowController](/android/sdk/reference/10.0/interface#ru.dgis.sdk.map.custom-follow-controller). Вместо них добавлен метод [CustomFollowController.bearing()](/android/sdk/reference/10.0/interface#ru.dgis.sdk.map.custom-follow-controller).
+  * Удалены методы `setClock()`, `satelliteBearing()`, `magneticBearing()` и `accuracy()` из [FollowController](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.follow-controller). Вместо них добавлены методы `onAddedToMap()`, `onRemovedFromMap()` и `bearing()`.
+  * Удалён канал `FollowController.nextTimestampChannel`. Вместо него добавлен [FollowController.changedChannel](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.follow-controller).
+  * Изменена сигнатура метода [FollowController.updateValues()](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.follow-controller).
+  * Удалён контроллер `PlatformLocationFollowController`. Вместо него добавлены контроллеры [BearingFollowController](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.bearing-follow-controller) и [CoordinatesFollowController](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.coordinates-follow-controller) для слежения за направлением карты и за координатами позиции карты, соответственно.
+  * Изменён конструктор контроллера [StyleZoomFollowController](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.style-zoom-follow-controller). Удалён метод `StyleZoomFollowController.setAnimationDuration()`.
+  * Изменён конструктор контроллера [TiltFollowController](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.tilt-follow-controller). Удалены методы `TiltFollowController.setTilt()` и `TiltFollowController.setAnimationDuration()`.
+  * Изменены параметры метода [FollowController.setThresholds()](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.follow-controller) на типизированные.
+  * Удалён класс `FollowControllerClock`. Тип параметра в методе [FollowController.setClock()](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.follow-controller) заменён на timestamp.
+  * Удалён `TransitionType`. Конструктор [MyLocationControlModel](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.my-location-control-model) теперь не принимает `transitionType`. Удалено поле `CameraBehaviour.transitionType`. Удалён параметр `transitionType` из конструктора [CameraBehaviour](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.camera-behaviour).
+  * Удалён `MyLocationDirectionBehaviour`. Конструктор источника геопозиции [MyLocationMapObjectSource](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.my-location-map-object-source) теперь не принимает `directionBehaviour`. Удалён метод `MyLocationMapObjectSource.setDirectionBehaviour()`.
+
+* Удалено поле `BaseCamera.styleZoomToTiltRelation`.
+
+* Переименован класс `MagneticHeadingProvider` в `HeadingProvider`.
+
+* Метод [LocaleManager.overrideLocales()](/android/sdk/reference/10.0/class#ru.dgis.sdk.platform.locale-manager) теперь принимает список структур `Locale` с отдельными полями `language` и `region`.
+
+* Из сборки версии **Map** удалены [PackageManager](/android/sdk/reference/10.0/class#ru.dgis.sdk.update.package-manager) и [Package](/android/sdk/reference/10.0/class#ru.dgis.sdk.update.package), что уменьшило размер продукта.
+
+* Удалены поля `lightTheme` и `darkTheme` в [MapOptions](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.map-options). Для выставления темы используйте класс [MapTheme](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.map-theme) в методах [MapOptions.setTheme()](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.map-options) и [MapView.setTheme()](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.map-view).
+
+### Дополнительно для версии Full
+
+* Метод [Voice.playWelcome()](/android/sdk/reference/10.0/class#ru.dgis.sdk.navigation.voice) теперь возвращает [Future](/android/sdk/reference/10.0/interface#ru.dgis.sdk.future), который становится готовым, когда проигрывание сэмпла завершается.
+* Удалено поле `RoadSubtype.STAIRWAY`. Вместо него добавлены поля [RoadSubtype.STAIRWAY_UP](/android/sdk/reference/10.0/enumeration#ru.dgis.sdk.routing.road-subtype) и [RoadSubtype.STAIRWAY_DOWN](/android/sdk/reference/10.0/enumeration#ru.dgis.sdk.routing.road-subtype) для использования лестниц с явным направлением.
+* Удалено поле `NavigationFollowController.mapTiltController`.
+* При запуске навигатора в режиме ведения или симуляции с маршрутом на общественном транспорте теперь генерируется исключение.
+* Отключено кеширование тайлов `FreeRoam` при навигации.
+* [MyLocationMapObjectSource](/android/sdk/reference/10.0/class#ru.dgis.sdk.map.my-location-map-object-source) для навигатора теперь устанавливается внутри [NavigationView](/android/sdk/reference/10.0/class#ru.dgis.sdk.navigation.navigation-view).
+
+## С версий 5.x на 7.x {#from-5-to-7}
+
+### Для версий Full и Map
+
+* Повторно выгрузите стили.
+* Удалены методы `DgisSource.createOnlineDgisSource()` и `DgisSource.createOfflineDgisSource()`. Вместо них используйте метод `DgisSource.createDgisSource()` с дополнительным параметром `DgisSourceWorkingMode` для установки режима работы карты. Доступно четыре режима работы: `ONLINE`, `OFFLINE`, `HYBRID_ONLINE_FIRST` и `HYBRID_OFFLINE_FIRST`.
+* `FollowController` теперь возвращает `StyleZoom` вместо `Zoom`.
+* `FollowValue.ZOOM` переименован в `FollowValue.STYLE_ZOOM`.
+* `ZoomFollowController` переименован в `StyleZoomFollowController`.
+* `ZoomToTiltRelation` переименован в `StyleZoomToTiltRelation`.
+* `SpeedRangeToZoom` переименован в `SpeedRangeToStyleZoom`.
+* Метод `Projection.screenToMap()` теперь вместо исключения возвращает пустое значение, если точка находится за пределами карты.
+* Удалены методы `BaseCamera.setPadding()` и `BaseCamera.setPositionPoint()`. Удалён enum `CameraPositionPointChangeBehaviour`. Поля `BaseCamera.padding` и `BaseCamera.positionPoint` теперь являются свойствами.
+* Удалены методы `Camera.animatedMoveStarted()` и `Camera.animatedMoveFinished()`. Вместо них используйте канал `Camera.stateChannel`.
+* Каналы `IndoorControlModel.levelNames` и `IndoorControlModel.activeLevelIndex` переименованы в `IndoorControlModel.levelNamesChannel` и `IndoorControlModel.activeLevelIndexChannel`, соответственно. Удалён метод `IndoorControlModel.onLevelClicked()`. Переименован метод `IndoorControlModel.isMarkedLevel()` в `IndoorControlModel.isLevelMarked()`.
+
+### Дополнительно для версии Full
+
+* Изменены названия в `ZoomFollowSettings`, чтобы лучше соответствовать назначению.
+* Удалён метод `Model.applyBetterRoute()`. Вместо него добавлен метод `Model.betterRouteResponse()` и enum `BetterRouteResponse` для работы с альтернативными маршрутами.
+* Удалено значение `State.FREE_ROAM`. Чтобы определить, что навигатор находится в режиме свободной навигации, используйте значение `RouteInfo.routeBuildOptions` (оно должно быть пустым).
+
+## С версий 4.x на 5.x {#from-4-to-5}
+
+### Для версий Full и Map
+
+* Изменена сигнатура методов:
+
+   * `zoomOutToFit()` теперь принимает только камеру и геометрию.
+   * `calcPosition()` теперь принимает активную область, угол наклона и поворота карты, поэтому теперь необязательно предварительно настраивать камеру для расчёта позиции.
+
+* Конструктор `ZoomFollowController` теперь принимает параметр `Map`.
+* Удалён метод `showOsmCopyright()` из класса `MapView`.
+
+### Дополнительно для версии Full
+
+* Удалён избыточный класс `RoutePosition`. Вместо него используйте `RoutePoint`.
+* Удалено свойство `Model.cameraProgressChannel`. Вместо него используйте `CameraNotifier`.
+* Изменён тип `Traffic.durations` с `MillisecondsRouteAttribute` на `SecondsRouteLongAttribute` и повышена точность значений.
+* Изменён тип `Route.obstacles` на `ObstacleInfoRouteAttribute` и добавлена дополнительная информация.
+
+## С версий 2.x на 4.x {#from-2-to-4}
+
+### Для версий Full и Map
+
+* Обратитесь в [службу поддержки <Brand />](mailto:api@2gis.ru) для получения нового ключа для использования Mobile SDK. Обязательно укажите `appId` приложения, для которого будет создан ключ. Полученный файл ключа `dgissdk.key` нужно добавить в `assets`.
+* Удалена структура `ApiKeys` и соответствующий параметр в `DGis.initialize`.
+* Обновите стили.
+* Переименован класс `DirectoryObjectId` в `DgisObjectId`.
+* Удалены функции `serialize` и `deserialize` для `CameraPosition`. Вместо них используйте новый механизм сериализации `PackedMapState`.
+* Удалены методы `SearchQueryBuilder.setLocation()` и `SuggestQueryBuilder.setLocation()`. Теперь значение автоматически берётся из источника геопозиции.
+* Удалён метод `PackedSearchQuery.location()`.
+* Удалены `SearchResultMarkerObject` и `SearchResultMarkerSource` для генерализации маркеров поисковой выдачи, т. к. невозможно динамически добавлять или удалять объекты. В качестве альтернативы вы можете реализовать генерализацию маркеров или воспользоваться кластеризацией.
+* При создании `MyLocationMapObjectSource` по умолчанию используется `SmoothMyLocationController` вместо `RawMyLocationController`.
+
+### Дополнительно для версии Full
+
+* Удалены списки с информацией о маршруте в `RouteInfo`: `cameras`, `instructions`, `laneSigns` и т. д. Удалены индексы текущих элементов `Model.cameraIndexChannel` и `Model.instructionIndexChannel`. Вместо этого получайте информацию непосредственно из маршрута и текущей позиции. Например, для получения ближайшей камеры используйте `Model.route.route.cameras.findNearForward(position)`.
+* Переименованы параметры поиска маршрута:
+
+   * `BicycleRouteSearchOptions.avoidUnderpasses` в `avoidUnderpassesAndOverpasses`;
+   * `CarRouteSearchOptions.avoidFerry` в `avoidFerries`;
+   * `TruckRouteSearchOptions actualWeight`, `maxPermissibleWeight` в `actualMass`, `maxPermittedMass`.
+
+* Значение enum `RoadType.ROAD` разделено на подтипы `RoadType.HIGHWAY`, `RoadType.FEDERAL_ROAD` и другие.
+* Заменён метод `VoiceSelector.setVoice()` на свойство `voice`.
+* Удалены `Model.durationChannel`, `Model.routeDurationChannel`. Вместо них используйте `Model.dynamicRouteInfo.traffic.durations.calculateDuration(routePoint)`.
+* Изменён набор значений в enum `RoadSurface`.
+* Удалены `Model.navigationActiveChannel`, `NavigationManager.uiSettings`. Вместо них для получения активности навигатора используйте новый класс `ActivityTracker`.
+
+## С версий 1.x на 2.x {#from-1-to-2}
+
+* Вместо `Arcdegree` используйте отдельные типы `Bearing`, `Latitude` и `Longitude` для задания поворота камеры, широты и долготы.
+* Изменён API для работы с пробками: 
+
+   * Переименован `TrafficScore` в `TrafficScoreProvider`.
+   * Переименован `TrafficScoreValue` в `TrafficScore`.
+   * Удалён `TrafficManager`.
+   * `TrafficScoreProvider` теперь создаётся через конструктор.
+
+* Переименован метод `LocaleManager.setOverridedLocales()` в `overrideLocales()`.
+* Перенесён класс `ScreenSize` из `ru.dgis.map` в `ru.dgis.common`.
+* Вместо свойств `HttpOptions.userSslCerts` и `HttpOptions.disableSystemSslCerts` используйте свойство `HttpOptions.certificates` для задания списка сертификатов.
+* Исправлены и изменены API пользовательских контроллеров камеры. Теперь контроллер может быть только один. Используйте методы`Camera.setCustomFollowController()` и `Camera.removeCustomFollowController()` для добавления и удаления контроллеров.

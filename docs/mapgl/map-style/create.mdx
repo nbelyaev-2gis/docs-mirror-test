@@ -1,0 +1,141 @@
+---
+sidebar: mapgljsapi
+---
+# Создание стиля карты
+
+Вы можете изменять внешний вид карты и её объектов с помощью стилей. Стиль — это документ, который определяет внешний вид карты: какие данные отрисовывать, в каком порядке, как стилизовать данные при отрисовке, какие иконки использовать и т. д.
+
+1. Создайте свой стиль карты с помощью одного из инструментов:
+
+   * [Редактор стилей](https://styles.2gis.com/), который предоставляет возможность детально настраивать отрисовку любых компонентов карты. Вы можете создать свой стиль с нуля или использовать один из готовых шаблонов. Вы также можете изменять уже использующийся стиль прямо в Редакторе.
+
+     Все инструкции по созданию стиля вы можете получить в документации [Редактора стилей карты](/maps/styles/overview).
+
+   * [Спецификация стилей](/mapgl/styles-specification), которая предоставляет более ограниченный (по сравнению с Редактором стилей) набор настроек. Используйте спецификацию, если вы хотите изменять стиль карты (например, добавлять новый слой) «на лету».
+
+2. Передайте идентификатор созданного стиля с помощью опции [style](/mapgl/reference/interface#map-options/style):
+
+   ```js
+   const map = new mapgl.Map('container', {
+       center: [37.615655, 55.768005],
+       styleZoom: 13,
+       key: 'Ваш ключ доступа к API',
+       style: 'Ваш идентификатор стиля карты',
+   });
+   ```
+
+В примере выше используется опция `styleZoom` вместо `zoom`. Выберите её, если вы хотите установить тот же масштаб, что и в настройках стиля. Подробнее см. в разделе [Стилевой уровень масштабирования](/mapgl/map-style/stylezoom).
+
+Также есть удобная опция [defaultBackgroundColor](/mapgl/reference/interface#map-options/default-background-color), с помощью которой вы можете установить цвет фона во время загрузки вашего стиля. Это может быть полезно, если базовая цветовая тема нового стиля отличается от темы стиля по умолчанию. Например, вы можете установить темный цвет фона по умолчанию для тёмного стиля:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Создание стиля карты" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                styleZoom: 16,
+                pitch: 40,
+                rotation: -45,
+                key: 'Your API access key',
+                style: 'e05ac437-fcc2-4845-ad74-b1de9ce07555',
+                defaultBackgroundColor: '#3b3b3b',
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>
+
+## Переключение стилей
+
+Если вам нужно изменить стиль карты «на лету», вы можете использовать метод [setStyleById](/mapgl/reference/class#map/set-style-by-id):
+
+```js
+const map = new mapgl.Map('container', {
+    center: [37.615655, 55.768005],
+    styleZoom: 13,
+    key: 'Ваш ключ для доступа к API',
+});
+
+map.setStyleById('Идентификатор вашего стиля карты');
+```
+
+Речь идёт об изменении стиля карты в целом, например, как при переключении между светлой и тёмной темой:
+
+<HtmlExampleWithSrcCode iframeStyles={{ height: '300px' }}>
+{`
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MapGL JS API</title>
+        <meta name="description" content="Переключение стилей карты" />
+        <style>
+            html,
+            body,
+            #container {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+
+            #dark_theme, #light_theme {
+                margin: 0 10px 10px;
+                padding: 3px 12px;
+                background: #3b3b3b;
+                color: #fff;
+                border: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            Нажмите, чтобы переключить тему:
+            <button id="dark_theme">Переключить на тёмную тему 🌙</button>
+            <button id="light_theme">Переключить на светлую тему 🌞</button>
+        </div>
+
+        <div id="container"></div>
+        <script src="__MAPGL_API_URL__"></script>
+        <script>
+            const map = new mapgl.Map('container', {
+                center: [37.615655, 55.768005],
+                styleZoom: 16,
+                pitch: 40,
+                rotation: -45,
+                key: 'Your API access key',
+            });
+
+            document.getElementById('dark_theme').addEventListener('click', function() {
+                map.setStyleById('e05ac437-fcc2-4845-ad74-b1de9ce07555');
+            });
+            document.getElementById('light_theme').addEventListener('click', function() {
+                map.setStyleById('c080bb6a-8134-4993-93a1-5b4d8c36a59b');
+            });
+        </script>
+    </body>
+</html>
+`}
+</HtmlExampleWithSrcCode>

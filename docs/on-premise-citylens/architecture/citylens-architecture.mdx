@@ -1,0 +1,57 @@
+---
+sidebar: on-premise-citylens
+---
+# Архитектура <Brand /> Ситискан
+
+<NoInvert>
+![Архитектура сервиса <Brand /> Ситискан](/img/on-premise/citylens-architecture-532.svg)
+</NoInvert>
+
+Сервис <Brand /> Ситискан состоит из следующих компонентов:
+
+* Mobile Application — мобильное приложение водителя для сбора треков и кадров.
+* CityLens API — API для передачи данных из внешних приложений в Kafka (на схеме — **Broker**) и для проксирования запросов с мобильного приложения.
+* CityLens Routes API — API для создания задач на объезды и построения маршрутов.
+* CityLens Routes worker — сервис для работы внутренних служб планирования: чтение из Kafka (на схеме — **Broker**), аналитика проезда по задаче, отправка результатов в смежные сервисы (<Brand /> Про).
+* CityLens Routes UI — веб-приложение на React для работы с задачами (Планировщик). Взаимодействует с CityLens Routes API по HTTP-протоколу.
+* CityLens Web — веб-приложение для работы с детальной информацией по задачам, водителям, детекциям и т.д.
+
+## Зависимости {#dependencies}
+
+Общая инфраструктура:
+
+* Apache Kafka — хранилище для событий, связанных с API-ключами.
+* PostgreSQL — база данных для хранения задач.
+* S3-совместимое хранилище — хранилище данных кадров.
+* Поставщик OpenID Connect для авторизации пользователей по технологии единого входа (SSO). См. инструкцию по [настройке поставщика аутентификации](/on-premise-citylens/install/authentication).
+
+:::tip[Можно использовать аналоги из реестра Минцифры]
+
+Доступные аналоги указанного программного обеспечения, включённые в реестр Минцифры, см. в разделе [Системные требования](/on-premise-citylens/install/requirements).
+
+:::
+
+Сервисы On-Premise:
+
+* [Сервис карт](/on-premise-api-platform/architecture/api-platform/maps) (с MapGL JS API);
+* [Сервис поиска](/on-premise-api-platform/architecture/api-platform/search) (с Catalog APIs);
+* [Сервис навигации](/on-premise-api-platform/architecture/api-platform/navigation) (с Directions API);
+* [<Brand /> Про](/on-premise-pro/architecture/pro-architecture).
+
+Подробнее о том, как проверить требования для каждого сервиса, см. в документе [Системные требования](/on-premise-citylens/install/requirements).
+
+## Что дальше? {#whats-next}
+
+* Узнайте, как установить или обновить сервис:
+
+  * [Системные требования](/on-premise-citylens/install/requirements)
+  * [Подготовка к установке](/on-premise-citylens/preparation)
+  * [Установка <Brand /> Ситискан](/on-premise-citylens/install/installation)
+  * [Обновление <Brand /> Ситискан](/on-premise-citylens/update)
+
+* Узнайте больше о программном комплексе <Brand />:
+
+  * [Обзор решения](/on-premise-citylens/overview/summary)
+  * [Архитектура программного комплекса <Brand />](/on-premise-citylens/architecture/solution-architecture)
+
+

@@ -1,0 +1,78 @@
+---
+sidebar: suggestAPI
+---
+# Примеры
+
+## Автодополнение адреса
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=Москва Ли&suggest_type=address&key=YOUR_KEY
+```
+
+## Автодополнение конечной точки маршрута
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=Москва Ли&suggest_type=route_endpoint&key=YOUR_KEY
+```
+
+## Автодополнение объектов справочника
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=Москва Ли&suggest_type=object&key=YOUR_KEY
+```
+
+## Фильтрация типов результатов
+
+Дополнение адреса здания, в результате только здания:
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=Москва Петровка, 2&type=building&suggest_type=address&fields=items.point&key=YOUR_KEY
+```
+
+Дополнение конечной точки маршрута, в результате только остановки:
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=Москва цент&type=station&suggest_type=route_endpoint&fields=items.point&key=YOUR_KEY
+```
+
+Дополнение пользовательского запроса, в ответе варианты текста запроса и компании:
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=почта рос&type=user_queries,branch&fields=items.point&polygon=POLYGON((37.5930 55.7667,37.6494 55.7667,37.6494 55.7405,37.5930 55.7405,37.5930 55.7667))&key=YOUR_KEY
+```
+
+## Получение дополнительных данных в ответе
+
+### Получение точки объекта:
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=Москва цент&fields=items.point&suggest_type=route_endpoint&type=station&key=YOUR_KEY
+```
+
+### Получение адреса объекта:
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=почта рос&fields=items.address&type=branch&fields=items.point&polygon=POLYGON((37.5930 55.7667,37.6494 55.7667,37.6494 55.7405,37.5930 55.7405,37.5930 55.7667))&key=YOUR_KEY
+```
+
+### Получение расписания компании:
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=почта рос&fields=items.schedule&type=branch&polygon=POLYGON((37.5930 55.7667,37.6494 55.7667,37.6494 55.7405,37.5930 55.7405,37.5930 55.7667))&key=YOUR_KEY
+```
+
+## Геоограничение области поиска
+
+Указание области поиска в формате [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry):
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=кафе&polygon=POLYGON((37.5930 55.7667,37.6494 55.7667,37.6494 55.7405,37.5930 55.7405,37.5930 55.7667))&key=YOUR_KEY
+```
+
+### Указание точки, относительно которой выполняется поиск:
+
+```http
+https://catalog.api.2gis.com/3.0/suggests?q=каф&sort_point=37.630866,55.752256&key=YOUR_KEY
+```
+
+
