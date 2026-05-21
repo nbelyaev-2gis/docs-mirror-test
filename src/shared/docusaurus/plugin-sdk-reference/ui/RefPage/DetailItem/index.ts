@@ -1,1 +1,0 @@
-export { DetailItem } from './ui/DetailItem';

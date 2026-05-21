@@ -1,1 +1,0 @@
-export { staticAssetsDevServerPlugin } from './plugin';

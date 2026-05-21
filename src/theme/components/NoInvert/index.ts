@@ -1,1 +1,0 @@
-export { NoInvert } from './NoInvert';

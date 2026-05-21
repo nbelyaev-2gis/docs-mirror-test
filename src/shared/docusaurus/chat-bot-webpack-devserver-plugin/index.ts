@@ -1,1 +1,0 @@
-export { chatBotWebpackDevServerPlugin } from './plugin';

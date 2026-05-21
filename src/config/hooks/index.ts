@@ -1,1 +1,0 @@
-export { useEnvConfig } from './useEnvConfig';

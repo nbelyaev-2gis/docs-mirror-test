@@ -1,1 +1,0 @@
-export { searchWebpackDevServerPlugin } from './plugin';

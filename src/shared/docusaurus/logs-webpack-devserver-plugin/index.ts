@@ -1,1 +1,0 @@
-export { logsWebpackDevServerPlugin } from './plugin';

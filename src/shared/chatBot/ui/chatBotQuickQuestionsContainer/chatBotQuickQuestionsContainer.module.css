@@ -1,7 +1,0 @@
-.wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: end;
-  gap: 8px;
-  padding: 12px 12px 0 32px;
-}

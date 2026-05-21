@@ -1,5 +1,0 @@
-.maximizeButton {
-  @media screen and (--media-s) {
-    visibility: hidden;
-  }
-}
